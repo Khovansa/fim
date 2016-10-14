@@ -8,7 +8,6 @@ import scala.Tuple2;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.TreeSet;
 
 /**
@@ -27,7 +26,8 @@ public class SparkContextFactory {
         conf.set("spark.kryoserializer.buffer.max", "256m");
         conf.registerKryoClasses(new Class[]{
                 org.apache.spark.mllib.fpm.FPTree.class, org.apache.spark.mllib.fpm.FPTree.Node.class,
-                org.apache.spark.mllib.fpm.FPTree.Summary.class, scala.collection.mutable.ListBuffer.class,
+                /*org.apache.spark.mllib.fpm.FPTree.Summary.class, */
+                scala.collection.mutable.ListBuffer.class,
                 org.apache.spark.mllib.fpm.FPGrowth.FreqItemset.class,
                 org.apache.spark.mllib.fpm.FPGrowth.FreqItemset[].class,
                 Object[].class,
