@@ -14,6 +14,7 @@ import java.util.*;
  */
 @SuppressWarnings("WeakerAccess")
 public class AlgITBase {
+    protected JavaSparkContext sc;
     protected StopWatch sw;
     protected BasicOps basicOps;
     protected ListComparator<String> listComparator;
@@ -24,6 +25,7 @@ public class AlgITBase {
 
     @Before
     public void setUp() throws Exception {
+        sc = SparkContextFactory.createLocalSparkContext();
         sw = new StopWatch();
         basicOps = new BasicOps();
         listComparator = new ListComparator<>();
@@ -31,8 +33,6 @@ public class AlgITBase {
 
     protected PrepStepOutput prepare(String inputFileName, double minSupport) {
         String inputFile = TestDataLocation.fileStr(inputFileName);
-
-        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext();
 
         sw.start();
         JavaRDD<ArrayList<String>> trs = basicOps.readLinesAsSortedItems(inputFile, sc);

@@ -4,6 +4,7 @@ import my.AlgITBase;
 import my.BasicOps;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,40 +21,48 @@ public class AprioriAlgIT extends AlgITBase {
     }
 
     @Test
-    public void test() {
-        final PrepStepOutput prep = prepare("kosarak.dat", 0.1);
+    public void test() throws InterruptedException {
+        final PrepStepOutput prep = prepare("pumsb.dat", 0.8);
 //        final PrepStepOutput prep = prepare("my.small.txt", 0.06);
 //        final PrepStepOutput prep = prepare("kosarak.dat", 0.06);
 //        final PrepStepOutput prep = prepare("pumsb.dat", 0.15);
 
         apr = new AprioriAlg<>(prep.minSuppCount);
         JavaPairRDD<String, Integer> f1AsRdd = apr.computeF1(prep.trs);
-        final HashSet<String> f1AsFastSet = basicOps.fillCollectionFromRdd(new HashSet<>(), f1AsRdd);
+        Broadcast<HashSet<String>> f1AsFastSetBr =
+                sc.broadcast(basicOps.fillCollectionFromRdd(new HashSet<>(), f1AsRdd));
         exploreF1(f1AsRdd);
 
         //2-FIs
         JavaRDD<ArrayList<String>> filteredTrs = prep.trs
-                .map(tr -> BasicOps.withoutInfrequent(tr, f1AsFastSet))
-//                .persist(StorageLevel.MEMORY_ONLY())
+                .map(tr -> BasicOps.withoutInfrequent(tr, f1AsFastSetBr.value()))
+                .persist(StorageLevel.MEMORY_ONLY_SER())
                 ;
-        pp("Filtered");
+        long filteredCnt = filteredTrs.flatMap(ArrayList::iterator).count();
+        long totalCnt = prep.trs.flatMap(ArrayList::iterator).count();
+        pp(String.format("Filtered: %s, items per transaction: %.2f, filtered items per transaction: %.2f",
+                filteredCnt, 1.0*totalCnt/prep.totalTrs, 1.0*filteredCnt/prep.totalTrs));
         JavaRDD<Collection<List<String>>> cand2AsRdd = apr.computeCand2(filteredTrs);
+        long candPairsCnt = cand2AsRdd.flatMap(Collection::iterator).count();
+        pp(String.format("Cand pairs per transaction: %.2f", 1.0*candPairsCnt/prep.totalTrs));
         JavaPairRDD<List<String>, Integer> f2AsRdd = apr.countAndFilterByMinSupport(cand2AsRdd);
-        pp("RDD computed: "+f2AsRdd.count());
+        pp(String.format("RDD computed: %s", f2AsRdd.count()));
         Collection<List<String>> f2 = apr.toCollectionOfLists(f2AsRdd);
         exploreFk(f2AsRdd, f2, 2);
 
         //3-FIs
-        Set<String> f1AsFastSet2 = apr.getUpdatedF1(f1AsFastSet, f2);
-        Set<List<String>> f2AsSet = new HashSet<>(f2);
-        pp("F1 size = " + f1AsFastSet2.size());
+        Broadcast<Set<String>> f1AsFastSet2 = sc.broadcast(apr.getUpdatedF1(f1AsFastSetBr.value(), f2));
+        Broadcast<Set<List<String>>> f2AsSet = sc.broadcast(new HashSet<>(f2));
+        pp("F1 size = " + f1AsFastSet2.value().size());
         cand2AsRdd = cand2AsRdd
-                .map(tr -> (Collection<List<String>>)BasicOps.withoutInfrequent(tr, f2AsSet))
+                .map(tr -> (Collection<List<String>>)BasicOps.withoutInfrequent(tr, f2AsSet.value()))
                 .filter(tr -> tr.size() >= 3)
-                .persist(StorageLevel.MEMORY_ONLY())
+                .persist(StorageLevel.MEMORY_ONLY_SER())
         ;
+        long filteredCandPairsCnt = cand2AsRdd.flatMap(Collection::iterator).count();
+        pp(String.format("Filtered cand pairs per transaction: %.2f", 1.0*filteredCandPairsCnt/prep.totalTrs));
         JavaRDD<Collection<List<String>>> cand3AsRdd =
-                apr.computeNextSizeCandidates(cand2AsRdd, 2, f1AsFastSet2, f2AsSet);
+                apr.computeNextSizeCandidates(cand2AsRdd, 2, f1AsFastSet2.value(), f2AsSet.value());
         JavaPairRDD<List<String>, Integer> f3AsRdd = apr.countAndFilterByMinSupport(cand3AsRdd);
         pp("RDD computed: "+f3AsRdd.count());
         Collection<List<String>> f3 = apr.toCollectionOfLists(f3AsRdd);

@@ -7,7 +7,7 @@ import java.util.*;
  * Generate candidate itemsets of size i+1 from frequent itemsets of size i. <br/>
  * Necessary for next step Apriori.
  */
-class AprCandidateFisGenerator<T extends Comparable<T>> implements Serializable {
+public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serializable {
 
     Collection<List<T>> getNextSizeCandItemsets(Collection<List<T>> oldFis) {
         if (oldFis.isEmpty()) {

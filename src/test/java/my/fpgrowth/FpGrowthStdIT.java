@@ -19,7 +19,7 @@ public class FpGrowthStdIT extends AlgITBase {
 
     @Test
     public void test() {
-        final double minSupp = 0.6;
+        final double minSupp = 0.8;
 //        final PrepStepOutput prep = prepare("my.small.txt", minSupp);
         final PrepStepOutput prep = prepare("pumsb.dat", minSupp);
 

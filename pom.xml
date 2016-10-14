@@ -21,6 +21,12 @@
             <version>2.0.0</version>
             <!--<scope>provided</scope>-->
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.esotericsoftware/kryo -->
+        <dependency>
+            <groupId>com.esotericsoftware</groupId>
+            <artifactId>kryo</artifactId>
+            <version>3.0.0</version>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
