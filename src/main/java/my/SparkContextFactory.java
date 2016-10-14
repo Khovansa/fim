@@ -33,8 +33,9 @@ public class SparkContextFactory {
                 Object[].class,
 
                 BasicOps.class, ListComparator.class,
-                HashSet.class, ArrayList.class, TreeSet.class, String[].class, Integer[].class, int[].class,
-                String.class, Integer.class, Tuple2.class,
+                HashSet.class, ArrayList.class, TreeSet.class,
+                String.class, String[].class, Integer.class, Integer[].class, int[].class,
+                Tuple2.class, Tuple2[].class,
                 AprCandidateFisGenerator.class, AprioriAlg.class
         });
 
