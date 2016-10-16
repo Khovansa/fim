@@ -8,7 +8,6 @@ import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
 import org.junit.Test;
-import scala.Tuple2;
 
 import java.util.*;
 
@@ -29,10 +28,17 @@ public class AprioriAlgIT extends AlgITBase {
         pp("F1 size = " + f1.size());
         pp(f1);
         Map<String, Integer> itemToRank = BasicOps.itemToRank(f1);
+
         //TODO: keep the partition of the transaction!
         JavaRDD<Integer[]> filteredTrs = prep.trs.map(t -> BasicOps.getMappedFilteredAndSortedTrs(t, itemToRank));
         filteredTrs = filteredTrs.persist(StorageLevel.MEMORY_ONLY_SER());
+        pp("filtered and saved");
 
+        List<Integer[]> f2AsArrays = apr.computeF2New(filteredTrs);
+        pp("F2 as arrays size: "+f2AsArrays.size());
+        List<Integer[]> f2 = apr.f2AsArraysToPairs(f2AsArrays);
+        pp("F2 as arrays size: "+f2.size());
+        pp("F2: "+laToString(f2, 100));
     }
 
     @Test

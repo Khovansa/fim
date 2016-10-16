@@ -82,6 +82,15 @@ public class AlgITBase {
         pp(fkAsTupleList.subList(0, Math.min(fkAsTupleList.size(), 200)));
     }
 
+    protected String laToString(List<Integer[]> listOfArrays, Integer optMaxArrays) {
+        int maxArrays = (optMaxArrays != null) ? Math.min(optMaxArrays, listOfArrays.size()) : listOfArrays.size();
+        List<String> outList = new ArrayList<>(maxArrays);
+        for (Integer[] arr : listOfArrays.subList(0, maxArrays)) {
+            outList.add(Arrays.toString(arr));
+        }
+        return outList.toString();
+    }
+
     protected void pp(Object msg) {
         System.out.println(String.format("%-15s %s", tt(sw), msg));
     }

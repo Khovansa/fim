@@ -46,7 +46,24 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .map(t -> t._1).collect(Collectors.toList());
     }
 
+    public List<Integer[]> computeF2New(JavaRDD<Integer[]> filteredTrs) {
+        return filteredTrs
+                .flatMap(tr -> new IteratorOverArray<>(candidateFisGenerator.genTransactionC2sNew(tr)))
+                .mapToPair(col -> new Tuple2<>(col[0], col))
+                .foldByKey(new Integer[]{}, candidateFisGenerator::mergeC2Columns)
+                .mapValues(col -> candidateFisGenerator.getC2sFilteredByMinSupport(col, minSuppCount))
+                .sortByKey()
+                .values()
+                .collect();
+    }
 
+    public List<Integer[]> f2AsArraysToPairs(List<Integer[]> cols) {
+        List<Integer[]> res = new ArrayList<>(cols.size() * cols.size());
+        for (Integer[] col : cols) {
+            res.addAll(candidateFisGenerator.f2ColToPairs(col));
+        }
+        return res;
+    }
 
     public JavaRDD<Collection<List<T>>> computeCand2(JavaRDD<ArrayList<T>> trs) {
         return trs.map(candidateFisGenerator::genTransactionC2s);
