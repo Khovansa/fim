@@ -1,13 +1,16 @@
 package my.apriori;
 
 import my.BasicOps;
+import my.IteratorOverArray;
 import my.ListComparator;
+import org.apache.spark.HashPartitioner;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import scala.Tuple2;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The main class that implements Apriori algorithm.
@@ -29,6 +32,21 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     public JavaPairRDD<T, Integer> computeF1(JavaRDD<? extends Collection<T>> trs) {
         return basicOps.countAndFilterByMinSupport(trs, minSuppCount);
     }
+
+    public List<T> computeF1New(JavaRDD<T[]> data) {
+        int numParts = data.getNumPartitions();
+        HashPartitioner partitioner = new HashPartitioner(numParts);
+        List<Tuple2<T, Long>> res = data.flatMap(IteratorOverArray::new)
+                .mapToPair(v -> new Tuple2<>(v, 1L))
+                .reduceByKey(partitioner, (x, y) -> x + y)
+                .filter(t -> t._2 >= minSuppCount)
+                .collect();
+        return res.stream()
+                .sorted((t1, t2) -> t2._2.compareTo(t1._2))
+                .map(t -> t._1).collect(Collectors.toList());
+    }
+
+
 
     public JavaRDD<Collection<List<T>>> computeCand2(JavaRDD<ArrayList<T>> trs) {
         return trs.map(candidateFisGenerator::genTransactionC2s);

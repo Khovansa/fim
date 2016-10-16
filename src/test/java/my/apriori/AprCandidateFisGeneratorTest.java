@@ -7,6 +7,7 @@ import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class AprCandidateFisGeneratorTest {
     private static final Random RAND = new Random(10L);
@@ -90,5 +91,19 @@ public class AprCandidateFisGeneratorTest {
                 Arrays.asList("d", "e")
         );
         assertThat(c2, is(expC2));
+    }
+
+    @Test
+    public void genTransactionC2sNew() throws Exception {
+        Integer[] transaction = new Integer[]{0, 3, 6, 9};
+        Integer[][] c2 = gen.genTransactionC2sNew(transaction);
+
+        Integer[][] expC2  = new Integer[][]{
+                {0, 3, 6, 9},
+                {3, 6, 9},
+                {6, 9}
+        };
+
+        assertTrue(Arrays.deepToString(c2), Arrays.deepEquals(expC2, c2));
     }
 }

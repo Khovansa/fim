@@ -7,6 +7,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeSet;
 
@@ -33,10 +34,11 @@ public class SparkContextFactory {
                 Object[].class,
 
                 BasicOps.class, ListComparator.class,
-                HashSet.class, ArrayList.class, TreeSet.class,
-                String.class, String[].class, Integer.class, Integer[].class, int[].class,
+                HashSet.class, TreeSet.class, HashMap.class, ArrayList.class,
+                String.class, String[].class, Integer.class, Integer[].class, Integer[][].class, int[].class,
                 Tuple2.class, Tuple2[].class,
-                AprCandidateFisGenerator.class, AprioriAlg.class
+                new ArrayList<>().iterator().getClass(),
+                AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class,
         });
 
         JavaSparkContext sc = new JavaSparkContext(conf);

@@ -19,12 +19,53 @@ public class BasicOps implements Serializable {
 
     public JavaRDD<ArrayList<String>> readLinesAsSortedItems(String inputFile, JavaSparkContext sc) {
         JavaRDD<String> lines = sc.textFile(inputFile);
-        return linesAsSortedItems(lines);//.persist(StorageLevel.MEMORY_ONLY());
+        return linesAsSortedItems(lines);
+    }
+
+    public JavaRDD<String[]> readLinesAsSortedItemsNew(String inputFile, JavaSparkContext sc) {
+        JavaRDD<String> lines = sc.textFile(inputFile);
+        return linesAsSortedItemsNew(lines);
     }
 
     public JavaRDD<ArrayList<String>> linesAsSortedItems(JavaRDD<String> lines) {
         return lines.map(BasicOps::splitLineToSortedList);
     }
+
+    public JavaRDD<String[]> linesAsSortedItemsNew(JavaRDD<String> lines) {
+        return lines.map(BasicOps::splitLineToSortedListNew);
+    }
+
+    public static <T> Map<T, Integer> itemToRank(List<T> f1) {
+        Map<T, Integer> res = new HashMap<>(f1.size() * 2);
+        int ii=0;
+        for (T item : f1) {
+            res.put(item, ii);
+            ++ii;
+        }
+        return res;
+    }
+
+    public static <T> Integer[] getMappedFilteredAndSortedTrs(T[] tr, Map<T, Integer> itemToRank) {
+        int resCnt = 0;
+        for (T item : tr) {
+            if (itemToRank.get(item) != null) {
+                ++resCnt;
+            }
+        }
+
+        Integer[] res = new Integer[resCnt];
+        int ii=0;
+        for (T item : tr) {
+            Integer rank = itemToRank.get(item);
+            if (rank != null) {
+                res[ii++] = rank;
+            }
+        }
+
+        Arrays.sort(res); //smaller rank means more frequent
+        return res;
+    }
+
 
     public static <V> ArrayList<V> withoutInfrequent(Collection<V> tr, Set<V> frequent) {
         if (tr.isEmpty() || frequent.isEmpty()) {
@@ -39,16 +80,6 @@ public class BasicOps implements Serializable {
         }
         res.trimToSize();
         return res;
-    }
-
-    @SuppressWarnings("unused")
-    public <T> JavaRDD<Tuple2<T, Integer>> computeSortedF1(JavaRDD<Set<T>> trs, double minSupp, boolean isAsc) {
-        final long totalTrs = trs.count();
-        final long minSuppCount = minSuppCount(totalTrs, minSupp);
-
-        JavaPairRDD<T, Integer> f1 = countAndFilterByMinSupport(trs, minSuppCount);
-
-        return sortedByFrequency(f1, isAsc);
     }
 
     public static long minSuppCount(long totalTrs, double minSupp) {
@@ -91,5 +122,20 @@ public class BasicOps implements Serializable {
             res.add(item.trim());
         }
         return new ArrayList<>(res);
+    }
+
+    static String[] splitLineToSortedListNew(String line) {
+        String[] items = line.split(" ");
+        SortedSet<String> res = new TreeSet<>();
+        for (String item : items) {
+            res.add(item.trim());
+        }
+
+        String[] resArr = new String[res.size()];
+        int ii=0;
+        for (String item : res) {
+            resArr[ii++] = item;
+        }
+        return resArr;
     }
 }

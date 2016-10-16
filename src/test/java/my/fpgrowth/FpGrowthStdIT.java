@@ -21,7 +21,7 @@ public class FpGrowthStdIT extends AlgITBase {
     public void test() {
         final double minSupp = 0.8;
 //        final PrepStepOutput prep = prepare("my.small.txt", minSupp);
-        final PrepStepOutput prep = prepare("pumsb.dat", minSupp);
+        final PrepStepOutput prep = prepare("pumsb.dat", minSupp, false);
 
         FPGrowth fpg = new FPGrowth()
                 .setMinSupport(minSupp)

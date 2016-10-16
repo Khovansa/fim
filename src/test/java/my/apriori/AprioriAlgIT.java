@@ -8,6 +8,7 @@ import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
 import org.junit.Test;
+import scala.Tuple2;
 
 import java.util.*;
 
@@ -21,8 +22,22 @@ public class AprioriAlgIT extends AlgITBase {
     }
 
     @Test
+    public void testNew() throws Exception {
+        final PrepStepOutputNew prep = prepareNew("pumsb.dat", 0.8, false);
+        apr = new AprioriAlg<>(prep.minSuppCount);
+        List<String> f1 = apr.computeF1New(prep.trs);
+        pp("F1 size = " + f1.size());
+        pp(f1);
+        Map<String, Integer> itemToRank = BasicOps.itemToRank(f1);
+        //TODO: keep the partition of the transaction!
+        JavaRDD<Integer[]> filteredTrs = prep.trs.map(t -> BasicOps.getMappedFilteredAndSortedTrs(t, itemToRank));
+        filteredTrs = filteredTrs.persist(StorageLevel.MEMORY_ONLY_SER());
+
+    }
+
+    @Test
     public void test() throws InterruptedException {
-        final PrepStepOutput prep = prepare("pumsb.dat", 0.8);
+        final PrepStepOutput prep = prepare("pumsb.dat", 0.8, false);
 //        final PrepStepOutput prep = prepare("my.small.txt", 0.06);
 //        final PrepStepOutput prep = prepare("kosarak.dat", 0.06);
 //        final PrepStepOutput prep = prepare("pumsb.dat", 0.15);

@@ -20,7 +20,7 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
 
     Collection<List<T>> getNextSizeCandItemsetsFromTransaction(
             Collection<List<T>> trAsCandidatesOfSizeK, int k, Set<T> f1, Set<List<T>> oldFisOfSizeK) {
-        if (oldFisOfSizeK.size()<=k || trAsCandidatesOfSizeK.size()<=k) {
+        if (oldFisOfSizeK.size() <= k || trAsCandidatesOfSizeK.size() <= k) {
             return Collections.emptyList();
         }
 
@@ -47,6 +47,35 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
         return res;
     }
 
+    /**
+     * Pairs {(0, 3), (0, 6), (0, 9), (3, 6), (3, 9), (6, 9)} will be held as followed: <br/>
+     * res[0] = [0, 3, 6, 9] <br/>
+     * res[1] = [3, 6, 9] <br/>
+     * res[2] = [6, 9] <br/>
+     * That is, the first element of each column is the first element of the pair. <br/>
+     * The rest of the elements in the column are the second elements. <br/>
+     * E.g. [3, 6, 9] stands for {(3, 6), (3, 9)}.
+     */
+    //TODO: add partitioner
+    Integer[][] genTransactionC2sNew(Integer[] sortedTr) {
+        final int trSize = sortedTr.length;
+        if (trSize <= 1) {
+            return new Integer[0][];
+        }
+
+        Integer[][] res = new Integer[trSize-1][];
+        for (int ii = 0; ii < trSize - 1; ++ii) {
+            Integer[] resCol = res[ii] = new Integer[trSize - ii];
+            int resColInd = 0;
+            resCol[resColInd++] = sortedTr[ii]; //the first element of the pair
+            //Adding the second elements of the pairs (whose first element is sortedTr[ii]):
+            for (int jj = ii + 1; jj < trSize; ++jj) {
+                resCol[resColInd++] = sortedTr[jj];
+            }
+        }
+
+        return res;
+    }
 
     private List<List<T>> getNextSizeItemsetsByCross(
             Collection<List<T>> seedItemsetsOfSizeK, List<T> sortedSeedItems, Set<List<T>> oldFisOfSizeK) {
@@ -107,10 +136,9 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
         List<T> res = new ArrayList<>(k);
         res.add(seedItem);
         res.addAll(seedK.subList(0, ii));
-        res.addAll(seedK.subList(ii+1, k));
+        res.addAll(seedK.subList(ii + 1, k));
         return res;
     }
-
 
     private static <T> List<T> pickAndSortItems(Collection<List<T>> inFis, Set<T> f1) {
         SortedSet<T> res = new TreeSet<>();
