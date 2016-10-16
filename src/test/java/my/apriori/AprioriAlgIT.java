@@ -37,7 +37,7 @@ public class AprioriAlgIT extends AlgITBase {
         List<Integer[]> f2AsArrays = apr.computeF2New(filteredTrs);
         pp("F2 as arrays size: "+f2AsArrays.size());
         List<Integer[]> f2 = apr.f2AsArraysToPairs(f2AsArrays);
-        pp("F2 as arrays size: "+f2.size());
+        pp("F2 size: "+f2.size());
         pp("F2: "+laToString(f2, 100));
     }
 
