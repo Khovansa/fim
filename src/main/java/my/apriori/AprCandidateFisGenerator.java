@@ -56,7 +56,7 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
      * res[2] = [6, 9, 1] <br/>
      * That is, the first element of each column is the first element of the pair. <br/>
      * The rest of the elements in the column are the second elements followed by their counters. <br/>
-     * The counters produced by this function are always 1's, but a later reduce operation will sum those counters. <br/>
+     * The counters produced by this function are always 1's, but a later reduce operation will sum them. <br/>
      * E.g. [3, 6, 1, 9, 1] stands for {((3, 6), 1), ((3, 9), 1)}.
      */
     //TODO: add partitioner
@@ -105,6 +105,7 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
     }
 
     /**
+     * Filter C2's by min support. <br/>
      * See {@link #genTransactionC2sNew} for the column structure. <br/>
      * E.g. {0, 3, 1, 6, 1, 9, 1}. <br/>
      */
@@ -150,6 +151,7 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
         }
         return res;
     }
+
     private int getDifferentItemsCountForC2s(Integer[] col1, Integer[] col2) {
         if (col1.length == 0) {
             return col2.length;
