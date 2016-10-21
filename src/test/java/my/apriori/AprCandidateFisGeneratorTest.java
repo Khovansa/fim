@@ -196,7 +196,7 @@ public class AprCandidateFisGeneratorTest {
 
         Integer[][] pairs = gen.f2ColToPairs(col).toArray(new Integer[][]{});
 
-        Integer[][] expPairs = {{0, 3}, {0, 6}, {0, 9}};
+        Integer[][] expPairs = {{0, 3, 1}, {0, 6, 3}, {0, 9, 2}};
         assertTrue(Arrays.deepToString(pairs), Arrays.deepEquals(expPairs, pairs));
     }
 

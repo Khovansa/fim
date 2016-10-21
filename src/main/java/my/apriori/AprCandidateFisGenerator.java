@@ -146,7 +146,7 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
         List<Integer[]> res = new ArrayList<>(resLen);
         Integer item1 = col[0];
         for (int ii=1; ii<col.length; ii+=2) {
-            res.add(new Integer[]{item1, col[ii]});
+            res.add(new Integer[]{item1, col[ii], col[ii+1]});
         }
         return res;
     }
