@@ -1,7 +1,7 @@
-package my;
+package org.openu.fimcmp;
 
-import my.apriori.AprCandidateFisGenerator;
-import my.apriori.AprioriAlg;
+import org.openu.fimcmp.apriori.AprCandidateFisGenerator;
+import org.openu.fimcmp.apriori.AprioriAlg;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;

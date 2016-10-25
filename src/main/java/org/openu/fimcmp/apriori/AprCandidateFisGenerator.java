@@ -1,4 +1,4 @@
-package my.apriori;
+package org.openu.fimcmp.apriori;
 
 import java.io.Serializable;
 import java.util.*;

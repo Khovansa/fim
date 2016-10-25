@@ -1,9 +1,8 @@
-package my.apriori;
+package org.openu.fimcmp.apriori;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Before;
 import org.junit.Test;
-import scala.Tuple2;
 
 import java.util.*;
 

@@ -1,6 +1,6 @@
-package my.fpgrowth;
+package org.openu.fimcmp.fpgrowth;
 
-import my.AlgITBase;
+import org.openu.fimcmp.AlgITBase;
 import org.apache.spark.mllib.fpm.FPGrowth;
 import org.apache.spark.mllib.fpm.FPGrowthModel;
 import org.junit.Before;

@@ -1,4 +1,4 @@
-package my;
+package org.openu.fimcmp;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;

@@ -1,4 +1,4 @@
-package my.apriori;
+package org.openu.fimcmp.apriori;
 
 import org.apache.spark.api.java.JavaRDD;
 import scala.Tuple2;

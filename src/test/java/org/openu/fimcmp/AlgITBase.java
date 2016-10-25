@@ -1,4 +1,4 @@
-package my;
+package org.openu.fimcmp;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaPairRDD;

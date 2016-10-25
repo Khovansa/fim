@@ -1,4 +1,4 @@
-package my;
+package org.openu.fimcmp;
 
 import org.apache.commons.io.FileUtils;
 

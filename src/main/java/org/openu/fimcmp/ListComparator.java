@@ -1,4 +1,4 @@
-package my;
+package org.openu.fimcmp;
 
 import java.io.Serializable;
 import java.util.Comparator;

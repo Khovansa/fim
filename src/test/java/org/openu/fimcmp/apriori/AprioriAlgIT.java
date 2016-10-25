@@ -1,7 +1,7 @@
-package my.apriori;
+package org.openu.fimcmp.apriori;
 
-import my.AlgITBase;
-import my.BasicOps;
+import org.openu.fimcmp.AlgITBase;
+import org.openu.fimcmp.BasicOps;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;

@@ -1,4 +1,4 @@
-package my;
+package org.openu.fimcmp;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -8,9 +8,6 @@ import org.apache.spark.storage.StorageLevel;
 import org.junit.Test;
 import scala.Tuple2;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.util.*;
 
 /**
