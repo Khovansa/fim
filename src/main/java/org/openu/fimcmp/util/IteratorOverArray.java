@@ -1,4 +1,4 @@
-package org.openu.fimcmp;
+package org.openu.fimcmp.util;
 
 import java.util.Iterator;
 

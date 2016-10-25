@@ -1,8 +1,8 @@
 package org.openu.fimcmp.apriori;
 
 import org.openu.fimcmp.BasicOps;
-import org.openu.fimcmp.IteratorOverArray;
-import org.openu.fimcmp.ListComparator;
+import org.openu.fimcmp.util.IteratorOverArray;
+import org.openu.fimcmp.util.ListComparator;
 import org.apache.spark.HashPartitioner;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;

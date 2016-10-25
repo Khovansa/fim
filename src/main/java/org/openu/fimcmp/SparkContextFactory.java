@@ -4,6 +4,8 @@ import org.openu.fimcmp.apriori.AprCandidateFisGenerator;
 import org.openu.fimcmp.apriori.AprioriAlg;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.openu.fimcmp.util.IteratorOverArray;
+import org.openu.fimcmp.util.ListComparator;
 import scala.Tuple2;
 
 import java.util.ArrayList;
