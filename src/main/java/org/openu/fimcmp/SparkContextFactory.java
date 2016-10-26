@@ -8,10 +8,7 @@ import org.openu.fimcmp.util.IteratorOverArray;
 import org.openu.fimcmp.util.ListComparator;
 import scala.Tuple2;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Utility class to create the JavaSparkContext
@@ -38,6 +35,7 @@ public class SparkContextFactory {
                 BasicOps.class, ListComparator.class,
                 HashSet.class, TreeSet.class, HashMap.class, ArrayList.class,
                 String.class, String[].class, Integer.class, Integer[].class, Integer[][].class, int[].class,
+                long[].class, int[].class, BitSet.class,
                 Tuple2.class, Tuple2[].class,
                 new ArrayList<>().iterator().getClass(),
                 AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class,

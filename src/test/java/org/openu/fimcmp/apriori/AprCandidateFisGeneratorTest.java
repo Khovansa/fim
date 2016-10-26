@@ -22,35 +22,6 @@ public class AprCandidateFisGeneratorTest {
     }
 
     @Test
-    public void tmpPerfTest() {
-        final int size = 10_000_000;
-        final int max = 5000;
-//        Set<Tuple2<Integer, Integer>> cont = new HashSet<>(size * 3/2);
-        Set<Integer> cont = new HashSet<>(size * 3/2);
-        int cnt = 0;
-        Random random = new Random(new Date().getTime());
-        StopWatch sw = new StopWatch();
-        sw.start();
-        for (int ii=0; ii<size; ++ii) {
-            int i1 = (int)(random.nextDouble() * max);
-            int i2 = (int)(random.nextDouble() * max);
-            int i3 = (int)(random.nextDouble() * max);
-            int i4 = (int)(random.nextDouble() * max);
-//            if (i1==i3 || i2==i4) {
-//                ++cnt;
-//            }
-//            cont.add(new Tuple2<>(i1, i2));
-            cont.add(i1 * max + i2);
-//            if (cont.contains(new Tuple2<>(i3, i4))) {
-            if (cont.contains(i3 * max + i4)) {
-                ++cnt;
-            }
-        }
-        sw.stop();
-        System.out.println(cnt+ ": "+sw);
-    }
-
-    @Test
     public void getNextSizeCandItemsets() throws Exception {
         List<List<String>> oldFis = Arrays.asList(
                 Arrays.asList("a", "b"),

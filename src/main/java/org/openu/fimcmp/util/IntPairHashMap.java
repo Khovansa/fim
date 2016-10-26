@@ -28,7 +28,7 @@ public class IntPairHashMap<V> implements Map<Tuple2<Integer, Integer>, V> {
 
         this.mult1 = max2nd + 1;
         //just enough capacity to store the elements:
-        this.map = new HashMap<>((int)Math.ceil(0.75f), 0.75f);
+        this.map = new HashMap<>((int)Math.ceil(expElems / 0.75f), 0.75f);
     }
 
     @Override
@@ -46,6 +46,10 @@ public class IntPairHashMap<V> implements Map<Tuple2<Integer, Integer>, V> {
         return map.containsKey(toActKeyFromObj(key));
     }
 
+    public boolean containsKey(int k1, int k2) {
+        return map.containsKey(toActKey(k1, k2));
+    }
+
     @Override
     public boolean containsValue(Object value) {
         //Lets hunt these usages down
@@ -57,14 +61,27 @@ public class IntPairHashMap<V> implements Map<Tuple2<Integer, Integer>, V> {
         return map.get(toActKeyFromObj(key));
     }
 
+    public V get(int k1, int k2) {
+        return map.get(toActKey(k1, k2));
+    }
+
     @Override
     public V put(Tuple2<Integer, Integer> key, V value) {
         return map.put(toActKey(key), value);
     }
 
+    public V put(int k1, int k2, V value) {
+        return map.put(toActKey(k1, k2), value);
+    }
+
+
     @Override
     public V remove(Object key) {
         return map.remove(toActKeyFromObj(key));
+    }
+
+    public V remove(int k1, int k2) {
+        return map.remove(toActKey(k1, k2));
     }
 
     @Override
@@ -100,8 +117,12 @@ public class IntPairHashMap<V> implements Map<Tuple2<Integer, Integer>, V> {
     }
 
     private Integer toActKey(@NotNull Tuple2<Integer, Integer> key) {
-        Assert.isTrue(key._1 >= 0 && key._2 >= 0);
-        int res = key._1 * mult1 + key._2;
+        return toActKey(key._1, key._2);
+    }
+
+    private Integer toActKey(int k1, int k2) {
+        Assert.isTrue(k1 >= 0 && k2 >= 0);
+        int res = k1 * mult1 + k2;
         Assert.isTrue(res >= 0);
         return res;
     }
