@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Test of standard FPGrowth Spark implementation
@@ -30,12 +31,12 @@ public class FpGrowthStdIT extends AlgITBase {
 
         List<FPGrowth.FreqItemset<String>> resAsList = model.freqItemsets().toJavaRDD().collect();
         pp("Total results: "+resAsList.size());
-        int cnt = 0;
-        for (FPGrowth.FreqItemset<String> itemset : resAsList) {
-            if (cnt > 1000) {
-                break;
-            }
-            ++cnt;
+        List<FPGrowth.FreqItemset<String>> f3s = resAsList.stream()
+                .filter(fi -> fi.javaItems().size() == 3)
+                .sorted((fi1, fi2) -> Long.compare(fi2.freq(), fi1.freq()))
+                .collect(Collectors.toList());
+        pp("F3 size: "+f3s.size());
+        for (FPGrowth.FreqItemset<String> itemset : f3s.subList(0, Math.min(100, f3s.size()))) {
             System.out.println("[" + itemset.javaItems() + "], " + itemset.freq());
         }
     }

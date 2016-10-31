@@ -37,10 +37,10 @@ public class BasicOps implements Serializable {
 
     public static <T> Map<T, Integer> itemToRank(List<T> f1) {
         Map<T, Integer> res = new HashMap<>(f1.size() * 2);
-        int ii=0;
+        int rank=0;
         for (T item : f1) {
-            res.put(item, ii);
-            ++ii;
+            res.put(item, rank);
+            ++rank;
         }
         return res;
     }
@@ -113,6 +113,14 @@ public class BasicOps implements Serializable {
     public <V, C extends Collection<V>> C fillCollectionFromRdd(C res, JavaPairRDD<V, Integer> rdd) {
         rdd.map(Tuple2::_1).toLocalIterator().forEachRemaining(res::add);
         return res;
+    }
+
+    public static String[] getRankToItem(Map<String, Integer> itemToRank) {
+        String[] rankToItem = new String[itemToRank.size()];
+        for (Map.Entry<String, Integer> entry : itemToRank.entrySet()) {
+            rankToItem[entry.getValue()] = entry.getKey();
+        }
+        return rankToItem;
     }
 
     static ArrayList<String> splitLineToSortedList(String line) {

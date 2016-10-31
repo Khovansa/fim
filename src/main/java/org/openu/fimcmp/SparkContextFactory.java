@@ -4,6 +4,7 @@ import org.openu.fimcmp.apriori.AprCandidateFisGenerator;
 import org.openu.fimcmp.apriori.AprioriAlg;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.openu.fimcmp.util.BoundedIntPairSet;
 import org.openu.fimcmp.util.IteratorOverArray;
 import org.openu.fimcmp.util.ListComparator;
 import scala.Tuple2;
@@ -35,7 +36,7 @@ public class SparkContextFactory {
                 BasicOps.class, ListComparator.class,
                 HashSet.class, TreeSet.class, HashMap.class, ArrayList.class,
                 String.class, String[].class, Integer.class, Integer[].class, Integer[][].class, int[].class,
-                long[].class, int[].class, BitSet.class,
+                long[].class, int[].class, int[][].class, BitSet.class, BoundedIntPairSet.class,
                 Tuple2.class, Tuple2[].class,
                 new ArrayList<>().iterator().getClass(),
                 AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class,

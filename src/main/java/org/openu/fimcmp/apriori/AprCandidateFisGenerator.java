@@ -1,5 +1,7 @@
 package org.openu.fimcmp.apriori;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import java.io.Serializable;
 import java.util.*;
 
@@ -9,6 +11,7 @@ import java.util.*;
  */
 public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serializable {
     private static final Integer[] EMPTY_COL = {};
+    private static final Integer[] EMPTY_COL_0 = {0};
     private static final Integer[][] EMPTY_COLS = {};
 
     Collection<List<T>> getNextSizeCandItemsets(Collection<List<T>> oldFis) {
@@ -82,14 +85,100 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
     }
 
     /**
+     * Return the same structure as {@link #genTransactionC2sNew}, but for triplets and potentially larger itemsets. <br/>
+     * Store a pair rank (integer) instead of a pair as a second element. <br/>
+     * In other words, triplets are represented as pairs (elem1, pairRank) and then
+     * group these pairs as described in {@link #genTransactionC2sNew}.
+     */
+    //TODO: add partitioner
+    Integer[][] genTransactionC3sNew_ByItems(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
+        final int trSize = sortedTr.length;
+        if (trSize <= 2) {
+            return EMPTY_COLS;
+        }
+
+        Integer[][] trIndToPairRanks = computeTrIndToPairRanks(sortedTr, preprocessedF2);
+        Integer[][] res = new Integer[trSize-2][];
+        for (int ii = 0; ii < trSize - 2; ++ii) {
+            List<Integer> feasiblePairRanks = computeFeasiblePairRanks(sortedTr, trIndToPairRanks, preprocessedF2, ii);
+            int pairsSize = feasiblePairRanks.size();
+            if (pairsSize == 0) {
+                //slight violation for efficiency - it does not matter what is the first element if there are no pairs:
+                res[ii] = EMPTY_COL_0;
+                continue;
+            }
+
+            Integer[] resCol = res[ii] = new Integer[2 * pairsSize + 1];
+            Integer elem1 = sortedTr[ii]; //the first element of the pair
+            int resColInd = 0;
+            resCol[resColInd++] = elem1;
+            //Adding the second elements of the pairs (whose first element is sortedTr[ii]):
+            for (Integer pairRank : feasiblePairRanks) {
+                resCol[resColInd++] = pairRank;
+                resCol[resColInd++] = 1;
+            }
+        }
+
+        return res;
+    }
+
+
+    private Integer[][] computeTrIndToPairRanks(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
+        final int arrSize = sortedTr.length - 1;
+        Integer[][] res = new Integer[arrSize][];
+        for (int ii = 0; ii < arrSize; ++ii) {
+            Integer elem1 = sortedTr[ii];
+            List<Integer> ranks = new ArrayList<>(arrSize);
+            for (int jj=ii+1; jj<sortedTr.length; ++jj) {
+                Integer elem2 = sortedTr[jj];
+                int rank = preprocessedF2.getPairRank(elem1, elem2);
+                if (rank >= 0) {
+                    ranks.add(rank);
+                }
+            }
+            if (!ranks.isEmpty()) {
+                res[ii] = ranks.toArray(new Integer[ranks.size()]);
+            }
+        }
+        return res;
+    }
+
+
+    /**
+     * Compute pairs that can form frequent triplets with sortedTr[ii] as the first element.
+     */
+    private List<Integer> computeFeasiblePairRanks(
+            Integer[] sortedTr, Integer[][] trIndToPairRanks, PreprocessedF2 preprocessedF2, int ii) {
+        Integer elem1 = sortedTr[ii];
+        ArrayList<Integer> res = new ArrayList<>(preprocessedF2.size());
+        for (int jj = ii + 1; jj < trIndToPairRanks.length; ++jj) {
+            Integer[] pairRanks = trIndToPairRanks[jj];
+            if (pairRanks == null) {
+                continue;
+            }
+
+            for (int pairRank : pairRanks) {
+                if (preprocessedF2.couldBeFrequent(elem1, pairRank)) {
+                    res.add(pairRank);
+                }
+            }
+        }
+
+        res.sort(null);
+        return res;
+    }
+    /**
      * See {@link #genTransactionC2sNew} for columns structure. <br/>
      * E.g. {0, 3, 1, 6, 1, 9, 1}. <br/>
      * That is, after the first item, we use a kind of linked list (2nd item, count),
      * i.e. a sparse representation of a map: item -> count.
      */
     Integer[] mergeC2Columns(Integer[] col1, Integer[] col2) {
-        if (col1.length == 0) {
+        if (col1.length <= 1) {
             return Arrays.copyOf(col2, col2.length);
+        }
+        if (col2.length <= 1) {
+            return col1;
         }
 
         int diffItemsCount = getDifferentItemsCountForC2s(col1, col2);
@@ -153,7 +242,7 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
     }
 
     private int getDifferentItemsCountForC2s(Integer[] col1, Integer[] col2) {
-        if (col1.length == 0) {
+        if (col1.length <= 1) {
             return col2.length;
         }
 

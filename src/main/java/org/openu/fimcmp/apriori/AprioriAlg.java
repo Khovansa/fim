@@ -1,6 +1,7 @@
 package org.openu.fimcmp.apriori;
 
 import org.openu.fimcmp.BasicOps;
+import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.util.IteratorOverArray;
 import org.openu.fimcmp.util.ListComparator;
 import org.apache.spark.HashPartitioner;
@@ -33,6 +34,9 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return basicOps.countAndFilterByMinSupport(trs, minSuppCount);
     }
 
+    /**
+     * @return frequent items sorted by decreasing frequency
+     */
     public List<T> computeF1New(JavaRDD<T[]> data) {
         int numParts = data.getNumPartitions();
         HashPartitioner partitioner = new HashPartitioner(numParts);
@@ -57,11 +61,58 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .collect();
     }
 
-    public List<Integer[]> f2AsArraysToPairs(List<Integer[]> cols) {
+    public List<Integer[]> computeF3New(JavaRDD<Integer[]> filteredTrs, PreprocessedF2 preprocessedF2) {
+        return filteredTrs
+                .flatMap(tr -> new IteratorOverArray<>(
+                        candidateFisGenerator.genTransactionC3sNew_ByItems(tr, preprocessedF2)))
+                .mapToPair(col -> new Tuple2<>(col[0], col))
+                .foldByKey(new Integer[]{}, candidateFisGenerator::mergeC2Columns)
+                .mapValues(col -> candidateFisGenerator.getC2sFilteredByMinSupport(col, minSuppCount))
+                .sortByKey()
+                .values()
+                .collect();
+    }
+
+    public List<Integer[]> f2AsArraysToRankPairs(List<Integer[]> cols) {
         List<Integer[]> res = new ArrayList<>(cols.size() * cols.size());
         for (Integer[] col : cols) {
             res.addAll(candidateFisGenerator.f2ColToPairs(col));
         }
+        return res;
+    }
+
+    public List<FreqItemset<String>> f2AsArraysToPairs(
+            List<Integer[]> cols, Map<String, Integer> itemToRank) {
+        String[] rankToItem = BasicOps.getRankToItem(itemToRank);
+        List<FreqItemset<String>> res = new ArrayList<>(cols.size() * cols.size());
+        for (Integer[] col : cols) {
+            List<Integer[]> pairs = candidateFisGenerator.f2ColToPairs(col);
+            for (Integer[] pair : pairs) {
+                String elem1 = rankToItem[pair[0]];
+                String elem2 = rankToItem[pair[1]];
+                res.add(new FreqItemset<>(Arrays.asList(elem1, elem2), pair[2]));
+            }
+        }
+        return res;
+    }
+
+    public List<FreqItemset<String>> f3AsArraysToTriplets(
+            List<Integer[]> cols, Map<String, Integer> itemToRank, PreprocessedF2 preprocessedF2) {
+        String[] rankToItem = BasicOps.getRankToItem(itemToRank);
+
+        List<FreqItemset<String>> res = new ArrayList<>((int)Math.pow(cols.size(), 3));
+        for (Integer[] col : cols) {
+            List<Integer[]> itemAndPairRanks = candidateFisGenerator.f2ColToPairs(col);
+            for (Integer[] itemAndPairRank : itemAndPairRanks) {
+                String elem1 = rankToItem[itemAndPairRank[0]];
+                int[] pair = preprocessedF2.getPairByRank(itemAndPairRank[1]);
+                String elem2 = rankToItem[pair[0]];
+                String elem3 = rankToItem[pair[1]];
+                int freq = itemAndPairRank[2];
+                res.add(new FreqItemset<>(Arrays.asList(elem1, elem2, elem3), freq));
+            }
+        }
+
         return res;
     }
 
