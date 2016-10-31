@@ -1,7 +1,5 @@
 package org.openu.fimcmp.apriori;
 
-import org.apache.commons.lang.ArrayUtils;
-
 import java.io.Serializable;
 import java.util.*;
 

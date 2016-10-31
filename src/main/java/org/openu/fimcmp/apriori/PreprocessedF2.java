@@ -10,46 +10,39 @@ import java.util.*;
 /**
  * Auxiliary class to hold F2-related data in a way that allows fast processing.
  */
-public class PreprocessedF2 implements Serializable {
+class PreprocessedF2 implements Serializable {
     private final int[][] rankToPair;
     private final int[][] pairToRank;
-    private final int[][] firstElemToPairRanks;
     private final BoundedIntPairSet cand3; //(item, pair) -> is possible
 
-    public static PreprocessedF2 construct(List<Integer[]> f2, int totalFreqItems) {
+    static PreprocessedF2 construct(List<Integer[]> f2, int totalFreqItems) {
         List<Integer[]> sortedF2 = getSortedByDecreasingFreq(f2);
         int[][] rankToPair = constructPairRankToPair(sortedF2);
         int[][] pairToRank = constructPairToRank(rankToPair, totalFreqItems);
         int[][] firstElemToPairRanks = constructFirstElemToPairRanks(sortedF2, totalFreqItems, pairToRank);
         BoundedIntPairSet cand3 = constructCand3(totalFreqItems, sortedF2, pairToRank, rankToPair, firstElemToPairRanks);
-        return new PreprocessedF2(rankToPair, pairToRank, firstElemToPairRanks, cand3);
+        return new PreprocessedF2(rankToPair, pairToRank, cand3);
     }
 
     public int size() {
         return rankToPair.length;
     }
 
-    public int[] getPairRanksByFirstElem(int firstElem) {
-        return firstElemToPairRanks[firstElem];
-    }
-
-    public boolean couldBeFrequent(int item1, int pairRank) {
+    boolean couldBeFrequent(int item1, int pairRank) {
         return cand3.contains(item1, pairRank);
     }
 
-    public int[] getPairByRank(int rank) {
+    int[] getPairByRank(int rank) {
         return rankToPair[rank];
     }
 
-    public int getPairRank(int elem1, int elem2) {
+    int getPairRank(int elem1, int elem2) {
         return pairToRank[elem1][elem2];
     }
 
-    private PreprocessedF2(
-            int[][] rankToPair, int[][] pairToRank, int[][] firstElemToPairRanks, BoundedIntPairSet cand3) {
+    private PreprocessedF2(int[][] rankToPair, int[][] pairToRank, BoundedIntPairSet cand3) {
         this.rankToPair = rankToPair;
         this.pairToRank = pairToRank;
-        this.firstElemToPairRanks = firstElemToPairRanks;
         this.cand3 = cand3;
     }
 
