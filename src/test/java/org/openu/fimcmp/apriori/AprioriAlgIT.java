@@ -10,6 +10,7 @@ import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
 import org.junit.Test;
 import org.openu.fimcmp.FreqItemset;
+import scala.Tuple2;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,15 +44,20 @@ public class AprioriAlgIT extends AlgITBase {
         List<Integer[]> f2 = apr.f2AsArraysToRankPairs(f2AsArrays);
         List<FreqItemset<String>> f2Res = apr.f2AsArraysToPairs(f2AsArrays, itemToRank);
         pp("F2 size: "+f2.size());
-        pp("F2: "+StringUtils.join(f2Res.subList(0, Math.min(100, f2Res.size())), "\n"));
+//        pp("F2: "+StringUtils.join(f2Res.subList(0, Math.min(100, f2Res.size())), "\n"));
 
         PreprocessedF2 preprocessedF2 = PreprocessedF2.construct(f2, sortedF1.size());
-        List<Integer[]> f3AsArrays = apr.computeF3New(filteredTrs, preprocessedF2);
+//        pp("zzz");
+//        List<Integer[]> f3AsArrays = apr.computeF3New(filteredTrs, preprocessedF2);
+        JavaRDD<Tuple2<Integer[], Integer[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
+        ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
+        pp("zzz");
+        List<Integer[]> f3AsArrays = apr.computeF3New2(ranks1And2, preprocessedF2);
         pp("F3 as arrays size: "+f3AsArrays.size());
         List<FreqItemset<String>> f3 = apr.f3AsArraysToTriplets(f3AsArrays, itemToRank, preprocessedF2);
         pp("F3 size: "+f3.size());
         f3 = f3.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
-        pp("F3: " + StringUtils.join(f3.subList(0, Math.min(100, f3.size())), "\n"));
+        pp("F3: " + StringUtils.join(f3.subList(0, Math.min(3, f3.size())), "\n"));
     }
 
     @Test

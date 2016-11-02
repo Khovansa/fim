@@ -1,5 +1,7 @@
 package org.openu.fimcmp.apriori;
 
+import scala.Tuple2;
+
 import java.io.Serializable;
 import java.util.*;
 
@@ -119,6 +121,56 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
 
         return res;
     }
+    Integer[][] genTransactionC3sNew2_ByItems(Tuple2<Integer[], Integer[]> ranks1And2, PreprocessedF2 preprocessedF2) {
+        Integer[] sortedTr = ranks1And2._1;
+        Integer[] ranks2 = ranks1And2._2;
+        final int trSize = sortedTr.length;
+        if (trSize <= 2 || ranks2.length == 0) {
+            return EMPTY_COLS;
+        }
+
+        Integer[][] res = new Integer[trSize-2][];
+        for (int ii = 0; ii < trSize - 2; ++ii) {
+            Integer elem1 = sortedTr[ii];
+            List<Integer> feasiblePairRanks = new ArrayList<>(ranks2.length);
+            for (int jj=ranks2.length-1; jj>=0; --jj) {
+                Integer rank2 = ranks2[jj];
+                if (!preprocessedF2.isFirstElemStrictlyLess(elem1, rank2)) {
+                    break; //only considering cases when elem1 < elem2 < elem3
+                }
+                if (preprocessedF2.couldBeFrequent(elem1, rank2)) {
+                    feasiblePairRanks.add(rank2);
+                }
+            }
+            int pairsSize = feasiblePairRanks.size();
+            if (pairsSize == 0) {
+                //slight violation for efficiency - it does not matter what is the first element if there are no pairs:
+                res[ii] = EMPTY_COL_0;
+                continue;
+            }
+
+            feasiblePairRanks.sort(null);
+            Integer[] resCol = res[ii] = new Integer[2 * pairsSize + 1];
+            int resColInd = 0;
+            resCol[resColInd++] = elem1; //the first element of the new pair (i.e. triplet)
+            //Adding the second elements of the pairs (whose first element is sortedTr[ii]):
+            for (Integer pairRank : feasiblePairRanks) {
+                resCol[resColInd++] = pairRank;
+                resCol[resColInd++] = 1;
+            }
+        }
+
+        return res;
+    }
+    Integer[][] genTransactionC3sNew3_ByItems(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
+        Tuple2<Integer[], Integer[]> ranks1And2 = toSortedRanks1And2(sortedTr, preprocessedF2);
+        return genTransactionC3sNew2_ByItems(ranks1And2, preprocessedF2);
+    }
+
+    public Tuple2<Integer[], Integer[]> toSortedRanks1And2(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
+        Integer[] ranks2 = computePairRanksAsNew2ndElemSortedBy1stElem(sortedTr, preprocessedF2);
+        return new Tuple2<>(sortedTr, ranks2);
+    }
 
 
     private Integer[][] computeTrIndToPairRanks(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
@@ -141,6 +193,22 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
         return res;
     }
 
+    private Integer[] computePairRanksAsNew2ndElemSortedBy1stElem(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
+        final int arrSize = sortedTr.length - 1;
+        List<Integer> ranks = new ArrayList<>(arrSize * (arrSize-1)/2);
+        //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem:
+        for (int ii = 1; ii < arrSize; ++ii) {
+            Integer elem1 = sortedTr[ii];
+            for (int jj=ii+1; jj<sortedTr.length; ++jj) {
+                Integer elem2 = sortedTr[jj];
+                int rank = preprocessedF2.getPairRank(elem1, elem2);
+                if (rank >= 0) {
+                    ranks.add(rank);
+                }
+            }
+        }
+        return ranks.toArray(new Integer[ranks.size()]);
+    }
 
     /**
      * Compute pairs that can form frequent triplets with sortedTr[ii] as the first element.

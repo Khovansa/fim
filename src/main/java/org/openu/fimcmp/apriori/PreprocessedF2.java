@@ -40,6 +40,10 @@ class PreprocessedF2 implements Serializable {
         return pairToRank[elem1][elem2];
     }
 
+    boolean isFirstElemStrictlyLess(int item1, int pairRank) {
+        return item1 < rankToPair[pairRank][0];
+    }
+
     private PreprocessedF2(int[][] rankToPair, int[][] pairToRank, BoundedIntPairSet cand3) {
         this.rankToPair = rankToPair;
         this.pairToRank = pairToRank;
