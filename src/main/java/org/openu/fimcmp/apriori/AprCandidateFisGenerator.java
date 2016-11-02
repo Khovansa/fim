@@ -133,10 +133,12 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
         for (int ii = 0; ii < trSize - 2; ++ii) {
             Integer elem1 = sortedTr[ii];
             List<Integer> feasiblePairRanks = new ArrayList<>(ranks2.length);
-            for (int jj=ranks2.length-1; jj>=0; --jj) {
+//            for (int jj=ranks2.length-1; jj>=0; --jj) {
+            for (int jj=0; jj < ranks2.length; ++jj) {
                 Integer rank2 = ranks2[jj];
                 if (!preprocessedF2.isFirstElemStrictlyLess(elem1, rank2)) {
-                    break; //only considering cases when elem1 < elem2 < elem3
+//                    break; //only considering cases when elem1 < elem2 < elem3
+                    continue;
                 }
                 if (preprocessedF2.couldBeFrequent(elem1, rank2)) {
                     feasiblePairRanks.add(rank2);
@@ -149,7 +151,7 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
                 continue;
             }
 
-            feasiblePairRanks.sort(null);
+//            feasiblePairRanks.sort(null);
             Integer[] resCol = res[ii] = new Integer[2 * pairsSize + 1];
             int resColInd = 0;
             resCol[resColInd++] = elem1; //the first element of the new pair (i.e. triplet)
@@ -207,6 +209,7 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
                 }
             }
         }
+        ranks.sort(null);
         return ranks.toArray(new Integer[ranks.size()]);
     }
 
