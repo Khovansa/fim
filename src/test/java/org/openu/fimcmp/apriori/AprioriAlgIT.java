@@ -52,7 +52,7 @@ public class AprioriAlgIT extends AlgITBase {
         JavaRDD<Tuple2<Integer[], Integer[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
         ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
         pp("zzz");
-        List<Integer[]> f3AsArrays = apr.computeF3New2(ranks1And2, preprocessedF2);
+        List<Integer[]> f3AsArrays = apr.computeF3New(ranks1And2, preprocessedF2);
         pp("F3 as arrays size: "+f3AsArrays.size());
         List<FreqItemset<String>> f3 = apr.f3AsArraysToTriplets(f3AsArrays, itemToRank, preprocessedF2);
         pp("F3 size: "+f3.size());

@@ -10,7 +10,7 @@ import java.util.*;
 /**
  * Auxiliary class to hold F2-related data in a way that allows fast processing.
  */
-class PreprocessedF2 implements Serializable {
+class PreprocessedF2 implements NextSizeItemsetGenHelper, Serializable {
     private final int[][] rankToPair;
     private final int[][] pairToRank;
     private final BoundedIntPairSet cand3; //(item, pair) -> is possible
@@ -28,8 +28,10 @@ class PreprocessedF2 implements Serializable {
         return rankToPair.length;
     }
 
-    boolean couldBeFrequent(int item1, int pairRank) {
-        return cand3.contains(item1, pairRank);
+    @Override
+    public boolean isGoodNextSizeItemset(int item, int currItemsetRank) {
+        //Ordering: item < current-itemset[0] < current-itemset[1] < ...:
+        return item < rankToPair[currItemsetRank][0] && cand3.contains(item, currItemsetRank);
     }
 
     int[] getPairByRank(int rank) {
@@ -38,10 +40,6 @@ class PreprocessedF2 implements Serializable {
 
     int getPairRank(int elem1, int elem2) {
         return pairToRank[elem1][elem2];
-    }
-
-    boolean isFirstElemStrictlyLess(int item1, int pairRank) {
-        return item1 < rankToPair[pairRank][0];
     }
 
     private PreprocessedF2(int[][] rankToPair, int[][] pairToRank, BoundedIntPairSet cand3) {

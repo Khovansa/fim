@@ -91,151 +91,71 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
      * group these pairs as described in {@link #genTransactionC2sNew}.
      */
     //TODO: add partitioner
-    Integer[][] genTransactionC3sNew_ByItems(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
+    Integer[][] genNextSizeCandsNew_ByItems(int currItemsetSize,
+            Tuple2<Integer[], Integer[]> itemsAndCurrItemsets, NextSizeItemsetGenHelper genHelper) {
+        Integer[] sortedTr = itemsAndCurrItemsets._1;
+        Integer[] currItemsets = itemsAndCurrItemsets._2;
         final int trSize = sortedTr.length;
-        if (trSize <= 2) {
+        if (trSize <= currItemsetSize || currItemsets.length == 0) {
             return EMPTY_COLS;
         }
 
-        Integer[][] trIndToPairRanks = computeTrIndToPairRanks(sortedTr, preprocessedF2);
-        Integer[][] res = new Integer[trSize-2][];
-        for (int ii = 0; ii < trSize - 2; ++ii) {
-            List<Integer> feasiblePairRanks = computeFeasiblePairRanks(sortedTr, trIndToPairRanks, preprocessedF2, ii);
-            int pairsSize = feasiblePairRanks.size();
-            if (pairsSize == 0) {
-                //slight violation for efficiency - it does not matter what is the first element if there are no pairs:
-                res[ii] = EMPTY_COL_0;
-                continue;
-            }
-
-            Integer[] resCol = res[ii] = new Integer[2 * pairsSize + 1];
-            Integer elem1 = sortedTr[ii]; //the first element of the pair
-            int resColInd = 0;
-            resCol[resColInd++] = elem1;
-            //Adding the second elements of the pairs (whose first element is sortedTr[ii]):
-            for (Integer pairRank : feasiblePairRanks) {
-                resCol[resColInd++] = pairRank;
-                resCol[resColInd++] = 1;
-            }
+        final int resColumnsSize = trSize - currItemsetSize;
+        Integer[][] res = new Integer[resColumnsSize][];
+        for (int ii = 0; ii < resColumnsSize; ++ii) {
+            Integer item = sortedTr[ii];
+            res[ii] = genNextSizeCandsForItem(item, currItemsets, genHelper);
         }
 
         return res;
     }
-    Integer[][] genTransactionC3sNew2_ByItems(Tuple2<Integer[], Integer[]> ranks1And2, PreprocessedF2 preprocessedF2) {
-        Integer[] sortedTr = ranks1And2._1;
-        Integer[] ranks2 = ranks1And2._2;
-        final int trSize = sortedTr.length;
-        if (trSize <= 2 || ranks2.length == 0) {
-            return EMPTY_COLS;
-        }
 
-        Integer[][] res = new Integer[trSize-2][];
-        for (int ii = 0; ii < trSize - 2; ++ii) {
-            Integer elem1 = sortedTr[ii];
-            List<Integer> feasiblePairRanks = new ArrayList<>(ranks2.length);
-//            for (int jj=ranks2.length-1; jj>=0; --jj) {
-            for (int jj=0; jj < ranks2.length; ++jj) {
-                Integer rank2 = ranks2[jj];
-                if (!preprocessedF2.isFirstElemStrictlyLess(elem1, rank2)) {
-//                    break; //only considering cases when elem1 < elem2 < elem3
-                    continue;
-                }
-                if (preprocessedF2.couldBeFrequent(elem1, rank2)) {
-                    feasiblePairRanks.add(rank2);
-                }
-            }
-            int pairsSize = feasiblePairRanks.size();
-            if (pairsSize == 0) {
-                //slight violation for efficiency - it does not matter what is the first element if there are no pairs:
-                res[ii] = EMPTY_COL_0;
-                continue;
-            }
+    private Integer[] genNextSizeCandsForItem(
+            Integer item, Integer[] currItemsetRanks, NextSizeItemsetGenHelper genHelper) {
 
-//            feasiblePairRanks.sort(null);
-            Integer[] resCol = res[ii] = new Integer[2 * pairsSize + 1];
-            int resColInd = 0;
-            resCol[resColInd++] = elem1; //the first element of the new pair (i.e. triplet)
-            //Adding the second elements of the pairs (whose first element is sortedTr[ii]):
-            for (Integer pairRank : feasiblePairRanks) {
-                resCol[resColInd++] = pairRank;
-                resCol[resColInd++] = 1;
-            }
-        }
+        List<Integer> filteredItemsetRanks = getFilteredItemsetRanksForItem(item, currItemsetRanks, genHelper);
 
-        return res;
-    }
-    Integer[][] genTransactionC3sNew3_ByItems(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
-        Tuple2<Integer[], Integer[]> ranks1And2 = toSortedRanks1And2(sortedTr, preprocessedF2);
-        return genTransactionC3sNew2_ByItems(ranks1And2, preprocessedF2);
+        return createColumn(item, filteredItemsetRanks);
     }
 
-    public Tuple2<Integer[], Integer[]> toSortedRanks1And2(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
-        Integer[] ranks2 = computePairRanksAsNew2ndElemSortedBy1stElem(sortedTr, preprocessedF2);
+    private List<Integer> getFilteredItemsetRanksForItem(
+            Integer item, Integer[] currItemsetRanks, NextSizeItemsetGenHelper genHelper) {
+        List<Integer> filteredItemsetRanks = new ArrayList<>(currItemsetRanks.length);
+        for (Integer itemsetRank : currItemsetRanks) {
+            if (genHelper.isGoodNextSizeItemset(item, itemsetRank)) {
+                filteredItemsetRanks.add(itemsetRank);
+            }
+        }
+        return filteredItemsetRanks;
+    }
+
+    /**
+     * See {@link #genTransactionC2sNew(Integer[])} for the column structure
+     */
+    private Integer[] createColumn(Integer elem1, List<Integer> elem2s) {
+        int elem2sCnt = elem2s.size();
+        if (elem2sCnt == 0) {
+            //slight violation for efficiency - it does not matter what is the first element if there are no pairs:
+            return EMPTY_COL_0;
+        }
+
+        Integer[] resCol = new Integer[2 * elem2sCnt + 1];
+        int resColInd = 0;
+        resCol[resColInd++] = elem1; //the first element of the new pair (i.e. triplet)
+        //Adding the second elements of the pairs (whose first element is 'item'):
+        for (Integer elem2 : elem2s) {
+            resCol[resColInd++] = elem2;
+            resCol[resColInd++] = 1;
+        }
+        return resCol;
+    }
+
+    Tuple2<Integer[], Integer[]> toSortedRanks1And2(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
+        Integer[] ranks2 = computeSortedRanks2(sortedTr, preprocessedF2);
         return new Tuple2<>(sortedTr, ranks2);
     }
 
 
-    private Integer[][] computeTrIndToPairRanks(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
-        final int arrSize = sortedTr.length - 1;
-        Integer[][] res = new Integer[arrSize][];
-        for (int ii = 0; ii < arrSize; ++ii) {
-            Integer elem1 = sortedTr[ii];
-            List<Integer> ranks = new ArrayList<>(arrSize);
-            for (int jj=ii+1; jj<sortedTr.length; ++jj) {
-                Integer elem2 = sortedTr[jj];
-                int rank = preprocessedF2.getPairRank(elem1, elem2);
-                if (rank >= 0) {
-                    ranks.add(rank);
-                }
-            }
-            if (!ranks.isEmpty()) {
-                res[ii] = ranks.toArray(new Integer[ranks.size()]);
-            }
-        }
-        return res;
-    }
-
-    private Integer[] computePairRanksAsNew2ndElemSortedBy1stElem(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
-        final int arrSize = sortedTr.length - 1;
-        List<Integer> ranks = new ArrayList<>(arrSize * (arrSize-1)/2);
-        //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem:
-        for (int ii = 1; ii < arrSize; ++ii) {
-            Integer elem1 = sortedTr[ii];
-            for (int jj=ii+1; jj<sortedTr.length; ++jj) {
-                Integer elem2 = sortedTr[jj];
-                int rank = preprocessedF2.getPairRank(elem1, elem2);
-                if (rank >= 0) {
-                    ranks.add(rank);
-                }
-            }
-        }
-        ranks.sort(null);
-        return ranks.toArray(new Integer[ranks.size()]);
-    }
-
-    /**
-     * Compute pairs that can form frequent triplets with sortedTr[ii] as the first element.
-     */
-    private List<Integer> computeFeasiblePairRanks(
-            Integer[] sortedTr, Integer[][] trIndToPairRanks, PreprocessedF2 preprocessedF2, int ii) {
-        Integer elem1 = sortedTr[ii];
-        ArrayList<Integer> res = new ArrayList<>(preprocessedF2.size());
-        for (int jj = ii + 1; jj < trIndToPairRanks.length; ++jj) {
-            Integer[] pairRanks = trIndToPairRanks[jj];
-            if (pairRanks == null) {
-                continue;
-            }
-
-            for (int pairRank : pairRanks) {
-                if (preprocessedF2.couldBeFrequent(elem1, pairRank)) {
-                    res.add(pairRank);
-                }
-            }
-        }
-
-        res.sort(null);
-        return res;
-    }
     /**
      * See {@link #genTransactionC2sNew} for columns structure. <br/>
      * E.g. {0, 3, 1, 6, 1, 9, 1}. <br/>
@@ -374,6 +294,25 @@ public class AprCandidateFisGenerator<T extends Comparable<T>> implements Serial
                 i1 += 2; //col2 has no such element => this element's count is unchanged
             }
         }
+    }
+
+    private Integer[] computeSortedRanks2(Integer[] sortedTr, PreprocessedF2 preprocessedF2) {
+        final int arrSize = sortedTr.length - 1;
+        List<Integer> ranks = new ArrayList<>(arrSize * (arrSize-1)/2);
+        //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem:
+        for (int ii = 1; ii < arrSize; ++ii) {
+            Integer elem1 = sortedTr[ii];
+            for (int jj=ii+1; jj<sortedTr.length; ++jj) {
+                Integer elem2 = sortedTr[jj];
+                int rank = preprocessedF2.getPairRank(elem1, elem2);
+                if (rank >= 0) {
+                    ranks.add(rank);
+                }
+            }
+        }
+
+        ranks.sort(null);
+        return ranks.toArray(new Integer[ranks.size()]);
     }
 
     private List<List<T>> getNextSizeItemsetsByCross(
