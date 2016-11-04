@@ -1,15 +1,12 @@
 package org.openu.fimcmp;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
-import org.openu.fimcmp.util.ListComparator;
-import scala.Tuple2;
 
-import java.util.*;
+import java.util.ArrayList;
 
 /**
  * Basic class for all integration tests
@@ -19,7 +16,6 @@ public class AlgITBase {
     protected JavaSparkContext sc;
     protected StopWatch sw;
     protected BasicOps basicOps;
-    protected ListComparator<String> listComparator;
 
     protected static String tt(StopWatch sw) {
         return "[" + sw.toString() + "] ";
@@ -30,7 +26,6 @@ public class AlgITBase {
         sc = SparkContextFactory.createLocalSparkContext();
         sw = new StopWatch();
         basicOps = new BasicOps();
-        listComparator = new ListComparator<>();
     }
 
     protected PrepStepOutput prepare(String inputFileName, double minSupport, boolean isPersist) {
@@ -63,33 +58,6 @@ public class AlgITBase {
         pp("Min support: " + minSuppCount);
 
         return new PrepStepOutputNew(trs, totalTrs, minSuppCount);
-    }
-
-    protected void exploreF1(JavaPairRDD<String, Integer> f1AsRdd) {
-        SortedSet<String> f1AsSet = basicOps.fillCollectionFromRdd(new TreeSet<>(), f1AsRdd);
-        pp("F1 size = " + f1AsSet.size());
-        pp(f1AsSet);
-        JavaRDD<Tuple2<String, Integer>> sortedF1 = basicOps.sortedByFrequency(f1AsRdd, false);
-        List<Tuple2<String, Integer>> f1AsList = basicOps.fiRddAsList(sortedF1);
-        pp(f1AsList);
-    }
-
-    protected void exploreFk(JavaPairRDD<List<String>, Integer> fkAsRdd, Collection<List<String>> fk, int k) {
-        pp(String.format("F%s size = %s", k, fk.size()));
-        pp(new ArrayList<>(fk).subList(0, Math.min(fk.size(), 200)));
-        JavaRDD<Tuple2<List<String>, Integer>> sortedFk =
-                basicOps.sortedByFrequency(fkAsRdd, listComparator, false);
-        List<Tuple2<List<String>, Integer>> fkAsTupleList = basicOps.fiRddAsList(sortedFk);
-        pp(fkAsTupleList.subList(0, Math.min(fkAsTupleList.size(), 200)));
-    }
-
-    protected String laToString(List<Integer[]> listOfArrays, Integer optMaxArrays) {
-        int maxArrays = (optMaxArrays != null) ? Math.min(optMaxArrays, listOfArrays.size()) : listOfArrays.size();
-        List<String> outList = new ArrayList<>(maxArrays);
-        for (Integer[] arr : listOfArrays.subList(0, maxArrays)) {
-            outList.add(Arrays.toString(arr));
-        }
-        return outList.toString();
     }
 
     protected void pp(Object msg) {

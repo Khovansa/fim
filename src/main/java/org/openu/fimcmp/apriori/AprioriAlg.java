@@ -1,16 +1,17 @@
 package org.openu.fimcmp.apriori;
 
+import org.apache.spark.HashPartitioner;
+import org.apache.spark.api.java.JavaRDD;
 import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.util.IteratorOverArray;
-import org.openu.fimcmp.util.ListComparator;
-import org.apache.spark.HashPartitioner;
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import scala.Tuple2;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -19,19 +20,11 @@ import java.util.stream.Collectors;
 @SuppressWarnings("WeakerAccess")
 public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     private final long minSuppCount;
-    private final BasicOps basicOps;
-    private final AprCandidateFisGenerator<T> candidateFisGenerator;
-    private final ListComparator<T> listComparator;
+    private final AprCandidateFisGenerator candidateFisGenerator;
 
     public AprioriAlg(long minSuppCount) {
         this.minSuppCount = minSuppCount;
-        this.basicOps = new BasicOps();
-        this.candidateFisGenerator = new AprCandidateFisGenerator<>();
-        this.listComparator = new ListComparator<>();
-    }
-
-    public JavaPairRDD<T, Integer> computeF1(JavaRDD<? extends Collection<T>> trs) {
-        return basicOps.countAndFilterByMinSupport(trs, minSuppCount);
+        this.candidateFisGenerator = new AprCandidateFisGenerator();
     }
 
     /**
@@ -106,7 +99,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
             List<Integer[]> cols, Map<String, Integer> itemToRank, PreprocessedF2 preprocessedF2) {
         String[] rankToItem = BasicOps.getRankToItem(itemToRank);
 
-        List<FreqItemset<String>> res = new ArrayList<>((int)Math.pow(cols.size(), 3));
+        List<FreqItemset<String>> res = new ArrayList<>((int) Math.pow(cols.size(), 3));
         for (Integer[] col : cols) {
             List<Integer[]> itemAndPairRanks = candidateFisGenerator.f2ColToPairs(col);
             for (Integer[] itemAndPairRank : itemAndPairRanks) {
@@ -119,39 +112,6 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
             }
         }
 
-        return res;
-    }
-
-    public JavaRDD<Collection<List<T>>> computeCand2(JavaRDD<ArrayList<T>> trs) {
-        return trs.map(candidateFisGenerator::genTransactionC2s);
-    }
-
-    public JavaPairRDD<List<T>, Integer> countAndFilterByMinSupport(JavaRDD<Collection<List<T>>> trsAsCandidatesList) {
-        return basicOps.countAndFilterByMinSupport(trsAsCandidatesList, minSuppCount);
-    }
-
-    public JavaRDD<Collection<List<T>>> computeNextSizeCandidates(
-            JavaRDD<Collection<List<T>>> trsAsCandidatesOfSizeK, int k, Set<T> f1, Set<List<T>> oldFisOfSizeK) {
-        return trsAsCandidatesOfSizeK.map(
-                    tr -> candidateFisGenerator.getNextSizeCandItemsetsFromTransaction(tr, k, f1, oldFisOfSizeK));
-    }
-
-    public Collection<List<T>> toCollectionOfLists(JavaPairRDD<List<T>, Integer> rdd) {
-//        List<List<T>> res = new ArrayList<>(10000);
-//        basicOps.fillCollectionFromRdd(res, rdd);
-//        return res;
-        return rdd.map(Tuple2::_1).collect();
-    }
-
-    public Set<T> getUpdatedF1(Set<T> f1, Collection<? extends Collection<T>> kFIs) {
-        Set<T> res = new HashSet<>(f1.size());
-        for (Collection<T> fi : kFIs) {
-            for (T item : fi) {
-                if (f1.contains(item)) {
-                    res.add(item);
-                }
-            }
-        }
         return res;
     }
 }
