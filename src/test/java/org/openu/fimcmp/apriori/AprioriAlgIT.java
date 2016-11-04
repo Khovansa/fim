@@ -3,9 +3,7 @@ package org.openu.fimcmp.apriori;
 import org.apache.commons.lang3.StringUtils;
 import org.openu.fimcmp.AlgITBase;
 import org.openu.fimcmp.BasicOps;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,10 +23,10 @@ public class AprioriAlgIT extends AlgITBase {
     }
 
     @Test
-    public void testNew() throws Exception {
-        final PrepStepOutputNew prep = prepareNew("pumsb.dat", 0.8, false);
+    public void test() throws Exception {
+        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.8, false);
         apr = new AprioriAlg<>(prep.minSuppCount);
-        List<String> sortedF1 = apr.computeF1New(prep.trs);
+        List<String> sortedF1 = apr.computeF1(prep.trs);
         pp("F1 size = " + sortedF1.size());
         pp(sortedF1);
         Map<String, Integer> itemToRank = BasicOps.itemToRank(sortedF1);
@@ -39,20 +37,20 @@ public class AprioriAlgIT extends AlgITBase {
         filteredTrs = filteredTrs.persist(StorageLevel.MEMORY_ONLY_SER());
         pp("filtered and saved");
 
-        List<Integer[]> f2AsArrays = apr.computeF2New(filteredTrs);
+        List<Integer[]> f2AsArrays = apr.computeF2(filteredTrs);
         pp("F2 as arrays size: "+f2AsArrays.size());
         List<Integer[]> f2 = apr.f2AsArraysToRankPairs(f2AsArrays);
-        List<FreqItemset<String>> f2Res = apr.f2AsArraysToPairs(f2AsArrays, itemToRank);
         pp("F2 size: "+f2.size());
+//        List<FreqItemset<String>> f2Res = apr.f2AsArraysToPairs(f2AsArrays, itemToRank);
 //        pp("F2: "+StringUtils.join(f2Res.subList(0, Math.min(100, f2Res.size())), "\n"));
 
         PreprocessedF2 preprocessedF2 = PreprocessedF2.construct(f2, sortedF1.size());
 //        pp("zzz");
-//        List<Integer[]> f3AsArrays = apr.computeF3New(filteredTrs, preprocessedF2);
+//        List<Integer[]> f3AsArrays = apr.computeF3(filteredTrs, preprocessedF2);
         JavaRDD<Tuple2<Integer[], Integer[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
         ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
         pp("zzz");
-        List<Integer[]> f3AsArrays = apr.computeF3New(ranks1And2, preprocessedF2);
+        List<Integer[]> f3AsArrays = apr.computeF3(ranks1And2, preprocessedF2);
         pp("F3 as arrays size: "+f3AsArrays.size());
         List<FreqItemset<String>> f3 = apr.f3AsArraysToTriplets(f3AsArrays, itemToRank, preprocessedF2);
         pp("F3 size: "+f3.size());

@@ -17,22 +17,22 @@ public class BasicOps implements Serializable {
     public BasicOps() {
     }
 
-    public JavaRDD<ArrayList<String>> readLinesAsSortedItems(String inputFile, JavaSparkContext sc) {
+    public JavaRDD<ArrayList<String>> readLinesAsSortedItemsList(String inputFile, JavaSparkContext sc) {
         JavaRDD<String> lines = sc.textFile(inputFile);
-        return linesAsSortedItems(lines);
+        return linesAsSortedItemsList(lines);
     }
 
-    public JavaRDD<String[]> readLinesAsSortedItemsNew(String inputFile, JavaSparkContext sc) {
+    public JavaRDD<String[]> readLinesAsSortedItemsArr(String inputFile, JavaSparkContext sc) {
         JavaRDD<String> lines = sc.textFile(inputFile);
-        return linesAsSortedItemsNew(lines);
+        return linesAsSortedItemsArr(lines);
     }
 
-    public JavaRDD<ArrayList<String>> linesAsSortedItems(JavaRDD<String> lines) {
+    public JavaRDD<ArrayList<String>> linesAsSortedItemsList(JavaRDD<String> lines) {
         return lines.map(BasicOps::splitLineToSortedList);
     }
 
-    public JavaRDD<String[]> linesAsSortedItemsNew(JavaRDD<String> lines) {
-        return lines.map(BasicOps::splitLineToSortedListNew);
+    public JavaRDD<String[]> linesAsSortedItemsArr(JavaRDD<String> lines) {
+        return lines.map(BasicOps::splitLineToSortedArr);
     }
 
     public static <T> Map<T, Integer> itemToRank(List<T> f1) {
@@ -63,22 +63,6 @@ public class BasicOps implements Serializable {
         }
 
         Arrays.sort(res); //smaller rank means more frequent
-        return res;
-    }
-
-
-    public static <V> ArrayList<V> withoutInfrequent(Collection<V> tr, Set<V> frequent) {
-        if (tr.isEmpty() || frequent.isEmpty()) {
-            return new ArrayList<>(0);
-        }
-
-        ArrayList<V> res = new ArrayList<>(tr.size());
-        for (V item : tr) {
-            if (frequent.contains(item)) {
-                res.add(item);
-            }
-        }
-        res.trimToSize();
         return res;
     }
 
@@ -124,20 +108,12 @@ public class BasicOps implements Serializable {
     }
 
     static ArrayList<String> splitLineToSortedList(String line) {
-        String[] items = line.split(" ");
-        SortedSet<String> res = new TreeSet<>();
-        for (String item : items) {
-            res.add(item.trim());
-        }
+        SortedSet<String> res = splitLineToSortedSet(line);
         return new ArrayList<>(res);
     }
 
-    static String[] splitLineToSortedListNew(String line) {
-        String[] items = line.split(" ");
-        SortedSet<String> res = new TreeSet<>();
-        for (String item : items) {
-            res.add(item.trim());
-        }
+    static String[] splitLineToSortedArr(String line) {
+        SortedSet<String> res = splitLineToSortedSet(line);
 
         String[] resArr = new String[res.size()];
         int ii=0;
@@ -145,5 +121,14 @@ public class BasicOps implements Serializable {
             resArr[ii++] = item;
         }
         return resArr;
+    }
+
+    private static SortedSet<String> splitLineToSortedSet(String line) {
+        String[] items = line.split(" ");
+        SortedSet<String> res = new TreeSet<>();
+        for (String item : items) {
+            res.add(item.trim());
+        }
+        return res;
     }
 }

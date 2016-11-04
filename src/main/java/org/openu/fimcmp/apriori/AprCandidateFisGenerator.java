@@ -28,7 +28,7 @@ public class AprCandidateFisGenerator implements Serializable {
      * E.g. [3, 6, 1, 9, 1] stands for {((3, 6), 1), ((3, 9), 1)}.
      */
     //TODO: add partitioner
-    Integer[][] genTransactionC2sNew(Integer[] sortedTr) {
+    Integer[][] genTransactionC2s(Integer[] sortedTr) {
         final int trSize = sortedTr.length;
         if (trSize <= 1) {
             return EMPTY_COLS;
@@ -50,14 +50,15 @@ public class AprCandidateFisGenerator implements Serializable {
     }
 
     /**
-     * Return the same structure as {@link #genTransactionC2sNew}, but for triplets and potentially larger itemsets. <br/>
+     * Return the same structure as {@link #genTransactionC2s}, but for triplets and potentially larger itemsets. <br/>
      * Store a pair rank (integer) instead of a pair as a second element. <br/>
      * In other words, triplets are represented as pairs (elem1, pairRank) and then
-     * group these pairs as described in {@link #genTransactionC2sNew}.
+     * group these pairs as described in {@link #genTransactionC2s}.
      */
     //TODO: add partitioner
-    Integer[][] genNextSizeCandsNew_ByItems(int currItemsetSize,
-                                            Tuple2<Integer[], Integer[]> itemsAndCurrItemsets, NextSizeItemsetGenHelper genHelper) {
+    Integer[][] genNextSizeCands_ByItems(
+            int currItemsetSize, Tuple2<Integer[], Integer[]> itemsAndCurrItemsets,
+            NextSizeItemsetGenHelper genHelper) {
         Integer[] sortedTr = itemsAndCurrItemsets._1;
         Integer[] currItemsets = itemsAndCurrItemsets._2;
         final int trSize = sortedTr.length;
@@ -95,7 +96,7 @@ public class AprCandidateFisGenerator implements Serializable {
     }
 
     /**
-     * See {@link #genTransactionC2sNew(Integer[])} for the column structure
+     * See {@link #genTransactionC2s(Integer[])} for the column structure
      */
     private Integer[] createColumn(Integer elem1, List<Integer> elem2s) {
         int elem2sCnt = elem2s.size();
@@ -121,7 +122,7 @@ public class AprCandidateFisGenerator implements Serializable {
     }
 
     /**
-     * See {@link #genTransactionC2sNew} for columns structure. <br/>
+     * See {@link #genTransactionC2s} for columns structure. <br/>
      * E.g. {0, 3, 1, 6, 1, 9, 1}. <br/>
      * That is, after the first item, we use a kind of linked list (2nd item, count),
      * i.e. a sparse representation of a map: item -> count.
@@ -148,7 +149,7 @@ public class AprCandidateFisGenerator implements Serializable {
 
     /**
      * Filter C2's by min support. <br/>
-     * See {@link #genTransactionC2sNew} for the column structure. <br/>
+     * See {@link #genTransactionC2s} for the column structure. <br/>
      * E.g. {0, 3, 1, 6, 1, 9, 1}. <br/>
      */
     Integer[] getC2sFilteredByMinSupport(Integer[] col, long minSuppCount) {
@@ -278,5 +279,4 @@ public class AprCandidateFisGenerator implements Serializable {
         ranks.sort(null);
         return ranks.toArray(new Integer[ranks.size()]);
     }
-
 }

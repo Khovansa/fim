@@ -41,7 +41,7 @@ public class HelloSparkTest {
         JavaRDD<String> lines = sc.textFile(inputFile);
 
         BasicOps basicOps = new BasicOps();
-        JavaRDD<ArrayList<String>> trs = basicOps.linesAsSortedItems(lines).persist(StorageLevel.MEMORY_ONLY());
+        JavaRDD<ArrayList<String>> trs = basicOps.linesAsSortedItemsList(lines).persist(StorageLevel.MEMORY_ONLY());
         final long totalTrs = trs.count();
         System.out.println(String.format("%-20s %s", "Transactions count:", totalTrs));
         final long minSuppCount = BasicOps.minSuppCount(totalTrs, minSupport);

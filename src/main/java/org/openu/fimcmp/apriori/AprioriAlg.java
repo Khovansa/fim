@@ -30,7 +30,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     /**
      * @return frequent items sorted by decreasing frequency
      */
-    public List<T> computeF1New(JavaRDD<T[]> data) {
+    public List<T> computeF1(JavaRDD<T[]> data) {
         int numParts = data.getNumPartitions();
         HashPartitioner partitioner = new HashPartitioner(numParts);
         List<Tuple2<T, Long>> res = data.flatMap(IteratorOverArray::new)
@@ -43,9 +43,9 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .map(t -> t._1).collect(Collectors.toList());
     }
 
-    public List<Integer[]> computeF2New(JavaRDD<Integer[]> filteredTrs) {
+    public List<Integer[]> computeF2(JavaRDD<Integer[]> filteredTrs) {
         return filteredTrs
-                .flatMap(tr -> new IteratorOverArray<>(candidateFisGenerator.genTransactionC2sNew(tr)))
+                .flatMap(tr -> new IteratorOverArray<>(candidateFisGenerator.genTransactionC2s(tr)))
                 .mapToPair(col -> new Tuple2<>(col[0], col))
                 .foldByKey(new Integer[]{}, candidateFisGenerator::mergeC2Columns)
                 .mapValues(col -> candidateFisGenerator.getC2sFilteredByMinSupport(col, minSuppCount))
@@ -59,11 +59,11 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return filteredTrs.map(tr -> candidateFisGenerator.toSortedRanks1And2(tr, preprocessedF2));
     }
 
-    public List<Integer[]> computeF3New(
+    public List<Integer[]> computeF3(
             JavaRDD<Tuple2<Integer[], Integer[]>> ranks1And2, NextSizeItemsetGenHelper genHelper) {
         return ranks1And2
                 .flatMap(tr -> new IteratorOverArray<>(
-                        candidateFisGenerator.genNextSizeCandsNew_ByItems(2, tr, genHelper)))
+                        candidateFisGenerator.genNextSizeCands_ByItems(2, tr, genHelper)))
                 .mapToPair(col -> new Tuple2<>(col[0], col))
                 .foldByKey(new Integer[]{}, candidateFisGenerator::mergeC2Columns)
                 .mapValues(col -> candidateFisGenerator.getC2sFilteredByMinSupport(col, minSuppCount))

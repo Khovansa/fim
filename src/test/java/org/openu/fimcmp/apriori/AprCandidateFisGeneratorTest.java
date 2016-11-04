@@ -96,7 +96,7 @@ public class AprCandidateFisGeneratorTest {
     @Test
     public void genTransactionC2sNew() throws Exception {
         Integer[] transaction = {0, 3, 6, 9};
-        Integer[][] c2 = gen.genTransactionC2sNew(transaction);
+        Integer[][] c2 = gen.genTransactionC2s(transaction);
 
         Integer[][] expC2 = {
                 {0, 3, 1, 6, 1, 9, 1},

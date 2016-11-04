@@ -28,65 +28,69 @@ public class AlgITBase {
         basicOps = new BasicOps();
     }
 
-    protected PrepStepOutput prepare(String inputFileName, double minSupport, boolean isPersist) {
+    protected PrepStepOutputAsList prepareAsList(String inputFileName, double minSupport, boolean isPersist) {
         String inputFile = TestDataLocation.fileStr(inputFileName);
 
         sw.start();
-        JavaRDD<ArrayList<String>> trs = basicOps.readLinesAsSortedItems(inputFile, sc);
+        JavaRDD<ArrayList<String>> trs = basicOps.readLinesAsSortedItemsList(inputFile, sc);
         if (isPersist) {
             trs = trs.persist(StorageLevel.MEMORY_ONLY_SER());
         }
-        final long totalTrs = trs.count();
-        final long minSuppCount = BasicOps.minSuppCount(totalTrs, minSupport);
-        pp("Total records: " + totalTrs);
-        pp("Min support: " + minSuppCount);
-
-        return new PrepStepOutput(trs, totalTrs, minSuppCount);
+        UsefulCounts cnts = getCounts(trs, minSupport);
+        return new PrepStepOutputAsList(trs, cnts.totalTrs, cnts.minSuppCount);
     }
 
-    protected PrepStepOutputNew prepareNew(String inputFileName, double minSupport, boolean isPersist) {
+    protected PrepStepOutputAsArr prepareAsArr(String inputFileName, double minSupport, boolean isPersist) {
         String inputFile = TestDataLocation.fileStr(inputFileName);
 
         sw.start();
-        JavaRDD<String[]> trs = basicOps.readLinesAsSortedItemsNew(inputFile, sc);
+        JavaRDD<String[]> trs = basicOps.readLinesAsSortedItemsArr(inputFile, sc);
         if (isPersist) {
             trs = trs.persist(StorageLevel.MEMORY_ONLY_SER());
         }
+        UsefulCounts cnts = getCounts(trs, minSupport);
+        return new PrepStepOutputAsArr(trs, cnts.totalTrs, cnts.minSuppCount);
+    }
+
+    private <T> UsefulCounts getCounts(JavaRDD<T> trs, double minSupport) {
         final long totalTrs = trs.count();
         final long minSuppCount = BasicOps.minSuppCount(totalTrs, minSupport);
         pp("Total records: " + totalTrs);
         pp("Min support: " + minSuppCount);
-
-        return new PrepStepOutputNew(trs, totalTrs, minSuppCount);
+        return new UsefulCounts(totalTrs, minSuppCount);
     }
 
     protected void pp(Object msg) {
         System.out.println(String.format("%-15s %s", tt(sw), msg));
     }
 
-    protected static class PrepStepOutput {
-        public final JavaRDD<ArrayList<String>> trs;
+    private static class UsefulCounts {
         public final long totalTrs;
         public final long minSuppCount;
 
-        public PrepStepOutput(
-                JavaRDD<ArrayList<String>> trs, long totalTrs, long minSuppCount) {
-            this.trs = trs;
+        UsefulCounts(long totalTrs, long minSuppCount) {
             this.totalTrs = totalTrs;
             this.minSuppCount = minSuppCount;
         }
     }
 
-    protected static class PrepStepOutputNew {
-        public final JavaRDD<String[]> trs;
-        public final long totalTrs;
-        public final long minSuppCount;
+    protected static class PrepStepOutputAsList extends UsefulCounts {
+        public final JavaRDD<ArrayList<String>> trs;
 
-        public PrepStepOutputNew(
-                JavaRDD<String[]> trs, long totalTrs, long minSuppCount) {
+        public PrepStepOutputAsList(
+                JavaRDD<ArrayList<String>> trs, long totalTrs, long minSuppCount) {
+            super(totalTrs, minSuppCount);
             this.trs = trs;
-            this.totalTrs = totalTrs;
-            this.minSuppCount = minSuppCount;
+        }
+    }
+
+    protected static class PrepStepOutputAsArr extends UsefulCounts {
+        public final JavaRDD<String[]> trs;
+
+        public PrepStepOutputAsArr(
+                JavaRDD<String[]> trs, long totalTrs, long minSuppCount) {
+            super(totalTrs, minSuppCount);
+            this.trs = trs;
         }
     }
 }
