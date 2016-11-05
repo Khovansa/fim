@@ -21,6 +21,10 @@ public class PairRanks implements Serializable {
         return new PairRanks(rankToPair, pairToRank);
     }
 
+    boolean existsPair(int elem1, int elem2) {
+        return pairToRank[elem1][elem2] >= 0;
+    }
+
     private static int[][] constructPairRankToPair(List<int[]> sortedPairs) {
         final int arrSize = sortedPairs.size();
         int[][] res = new int[arrSize][];
