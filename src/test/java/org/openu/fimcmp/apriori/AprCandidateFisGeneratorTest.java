@@ -11,11 +11,11 @@ import static org.junit.Assert.assertTrue;
 
 public class AprCandidateFisGeneratorTest {
     //    private static final Random RAND = new Random(10L);
-    private AprCandidateFisGenerator2 gen;
+    private AprCandidateFisGenerator gen;
 
     @Before
     public void setUp() throws Exception {
-        gen = new AprCandidateFisGenerator2();
+        gen = new AprCandidateFisGenerator();
     }
 
 //    @Test

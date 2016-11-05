@@ -18,13 +18,13 @@ import java.util.stream.Collectors;
  * The main class that implements Apriori algorithm.
  */
 @SuppressWarnings("WeakerAccess")
-public class AprioriAlg2<T extends Comparable<T>> implements Serializable {
+public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     private final long minSuppCount;
-    private final AprCandidateFisGenerator2 candidateFisGenerator;
+    private final AprCandidateFisGenerator candidateFisGenerator;
 
-    public AprioriAlg2(long minSuppCount) {
+    public AprioriAlg(long minSuppCount) {
         this.minSuppCount = minSuppCount;
-        this.candidateFisGenerator = new AprCandidateFisGenerator2();
+        this.candidateFisGenerator = new AprCandidateFisGenerator();
     }
 
     /**

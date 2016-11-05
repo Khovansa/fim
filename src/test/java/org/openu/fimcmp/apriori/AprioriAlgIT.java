@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class AprioriAlg2IT extends AlgITBase {
+public class AprioriAlgIT extends AlgITBase {
     @SuppressWarnings("FieldCanBeLocal")
-    private AprioriAlg2<String> apr;
+    private AprioriAlg<String> apr;
 
     @Before
     public void setUp() throws Exception {
@@ -26,7 +26,7 @@ public class AprioriAlg2IT extends AlgITBase {
     @Test
     public void test() throws Exception {
         final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.8, false);
-        apr = new AprioriAlg2<>(prep.minSuppCount);
+        apr = new AprioriAlg<>(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
         pp("F1 size = " + sortedF1.size());
         pp(sortedF1);

@@ -13,7 +13,7 @@ import java.util.List;
  * Generate candidate itemsets of size i+1 from frequent itemsets of size i. <br/>
  * Necessary for next step Apriori.
  */
-public class AprCandidateFisGenerator2 implements Serializable {
+public class AprCandidateFisGenerator implements Serializable {
     private static final int[] EMPTY_COL = {};
     private static final int[] EMPTY_COL_0 = {0};
     private static final int[][] EMPTY_COLS = {};
