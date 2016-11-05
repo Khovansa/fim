@@ -41,10 +41,11 @@ public class AprioriAlgIT extends AlgITBase {
 
         List<int[]> f2AsArrays = apr.computeF2(filteredTrs);
         pp("F2 as arrays size: "+f2AsArrays.size());
-        List<int[]> f2 = apr.f2AsArraysToRankPairs(f2AsArrays);
+        List<int[]> f2 = apr.fkAsArraysToRankPairs(f2AsArrays);
         pp("F2 size: "+f2.size());
-//        List<FreqItemset<String>> f2Res = apr.f2AsArraysToPairs(f2AsArrays, itemToRank);
-//        pp("F2: "+StringUtils.join(f2Res.subList(0, Math.min(100, f2Res.size())), "\n"));
+        List<FreqItemset<String>> f2Res = apr.fkAsArraysToResItemsets(f2AsArrays, itemToRank);
+        f2Res = f2Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
+        pp("F2: "+StringUtils.join(f2Res.subList(0, Math.min(3, f2Res.size())), "\n"));
 
         PairRanks f2Ranks = CurrSizeFiRanks.constructF2Ranks(f2, totalFreqItems);
         CurrSizeFiRanks preprocessedF2 = CurrSizeFiRanks.construct(f2, totalFreqItems, totalFreqItems, f2Ranks);
@@ -55,9 +56,13 @@ public class AprioriAlgIT extends AlgITBase {
         pp("zzz");
         List<int[]> f3AsArrays = apr.computeF3(ranks1And2, preprocessedF2);
         pp("F3 as arrays size: "+f3AsArrays.size());
-        List<FreqItemset<String>> f3 = apr.f3AsArraysToTriplets(f3AsArrays, itemToRank, preprocessedF2);
+        List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays);
         pp("F3 size: "+f3.size());
-        f3 = f3.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
-        pp("F3: " + StringUtils.join(f3.subList(0, Math.min(3, f3.size())), "\n"));
+        List<FreqItemset<String>> f3Res = apr.fkAsArraysToResItemsets(f3AsArrays, itemToRank, preprocessedF2);
+        f3Res = f3Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
+        pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(3, f3Res.size())), "\n"));
+
+        CurrSizeFiRanks preprocessedF3 = CurrSizeFiRanks.construct(f3, totalFreqItems, f2.size(), f2Ranks);
+
     }
 }

@@ -192,7 +192,7 @@ public class AprCandidateFisGeneratorTest {
     public void f2ColToPairs_normal() throws Exception {
         int[] col = {0, 3, 1, 6, 3, 9, 2};
 
-        int[][] pairs = gen.f2ColToPairs(col).toArray(new int[][]{});
+        int[][] pairs = gen.fkColToPairs(col).toArray(new int[][]{});
 
         int[][] expPairs = {{0, 3, 1}, {0, 6, 3}, {0, 9, 2}};
         assertTrue(Arrays.deepToString(pairs), Arrays.deepEquals(expPairs, pairs));
@@ -202,7 +202,7 @@ public class AprCandidateFisGeneratorTest {
     public void f2ColToPairs_singleElem() throws Exception {
         int[] col = {0};
 
-        int[][] pairs = gen.f2ColToPairs(col).toArray(new int[][]{});
+        int[][] pairs = gen.fkColToPairs(col).toArray(new int[][]{});
 
         int[][] expPairs = {};
         assertTrue(Arrays.deepToString(pairs), Arrays.deepEquals(expPairs, pairs));
@@ -212,7 +212,7 @@ public class AprCandidateFisGeneratorTest {
     public void f2ColToPairs_empty() throws Exception {
         int[] col = {};
 
-        int[][] pairs = gen.f2ColToPairs(col).toArray(new int[][]{});
+        int[][] pairs = gen.fkColToPairs(col).toArray(new int[][]{});
 
         int[][] expPairs = {};
         assertTrue(Arrays.deepToString(pairs), Arrays.deepEquals(expPairs, pairs));

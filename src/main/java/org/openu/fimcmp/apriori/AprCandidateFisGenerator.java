@@ -181,7 +181,7 @@ public class AprCandidateFisGenerator implements Serializable {
         return res;
     }
 
-    List<int[]> f2ColToPairs(int[] col) {
+    List<int[]> fkColToPairs(int[] col) {
         if (col.length <= 1) {
             return Collections.emptyList();
         }

@@ -9,7 +9,6 @@ import scala.Tuple2;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -72,43 +71,37 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .collect();
     }
 
-    public List<int[]> f2AsArraysToRankPairs(List<int[]> cols) {
+    public List<int[]> fkAsArraysToRankPairs(List<int[]> cols) {
         List<int[]> res = new ArrayList<>(cols.size() * cols.size());
         for (int[] col : cols) {
-            res.addAll(candidateFisGenerator.f2ColToPairs(col));
+            res.addAll(candidateFisGenerator.fkColToPairs(col));
         }
         return res;
     }
 
-    public List<FreqItemset<String>> f2AsArraysToPairs(
-            List<int[]> cols, Map<String, Integer> itemToRank) {
-        String[] rankToItem = BasicOps.getRankToItem(itemToRank);
-        List<FreqItemset<String>> res = new ArrayList<>(cols.size() * cols.size());
-        for (int[] col : cols) {
-            List<int[]> pairs = candidateFisGenerator.f2ColToPairs(col);
-            for (int[] pair : pairs) {
-                String elem1 = rankToItem[pair[0]];
-                String elem2 = rankToItem[pair[1]];
-                res.add(new FreqItemset<>(Arrays.asList(elem1, elem2), pair[2]));
-            }
-        }
-        return res;
-    }
-
-    public List<FreqItemset<String>> f3AsArraysToTriplets(
-            List<int[]> cols, Map<String, Integer> itemToRank, CurrSizeFiRanks preprocessedF2) {
+    public List<FreqItemset<String>> fkAsArraysToResItemsets(
+            List<int[]> cols, Map<String, Integer> itemToRank, CurrSizeFiRanks... fkToF2RanksArr) {
         String[] rankToItem = BasicOps.getRankToItem(itemToRank);
 
         List<FreqItemset<String>> res = new ArrayList<>((int) Math.pow(cols.size(), 3));
         for (int[] col : cols) {
-            List<int[]> itemAndPairRanks = candidateFisGenerator.f2ColToPairs(col);
+            List<int[]> itemAndPairRanks = candidateFisGenerator.fkColToPairs(col);
             for (int[] itemAndPairRank : itemAndPairRanks) {
-                String elem1 = rankToItem[itemAndPairRank[0]];
-                int[] pair = preprocessedF2.getCurrSizeFiAsPairByRank(itemAndPairRank[1]);
-                String elem2 = rankToItem[pair[0]];
-                String elem3 = rankToItem[pair[1]];
-                int freq = itemAndPairRank[2];
-                res.add(new FreqItemset<>(Arrays.asList(elem1, elem2, elem3), freq));
+                ArrayList<String> resItemset = new ArrayList<>();
+                final int freq = itemAndPairRank[2];
+                resItemset.add(rankToItem[itemAndPairRank[0]]);
+
+                //currRank is a rank of (k-1)-FI, which in case of k=2 means an item rank
+                int currRank = itemAndPairRank[1];
+                for (CurrSizeFiRanks fiRanks : fkToF2RanksArr) {
+                    int[] pair = fiRanks.getCurrSizeFiAsPairByRank(currRank);
+                    resItemset.add(rankToItem[pair[0]]); //the first element of a pair is always an item
+                    currRank = pair[1]; //(i-1)-FI rank
+                }
+                resItemset.add(rankToItem[currRank]);
+
+                resItemset.trimToSize();
+                res.add(new FreqItemset<>(resItemset, freq));
             }
         }
 
