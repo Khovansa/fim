@@ -32,10 +32,10 @@ public class FpGrowthStdIT extends AlgITBase {
         List<FPGrowth.FreqItemset<String>> resAsList = model.freqItemsets().toJavaRDD().collect();
         pp("Total results: "+resAsList.size());
         List<FPGrowth.FreqItemset<String>> f3s = resAsList.stream()
-                .filter(fi -> fi.javaItems().size() == 3)
+                .filter(fi -> fi.javaItems().size() == 4)
                 .sorted((fi1, fi2) -> Long.compare(fi2.freq(), fi1.freq()))
                 .collect(Collectors.toList());
-        pp("F3 size: "+f3s.size());
+        pp("F4 size: "+f3s.size());
         for (FPGrowth.FreqItemset<String> itemset : f3s.subList(0, Math.min(100, f3s.size()))) {
             System.out.println("[" + itemset.javaItems() + "], " + itemset.freq());
         }

@@ -58,11 +58,16 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return filteredTrs.map(tr -> candidateFisGenerator.toSortedRanks1And2(tr, preprocessedF2));
     }
 
-    public List<int[]> computeF3(
-            JavaRDD<Tuple2<int[], int[]>> ranks1And2, NextSizeItemsetGenHelper genHelper) {
-        return ranks1And2
+    public JavaRDD<Tuple2<int[], int[]>> toRddOfRanks1AndK(
+            JavaRDD<Tuple2<int[], int[]>> ranks1AndKm1, CurrSizeFiRanks preprocessedF2) {
+        return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK(row._1, row._2, preprocessedF2));
+    }
+
+    public List<int[]> computeFk(
+            int k, JavaRDD<Tuple2<int[], int[]>> ranks1AndKm1, NextSizeItemsetGenHelper genHelper) {
+        return ranks1AndKm1
                 .flatMap(tr -> new IteratorOverArray<>(
-                        candidateFisGenerator.genNextSizeCands_ByItems(2, tr, genHelper)))
+                        candidateFisGenerator.genNextSizeCands_ByItems(k-1, tr, genHelper)))
                 .mapToPair(col -> new Tuple2<>(col[0], col))
                 .foldByKey(new int[]{}, candidateFisGenerator::mergeC2Columns)
                 .mapValues(col -> candidateFisGenerator.getC2sFilteredByMinSupport(col, minSuppCount))

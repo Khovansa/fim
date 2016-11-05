@@ -50,11 +50,11 @@ public class AprioriAlgIT extends AlgITBase {
         PairRanks f2Ranks = CurrSizeFiRanks.constructF2Ranks(f2, totalFreqItems);
         CurrSizeFiRanks preprocessedF2 = CurrSizeFiRanks.construct(f2, totalFreqItems, totalFreqItems, f2Ranks);
 //        pp("zzz");
-//        List<Integer[]> f3AsArrays = apr.computeF3(filteredTrs, preprocessedF2);
+//        List<Integer[]> f3AsArrays = apr.computeFk(filteredTrs, preprocessedF2);
         JavaRDD<Tuple2<int[], int[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
         ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
         pp("zzz");
-        List<int[]> f3AsArrays = apr.computeF3(ranks1And2, preprocessedF2);
+        List<int[]> f3AsArrays = apr.computeFk(3, ranks1And2, preprocessedF2);
         pp("F3 as arrays size: "+f3AsArrays.size());
         List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays);
         pp("F3 size: "+f3.size());
@@ -63,6 +63,15 @@ public class AprioriAlgIT extends AlgITBase {
         pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(3, f3Res.size())), "\n"));
 
         CurrSizeFiRanks preprocessedF3 = CurrSizeFiRanks.construct(f3, totalFreqItems, f2.size(), f2Ranks);
+        JavaRDD<Tuple2<int[], int[]>> ranks1And3 = apr.toRddOfRanks1AndK(ranks1And2, preprocessedF3);
+        pp("zzz");
+        List<int[]> f4AsArrays = apr.computeFk(4, ranks1And3, preprocessedF3);
+        pp("F4 as arrays size: "+f4AsArrays.size());
+        List<int[]> f4 = apr.fkAsArraysToRankPairs(f4AsArrays);
+        pp("F4 size: "+f4.size());
+        List<FreqItemset<String>> f4Res = apr.fkAsArraysToResItemsets(f4AsArrays, itemToRank, preprocessedF3, preprocessedF2);
+        f4Res = f4Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
+        pp("F4: " + StringUtils.join(f4Res.subList(0, Math.min(3, f4Res.size())), "\n"));
 
     }
 }

@@ -53,10 +53,10 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
     }
 
     /**
-     * See {@link #construct} for definition of elem1 and elem2
+     * See {@link #construct} for definition of rank1 and rankKm1 (elem1 and elem2)
      */
-    int getCurrSizeFiRank(int elem1, int elem2) {
-        return currSizeRanks.pairToRank[elem1][elem2];
+    int getCurrSizeFiRankByPair(int rank1, int rankKm1) {
+        return currSizeRanks.pairToRank[rank1][rankKm1];
     }
 
     private static List<int[]> getSortedByDecreasingFreq(List<int[]> currSizeFisAsPairs) {

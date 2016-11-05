@@ -116,9 +116,14 @@ public class AprCandidateFisGenerator implements Serializable {
         return resCol;
     }
 
-    Tuple2<int[], int[]> toSortedRanks1And2(int[] sortedTr, CurrSizeFiRanks preprocessedF2) {
-        int[] ranks2 = computeSortedRanks2(sortedTr, preprocessedF2);
+    Tuple2<int[], int[]> toSortedRanks1And2(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
+        int[] ranks2 = computeSortedRanks2(sortedTr, f2RanksHelper);
         return new Tuple2<>(sortedTr, ranks2);
+    }
+
+    Tuple2<int[], int[]> toSortedRanks1AndK(int[] sortedTr, int[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
+        int[] ranksK = computeSortedRanksK(sortedTr, sortedRanksKm1, fkRanksHelper);
+        return new Tuple2<>(sortedTr, ranksK);
     }
 
     /**
@@ -261,7 +266,7 @@ public class AprCandidateFisGenerator implements Serializable {
         }
     }
 
-    private int[] computeSortedRanks2(int[] sortedTr, CurrSizeFiRanks preprocessedF2) {
+    private int[] computeSortedRanks2(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
         final int arrSize = sortedTr.length - 1;
         int[] ranks = new int[arrSize * (arrSize - 1) / 2];
         //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem:
@@ -270,7 +275,7 @@ public class AprCandidateFisGenerator implements Serializable {
             int elem1 = sortedTr[ii];
             for (int jj = ii + 1; jj < sortedTr.length; ++jj) {
                 int elem2 = sortedTr[jj];
-                int rank = preprocessedF2.getCurrSizeFiRank(elem1, elem2);
+                int rank = f2RanksHelper.getCurrSizeFiRankByPair(elem1, elem2);
                 if (rank >= 0) {
                     ranks[resInd++] = rank;
                 }
@@ -280,4 +285,27 @@ public class AprCandidateFisGenerator implements Serializable {
         Arrays.sort(ranks, 0, resInd);
         return Arrays.copyOf(ranks, resInd);
     }
+
+    private int[] computeSortedRanksK(int[] sortedTr, int[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
+        final int elem1Cnt = sortedTr.length - 1;
+        final int elem2Cnt = sortedRanksKm1.length;
+        //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem in k-itemsets as pairs:
+        int[] resRanksK = new int[(elem1Cnt-1) * elem2Cnt];
+        int resInd=0;
+        for (int ii = 1; ii < elem1Cnt; ++ii) {
+            int elem1 = sortedTr[ii];
+            for (int jj = 0; jj < elem2Cnt; ++jj) {
+                int rankKm1 = sortedRanksKm1[jj];
+                int rankK = fkRanksHelper.getCurrSizeFiRankByPair(elem1, rankKm1);
+                if (rankK >= 0) {
+                    resRanksK[resInd++] = rankK;
+                }
+            }
+        }
+
+        Arrays.sort(resRanksK, 0, resInd);
+        return Arrays.copyOf(resRanksK, resInd);
+    }
+
+
 }
