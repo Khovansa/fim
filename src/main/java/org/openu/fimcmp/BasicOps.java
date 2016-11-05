@@ -65,6 +65,26 @@ public class BasicOps implements Serializable {
         Arrays.sort(res); //smaller rank means more frequent
         return res;
     }
+    public static <T> int[] getMappedFilteredAndSortedTrs2(T[] tr, Map<T, Integer> itemToRank) {
+        int resCnt = 0;
+        for (T item : tr) {
+            if (itemToRank.get(item) != null) {
+                ++resCnt;
+            }
+        }
+
+        int[] res = new int[resCnt];
+        int ii=0;
+        for (T item : tr) {
+            Integer rank = itemToRank.get(item);
+            if (rank != null) {
+                res[ii++] = rank;
+            }
+        }
+
+        Arrays.sort(res); //smaller rank means more frequent
+        return res;
+    }
 
     public static long minSuppCount(long totalTrs, double minSupp) {
         return (long)Math.ceil(totalTrs * minSupp);

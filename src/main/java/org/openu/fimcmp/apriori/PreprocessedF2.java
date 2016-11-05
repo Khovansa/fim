@@ -15,6 +15,14 @@ class PreprocessedF2 implements NextSizeItemsetGenHelper, Serializable {
     private final int[][] pairToRank;
     private final BoundedIntPairSet cand3; //(item, pair) -> is possible
 
+    static PreprocessedF2 construct2(List<int[]> f2, int totalFreqItems) {
+        List<Integer[]> f2Old = new ArrayList<>();
+        for (int[] ints : f2) {
+            f2Old.add(ArrayUtils.toObject(ints));
+        }
+        return construct(f2Old, totalFreqItems);
+    }
+
     static PreprocessedF2 construct(List<Integer[]> f2, int totalFreqItems) {
         List<Integer[]> sortedF2 = getSortedByDecreasingFreq(f2);
         int[][] rankToPair = constructPairRankToPair(sortedF2);
