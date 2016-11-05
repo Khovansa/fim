@@ -13,7 +13,6 @@ public class BoundedIntPairSet implements Serializable {
     private final int max2;
     private final int mult1;
     private final BitSet bitSet;
-    private int size;
 
     public BoundedIntPairSet(int maxElem1, int maxElem2) {
         Assert.isTrue(maxElem1>0 && maxElem2>0);

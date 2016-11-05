@@ -34,8 +34,8 @@ public class SparkContextFactory {
 
                 BasicOps.class,
                 HashSet.class, TreeSet.class, HashMap.class, ArrayList.class,
-                String.class, String[].class, Integer.class, Integer[].class, Integer[][].class, int[].class,
-                long[].class, int[].class, int[][].class, BitSet.class, BoundedIntPairSet.class,
+                String.class, String[].class, Integer.class, Integer[].class, Integer[][].class, Integer[][][].class,
+                long[].class, int[].class, int[][].class, int[][][].class, BitSet.class, BoundedIntPairSet.class,
                 Tuple2.class, Tuple2[].class,
                 new ArrayList<>().iterator().getClass(),
                 AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class,

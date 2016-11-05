@@ -15,25 +15,13 @@ class PreprocessedF2 implements NextSizeItemsetGenHelper, Serializable {
     private final int[][] pairToRank;
     private final BoundedIntPairSet cand3; //(item, pair) -> is possible
 
-    static PreprocessedF2 construct2(List<int[]> f2, int totalFreqItems) {
-        List<Integer[]> f2Old = new ArrayList<>();
-        for (int[] ints : f2) {
-            f2Old.add(ArrayUtils.toObject(ints));
-        }
-        return construct(f2Old, totalFreqItems);
-    }
-
-    static PreprocessedF2 construct(List<Integer[]> f2, int totalFreqItems) {
-        List<Integer[]> sortedF2 = getSortedByDecreasingFreq(f2);
+    static PreprocessedF2 construct(List<int[]> f2, int totalFreqItems) {
+        List<int[]> sortedF2 = getSortedByDecreasingFreq(f2);
         int[][] rankToPair = constructPairRankToPair(sortedF2);
         int[][] pairToRank = constructPairToRank(rankToPair, totalFreqItems);
         int[][] firstElemToPairRanks = constructFirstElemToPairRanks(sortedF2, totalFreqItems, pairToRank);
         BoundedIntPairSet cand3 = constructCand3(totalFreqItems, sortedF2, pairToRank, rankToPair, firstElemToPairRanks);
         return new PreprocessedF2(rankToPair, pairToRank, cand3);
-    }
-
-    public int size() {
-        return rankToPair.length;
     }
 
     @Override
@@ -56,18 +44,18 @@ class PreprocessedF2 implements NextSizeItemsetGenHelper, Serializable {
         this.cand3 = cand3;
     }
 
-    private static List<Integer[]> getSortedByDecreasingFreq(List<Integer[]> f2) {
-        ArrayList<Integer[]> res = new ArrayList<>(f2);
+    private static List<int[]> getSortedByDecreasingFreq(List<int[]> f2) {
+        ArrayList<int[]> res = new ArrayList<>(f2);
         Collections.sort(res, (o1, o2) -> Integer.compare(o2[2], o1[2]));
         return res;
     }
 
-    private static int[][] constructPairRankToPair(List<Integer[]> sortedF2) {
+    private static int[][] constructPairRankToPair(List<int[]> sortedF2) {
         final int arrSize = sortedF2.size();
         int[][] res = new int[arrSize][];
         int rank = 0;
-        for (Integer[] pair : sortedF2) {
-            res[rank++] = ArrayUtils.toPrimitive(pair);
+        for (int[] pair : sortedF2) {
+            res[rank++] = pair;
         }
         return res;
     }
@@ -92,17 +80,17 @@ class PreprocessedF2 implements NextSizeItemsetGenHelper, Serializable {
     }
 
     private static int[][] constructFirstElemToPairRanks(
-            List<Integer[]> sortedF2, int totalFreqItems, int[][] pairToRank) {
+            List<int[]> sortedF2, int totalFreqItems, int[][] pairToRank) {
         //compute it
         Map<Integer, List<Integer>> firstElemToPairRanks = new LinkedHashMap<>(totalFreqItems*2);
-        for (Integer[] pair : sortedF2) {
+        for (int[] pair : sortedF2) {
             int elem1 = pair[0];
             List<Integer> pairRanks = firstElemToPairRanks.get(elem1);
             if (pairRanks == null) {
                 pairRanks = new ArrayList<>(totalFreqItems);
                 firstElemToPairRanks.put(elem1, pairRanks);
             }
-            Integer elem2 = pair[1];
+            int elem2 = pair[1];
             pairRanks.add(pairToRank[elem1][elem2]);
         }
 
@@ -122,7 +110,7 @@ class PreprocessedF2 implements NextSizeItemsetGenHelper, Serializable {
      * Assuming the item ranks are [0, totalFreqItems) with 0 as the most frequent item. <br/>
      */
     private static BoundedIntPairSet constructCand3(
-            int totalFreqItems, List<Integer[]> f2, int[][] pairToRank, int[][] rankToPair,
+            int totalFreqItems, List<int[]> f2, int[][] pairToRank, int[][] rankToPair,
             int[][] firstElemToPairRanks) {
         BoundedIntPairSet res = new BoundedIntPairSet(totalFreqItems-1, f2.size()-1);
         for (int elem1=0; elem1<totalFreqItems; ++elem1) {

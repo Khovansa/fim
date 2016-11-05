@@ -34,7 +34,7 @@ public class AprioriAlgIT extends AlgITBase {
         //from now on, the items are [0, sortedF1.size), 0 denotes the most frequent item
 
         //TODO: keep the partition of the transaction!
-        JavaRDD<int[]> filteredTrs = prep.trs.map(t -> BasicOps.getMappedFilteredAndSortedTrs2(t, itemToRank));
+        JavaRDD<int[]> filteredTrs = prep.trs.map(t -> BasicOps.getMappedFilteredAndSortedTrs(t, itemToRank));
         filteredTrs = filteredTrs.persist(StorageLevel.MEMORY_ONLY_SER());
         pp("filtered and saved");
 
@@ -45,7 +45,7 @@ public class AprioriAlgIT extends AlgITBase {
 //        List<FreqItemset<String>> f2Res = apr.f2AsArraysToPairs(f2AsArrays, itemToRank);
 //        pp("F2: "+StringUtils.join(f2Res.subList(0, Math.min(100, f2Res.size())), "\n"));
 
-        PreprocessedF2 preprocessedF2 = PreprocessedF2.construct2(f2, sortedF1.size());
+        PreprocessedF2 preprocessedF2 = PreprocessedF2.construct(f2, sortedF1.size());
 //        pp("zzz");
 //        List<Integer[]> f3AsArrays = apr.computeF3(filteredTrs, preprocessedF2);
         JavaRDD<Tuple2<int[], int[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);

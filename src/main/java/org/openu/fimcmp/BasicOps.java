@@ -45,27 +45,7 @@ public class BasicOps implements Serializable {
         return res;
     }
 
-    public static <T> Integer[] getMappedFilteredAndSortedTrs(T[] tr, Map<T, Integer> itemToRank) {
-        int resCnt = 0;
-        for (T item : tr) {
-            if (itemToRank.get(item) != null) {
-                ++resCnt;
-            }
-        }
-
-        Integer[] res = new Integer[resCnt];
-        int ii=0;
-        for (T item : tr) {
-            Integer rank = itemToRank.get(item);
-            if (rank != null) {
-                res[ii++] = rank;
-            }
-        }
-
-        Arrays.sort(res); //smaller rank means more frequent
-        return res;
-    }
-    public static <T> int[] getMappedFilteredAndSortedTrs2(T[] tr, Map<T, Integer> itemToRank) {
+    public static <T> int[] getMappedFilteredAndSortedTrs(T[] tr, Map<T, Integer> itemToRank) {
         int resCnt = 0;
         for (T item : tr) {
             if (itemToRank.get(item) != null) {
