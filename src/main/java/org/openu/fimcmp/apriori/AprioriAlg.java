@@ -104,7 +104,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
             List<int[]> itemAndPairRanks = candidateFisGenerator.f2ColToPairs(col);
             for (int[] itemAndPairRank : itemAndPairRanks) {
                 String elem1 = rankToItem[itemAndPairRank[0]];
-                int[] pair = preprocessedF2.getPairByRank(itemAndPairRank[1]);
+                int[] pair = preprocessedF2.getCurrSizeFiAsPairByRank(itemAndPairRank[1]);
                 String elem2 = rankToItem[pair[0]];
                 String elem3 = rankToItem[pair[1]];
                 int freq = itemAndPairRank[2];

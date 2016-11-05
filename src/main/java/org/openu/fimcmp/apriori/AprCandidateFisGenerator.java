@@ -270,7 +270,7 @@ public class AprCandidateFisGenerator implements Serializable {
             int elem1 = sortedTr[ii];
             for (int jj = ii + 1; jj < sortedTr.length; ++jj) {
                 int elem2 = sortedTr[jj];
-                int rank = preprocessedF2.getPairRank(elem1, elem2);
+                int rank = preprocessedF2.getCurrSizeFiRank(elem1, elem2);
                 if (rank >= 0) {
                     ranks[resInd++] = rank;
                 }

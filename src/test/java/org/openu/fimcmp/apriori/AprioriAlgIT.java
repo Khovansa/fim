@@ -28,7 +28,8 @@ public class AprioriAlgIT extends AlgITBase {
         final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.8, false);
         apr = new AprioriAlg<>(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
-        pp("F1 size = " + sortedF1.size());
+        int totalFreqItems = sortedF1.size();
+        pp("F1 size = " + totalFreqItems);
         pp(sortedF1);
         Map<String, Integer> itemToRank = BasicOps.itemToRank(sortedF1);
         //from now on, the items are [0, sortedF1.size), 0 denotes the most frequent item
@@ -45,7 +46,8 @@ public class AprioriAlgIT extends AlgITBase {
 //        List<FreqItemset<String>> f2Res = apr.f2AsArraysToPairs(f2AsArrays, itemToRank);
 //        pp("F2: "+StringUtils.join(f2Res.subList(0, Math.min(100, f2Res.size())), "\n"));
 
-        CurrSizeFiRanks preprocessedF2 = CurrSizeFiRanks.construct(f2, sortedF1.size());
+        PairRanks f2Ranks = CurrSizeFiRanks.constructF2Ranks(f2, totalFreqItems);
+        CurrSizeFiRanks preprocessedF2 = CurrSizeFiRanks.construct(f2, totalFreqItems, totalFreqItems, f2Ranks);
 //        pp("zzz");
 //        List<Integer[]> f3AsArrays = apr.computeF3(filteredTrs, preprocessedF2);
         JavaRDD<Tuple2<int[], int[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
