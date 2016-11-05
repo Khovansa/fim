@@ -1,6 +1,5 @@
 package org.openu.fimcmp.apriori;
 
-import org.apache.commons.lang3.ArrayUtils;
 import scala.Tuple2;
 
 import java.io.Serializable;
@@ -117,7 +116,7 @@ public class AprCandidateFisGenerator implements Serializable {
         return resCol;
     }
 
-    Tuple2<int[], int[]> toSortedRanks1And2(int[] sortedTr, PreprocessedF2 preprocessedF2) {
+    Tuple2<int[], int[]> toSortedRanks1And2(int[] sortedTr, CurrSizeFiRanks preprocessedF2) {
         int[] ranks2 = computeSortedRanks2(sortedTr, preprocessedF2);
         return new Tuple2<>(sortedTr, ranks2);
     }
@@ -262,7 +261,7 @@ public class AprCandidateFisGenerator implements Serializable {
         }
     }
 
-    private int[] computeSortedRanks2(int[] sortedTr, PreprocessedF2 preprocessedF2) {
+    private int[] computeSortedRanks2(int[] sortedTr, CurrSizeFiRanks preprocessedF2) {
         final int arrSize = sortedTr.length - 1;
         int[] ranks = new int[arrSize * (arrSize - 1) / 2];
         //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem:

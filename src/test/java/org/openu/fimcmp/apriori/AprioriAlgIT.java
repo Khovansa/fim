@@ -45,7 +45,7 @@ public class AprioriAlgIT extends AlgITBase {
 //        List<FreqItemset<String>> f2Res = apr.f2AsArraysToPairs(f2AsArrays, itemToRank);
 //        pp("F2: "+StringUtils.join(f2Res.subList(0, Math.min(100, f2Res.size())), "\n"));
 
-        PreprocessedF2 preprocessedF2 = PreprocessedF2.construct(f2, sortedF1.size());
+        CurrSizeFiRanks preprocessedF2 = CurrSizeFiRanks.construct(f2, sortedF1.size());
 //        pp("zzz");
 //        List<Integer[]> f3AsArrays = apr.computeF3(filteredTrs, preprocessedF2);
         JavaRDD<Tuple2<int[], int[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);

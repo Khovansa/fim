@@ -8,15 +8,15 @@ import java.util.*;
 /**
  * Auxiliary class to hold F2-related data in a way that allows fast processing.
  */
-class PreprocessedF2 implements NextSizeItemsetGenHelper, Serializable {
+class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
     private final PairRanks pairRanks;
     private final BoundedIntPairSet cand3; //(item, pair) -> is possible
 
-    static PreprocessedF2 construct(List<int[]> f2, int totalFreqItems) {
+    static CurrSizeFiRanks construct(List<int[]> f2, int totalFreqItems) {
         List<int[]> sortedF2 = getSortedByDecreasingFreq(f2);
         PairRanks pairRanks = PairRanks.construct(sortedF2, totalFreqItems, totalFreqItems);
         BoundedIntPairSet cand3 = constructCand3(totalFreqItems, sortedF2, pairRanks);
-        return new PreprocessedF2(pairRanks, cand3);
+        return new CurrSizeFiRanks(pairRanks, cand3);
     }
 
     @Override
@@ -66,7 +66,7 @@ class PreprocessedF2 implements NextSizeItemsetGenHelper, Serializable {
         return pairRanks.existsPair(item1, item2) && pairRanks.existsPair(item1, item3);
     }
 
-    private PreprocessedF2(PairRanks pairRanks, BoundedIntPairSet cand3) {
+    private CurrSizeFiRanks(PairRanks pairRanks, BoundedIntPairSet cand3) {
         this.pairRanks = pairRanks;
         this.cand3 = cand3;
     }

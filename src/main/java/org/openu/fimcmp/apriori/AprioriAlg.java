@@ -55,7 +55,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     }
 
     public JavaRDD<Tuple2<int[], int[]>> toRddOfRanks1And2(
-            JavaRDD<int[]> filteredTrs, PreprocessedF2 preprocessedF2) {
+            JavaRDD<int[]> filteredTrs, CurrSizeFiRanks preprocessedF2) {
         return filteredTrs.map(tr -> candidateFisGenerator.toSortedRanks1And2(tr, preprocessedF2));
     }
 
@@ -96,7 +96,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     }
 
     public List<FreqItemset<String>> f3AsArraysToTriplets(
-            List<int[]> cols, Map<String, Integer> itemToRank, PreprocessedF2 preprocessedF2) {
+            List<int[]> cols, Map<String, Integer> itemToRank, CurrSizeFiRanks preprocessedF2) {
         String[] rankToItem = BasicOps.getRankToItem(itemToRank);
 
         List<FreqItemset<String>> res = new ArrayList<>((int) Math.pow(cols.size(), 3));
