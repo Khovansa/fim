@@ -11,11 +11,11 @@ import static org.junit.Assert.assertTrue;
 
 public class AprCandidateFisGeneratorTest {
     //    private static final Random RAND = new Random(10L);
-    private AprCandidateFisGenerator gen;
+    private AprCandidateFisGenerator2 gen;
 
     @Before
     public void setUp() throws Exception {
-        gen = new AprCandidateFisGenerator();
+        gen = new AprCandidateFisGenerator2();
     }
 
 //    @Test
@@ -95,10 +95,10 @@ public class AprCandidateFisGeneratorTest {
 
     @Test
     public void genTransactionC2sNew() throws Exception {
-        Integer[] transaction = {0, 3, 6, 9};
-        Integer[][] c2 = gen.genTransactionC2s(transaction);
+        int[] transaction = {0, 3, 6, 9};
+        int[][] c2 = gen.genTransactionC2s(transaction);
 
-        Integer[][] expC2 = {
+        int[][] expC2 = {
                 {0, 3, 1, 6, 1, 9, 1},
                 {3, 6, 1, 9, 1},
                 {6, 9, 1}
@@ -109,32 +109,32 @@ public class AprCandidateFisGeneratorTest {
 
     @Test
     public void mergeC2Columns_diffValues() throws Exception {
-        Integer[] col1 = {0, 3, 1, 6, 1, 9, 2};
-        Integer[] col2 = {0, 1, 1, 2, 1, 3, 2, 5, 1, 6, 1};
+        int[] col1 = {0, 3, 1, 6, 1, 9, 2};
+        int[] col2 = {0, 1, 1, 2, 1, 3, 2, 5, 1, 6, 1};
 
-        Integer[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeC2Columns(col1, col2);
 
-        Integer[] expRes = {0, 1, 1, 2, 1, 3, 3, 5, 1, 6, 2, 9, 2};
+        int[] expRes = {0, 1, 1, 2, 1, 3, 3, 5, 1, 6, 2, 9, 2};
         assertThat(res, is(expRes));
     }
 
     @Test
     public void mergeC2Columns_sameValues() throws Exception {
-        Integer[] col1 = {0, 3, 1, 6, 1, 9, 2};
-        Integer[] col2 = {0, 3, 2, 6, 1, 9, 3};
+        int[] col1 = {0, 3, 1, 6, 1, 9, 2};
+        int[] col2 = {0, 3, 2, 6, 1, 9, 3};
 
-        Integer[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeC2Columns(col1, col2);
 
-        Integer[] expRes = {0, 3, 3, 6, 2, 9, 5};
+        int[] expRes = {0, 3, 3, 6, 2, 9, 5};
         assertThat(res, is(expRes));
     }
 
     @Test
     public void mergeC2Columns_firstEmpty() throws Exception {
-        Integer[] col1 = {};
-        Integer[] col2 = {0, 3, 2, 6, 1, 9, 3};
+        int[] col1 = {};
+        int[] col2 = {0, 3, 2, 6, 1, 9, 3};
 
-        Integer[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeC2Columns(col1, col2);
 
         assertThat(res, is(col2));
         assertThat(res, not(sameInstance(col2)));
@@ -142,79 +142,79 @@ public class AprCandidateFisGeneratorTest {
 
     @Test
     public void mergeC2Columns_bothEmpty() throws Exception {
-        Integer[] col1 = {};
-        Integer[] col2 = {};
+        int[] col1 = {};
+        int[] col2 = {};
 
-        Integer[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeC2Columns(col1, col2);
 
         assertThat(res, is(col2));
     }
 
     @Test
     public void mergeC2Columns_col2IsSubsetOfCol1_noTail() throws Exception {
-        Integer[] col1 = {0, 19, 2, 20, 2, 21, 2};
-        Integer[] col2 = {0, 19, 1, 21, 1};
+        int[] col1 = {0, 19, 2, 20, 2, 21, 2};
+        int[] col2 = {0, 19, 1, 21, 1};
 
-        Integer[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeC2Columns(col1, col2);
 
-        Integer[] expRes = {0, 19, 3, 20, 2, 21, 3};
+        int[] expRes = {0, 19, 3, 20, 2, 21, 3};
         assertThat(res, is(expRes));
     }
 
     @Test
     public void mergeC2Columns_col2IsSubsetOfCol1_withTail() throws Exception {
-        Integer[] col1 = {0, 19, 2, 20, 2, 21, 2, 22, 1};
-        Integer[] col2 = {0, 19, 1, 21, 1};
+        int[] col1 = {0, 19, 2, 20, 2, 21, 2, 22, 1};
+        int[] col2 = {0, 19, 1, 21, 1};
 
-        Integer[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeC2Columns(col1, col2);
 
-        Integer[] expRes = {0, 19, 3, 20, 2, 21, 3, 22, 1};
+        int[] expRes = {0, 19, 3, 20, 2, 21, 3, 22, 1};
         assertThat(res, is(expRes));
     }
 
     @Test
     public void getC2sFilteredByMinSupport_normal() throws Exception {
-        Integer[] col = {0, 3, 1, 6, 3, 9, 2};
+        int[] col = {0, 3, 1, 6, 3, 9, 2};
 
         assertThat(gen.getC2sFilteredByMinSupport(col, 1), is(col));
-        assertThat(gen.getC2sFilteredByMinSupport(col, 2), is(new Integer[]{0, 6, 3, 9, 2}));
-        assertThat(gen.getC2sFilteredByMinSupport(col, 3), is(new Integer[]{0, 6, 3}));
-        assertThat(gen.getC2sFilteredByMinSupport(col, 4), is(new Integer[]{}));
+        assertThat(gen.getC2sFilteredByMinSupport(col, 2), is(new int[]{0, 6, 3, 9, 2}));
+        assertThat(gen.getC2sFilteredByMinSupport(col, 3), is(new int[]{0, 6, 3}));
+        assertThat(gen.getC2sFilteredByMinSupport(col, 4), is(new int[]{}));
     }
 
     @Test
     public void getC2sFilteredByMinSupport_empty() throws Exception {
-        Integer[] col = {};
+        int[] col = {};
         assertThat(gen.getC2sFilteredByMinSupport(col, 1), is(col));
     }
 
     @Test
     public void f2ColToPairs_normal() throws Exception {
-        Integer[] col = {0, 3, 1, 6, 3, 9, 2};
+        int[] col = {0, 3, 1, 6, 3, 9, 2};
 
-        Integer[][] pairs = gen.f2ColToPairs(col).toArray(new Integer[][]{});
+        int[][] pairs = gen.f2ColToPairs(col).toArray(new int[][]{});
 
-        Integer[][] expPairs = {{0, 3, 1}, {0, 6, 3}, {0, 9, 2}};
+        int[][] expPairs = {{0, 3, 1}, {0, 6, 3}, {0, 9, 2}};
         assertTrue(Arrays.deepToString(pairs), Arrays.deepEquals(expPairs, pairs));
     }
 
     @Test
     public void f2ColToPairs_singleElem() throws Exception {
-        Integer[] col = {0};
+        int[] col = {0};
 
-        Integer[][] pairs = gen.f2ColToPairs(col).toArray(new Integer[][]{});
+        int[][] pairs = gen.f2ColToPairs(col).toArray(new int[][]{});
 
-        Integer[][] expPairs = {};
+        int[][] expPairs = {};
         assertTrue(Arrays.deepToString(pairs), Arrays.deepEquals(expPairs, pairs));
     }
 
     @Test
     public void f2ColToPairs_empty() throws Exception {
-        Integer[] col = {};
+        int[] col = {};
 
-        Integer[][] pairs = gen.f2ColToPairs(col).toArray(new Integer[][]{});
+        int[][] pairs = gen.f2ColToPairs(col).toArray(new int[][]{});
 
-        Integer[][] expPairs = {};
+        int[][] expPairs = {};
         assertTrue(Arrays.deepToString(pairs), Arrays.deepEquals(expPairs, pairs));
     }
 }
