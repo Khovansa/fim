@@ -13,7 +13,7 @@ public class IntPairHashMapTest {
 
     @Test
     public void perf_test_IntPairFixedSet() {
-        BoundedIntPairSet map = new BoundedIntPairSet(MAX_ELEM1, MAX_ELEM2);
+        BoundedIntPairSet map = new BoundedIntPairSet(MAX_ELEM1+1, MAX_ELEM2+1);
         int cnt = 0;
         Random random = new Random(new Date().getTime());
         StopWatch sw = new StopWatch();

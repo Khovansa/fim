@@ -43,7 +43,7 @@ class PreprocessedF2 implements NextSizeItemsetGenHelper, Serializable {
      * Assuming the item ranks are [0, totalFreqItems) with 0 as the most frequent item. <br/>
      */
     private static BoundedIntPairSet constructCand3(int totalItems, List<int[]> f2, PairRanks pairRanks) {
-        BoundedIntPairSet res = new BoundedIntPairSet(totalItems - 1, f2.size() - 1);
+        BoundedIntPairSet res = new BoundedIntPairSet(totalItems, f2.size());
 
         Set<Integer> firstElems = new TreeSet<>();
         for (int[] pair : f2) {

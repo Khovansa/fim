@@ -5,7 +5,7 @@ import java.util.BitSet;
 
 /**
  * Fast and efficient fixed-size set of pairs of non-negative integers. <br/>
- * The range of the elements of the pair is assumed to be [0, MAX1] and [0, MAX2] respectively. <br/>
+ * The range of the elements of the pair is assumed to be [0, totalElems1) and [0, totalElems2) respectively. <br/>
  * The implementation is based on fixed-size Java BitSet. <br/>
  */
 public class BoundedIntPairSet implements Serializable {
@@ -14,12 +14,12 @@ public class BoundedIntPairSet implements Serializable {
     private final int mult1;
     private final BitSet bitSet;
 
-    public BoundedIntPairSet(int maxElem1, int maxElem2) {
-        Assert.isTrue(maxElem1>0 && maxElem2>0);
-        this.max1 = maxElem1;
-        this.max2 = maxElem2;
-        this.mult1 = (maxElem2 + 1);
-        int capacity = (maxElem1 + 1) * mult1;
+    public BoundedIntPairSet(int totalElems1, int totalElems2) {
+        Assert.isTrue(totalElems1>1 && totalElems2>1);
+        this.max1 = totalElems1 - 1;
+        this.max2 = totalElems2 - 1;
+        this.mult1 = totalElems2;
+        int capacity = totalElems1 * mult1;
         Assert.isTrue(capacity > 0); //no overflow
         this.bitSet = new BitSet(capacity);
     }
