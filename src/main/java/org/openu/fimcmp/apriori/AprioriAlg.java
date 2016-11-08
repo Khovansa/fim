@@ -59,8 +59,8 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     }
 
     public JavaRDD<Tuple2<int[], int[]>> toRddOfRanks1AndK(
-            JavaRDD<Tuple2<int[], int[]>> ranks1AndKm1, CurrSizeFiRanks preprocessedF2) {
-        return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK(row._1, row._2, preprocessedF2));
+            JavaRDD<Tuple2<int[], int[]>> ranks1AndKm1, CurrSizeFiRanks preprocessedFk) {
+        return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK(row._1, row._2, preprocessedFk));
     }
 
     public List<int[]> computeFk(

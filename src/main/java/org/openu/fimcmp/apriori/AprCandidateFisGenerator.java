@@ -289,7 +289,8 @@ public class AprCandidateFisGenerator implements Serializable {
     private int[] computeSortedRanksK(int[] sortedTr, int[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
         final int elem1Cnt = sortedTr.length - 1;
         final int elem2Cnt = sortedRanksKm1.length;
-        //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem in k-itemsets as pairs:
+        //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem
+        // in k-itemsets represented as pairs:
         int[] resRanksK = new int[(elem1Cnt-1) * elem2Cnt];
         int resInd=0;
         for (int ii = 1; ii < elem1Cnt; ++ii) {
