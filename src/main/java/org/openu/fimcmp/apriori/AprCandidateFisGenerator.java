@@ -309,13 +309,10 @@ public class AprCandidateFisGenerator implements Serializable {
         }
 
         //tails:
-        while (i1 < col1.length) {
-            res[ir++] = col1[i1++]; //elem
-            res[ir++] = col1[i1++]; //counter
-        }
-        while (i2 < col2.length) {
-            res[ir++] = col2[i2++]; //elem
-            res[ir++] = col2[i2++]; //counter
+        if (i1 < col1.length) {
+            System.arraycopy(col1, i1, res, ir, col1.length-i1);
+        } else if (i2 < col2.length) {
+            System.arraycopy(col2, i2, res, ir, col2.length-i2);
         }
     }
 
