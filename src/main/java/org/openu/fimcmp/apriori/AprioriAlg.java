@@ -46,8 +46,8 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return filteredTrs
                 .flatMap(tr -> new IteratorOverArray<>(candidateFisGenerator.genTransactionC2s(tr)))
                 .mapToPair(col -> new Tuple2<>(col[0], col))
-                .foldByKey(new int[]{}, candidateFisGenerator::mergeC2Columns)
-                .mapValues(col -> candidateFisGenerator.getC2sFilteredByMinSupport(col, minSuppCount))
+                .foldByKey(new int[]{}, candidateFisGenerator::mergeColumns)
+                .mapValues(col -> candidateFisGenerator.getColumnsFilteredByMinSupport(col, minSuppCount))
                 .sortByKey()
                 .values()
                 .collect();
@@ -69,8 +69,8 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .flatMap(tr -> new IteratorOverArray<>(
                         candidateFisGenerator.genNextSizeCands_ByItems(k-1, tr, genHelper)))
                 .mapToPair(col -> new Tuple2<>(col[0], col))
-                .foldByKey(new int[]{}, candidateFisGenerator::mergeC2Columns)
-                .mapValues(col -> candidateFisGenerator.getC2sFilteredByMinSupport(col, minSuppCount))
+                .foldByKey(new int[]{}, candidateFisGenerator::mergeColumns)
+                .mapValues(col -> candidateFisGenerator.getColumnsFilteredByMinSupport(col, minSuppCount))
                 .sortByKey()
                 .values()
                 .collect();

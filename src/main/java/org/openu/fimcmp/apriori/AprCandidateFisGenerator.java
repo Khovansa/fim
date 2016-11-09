@@ -3,10 +3,7 @@ package org.openu.fimcmp.apriori;
 import scala.Tuple2;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Generate candidate itemsets of size i+1 from frequent itemsets of size i. <br/>
@@ -127,12 +124,42 @@ public class AprCandidateFisGenerator implements Serializable {
     }
 
     /**
+     * Return array of [rank, tid] for all ranks that require this
+     * (see {@link TidsGenHelper#isStoreTidForRank} for details. <br/>
+     */
+    int[][] getRankToTid(int[] transactionRanksK, long tid, TidsGenHelper tidsGenHelper) {
+        Set<Integer> ranksSet = new HashSet<>(transactionRanksK.length * 2);
+        for (int rank : transactionRanksK) {
+            ranksSet.add(rank);
+        }
+
+        //count the result:
+        final int totalRanks = tidsGenHelper.totalRanks();
+        int resCnt = 0;
+        for (int rank = 0; rank < totalRanks; ++rank) {
+            if (tidsGenHelper.isStoreTidForRank(rank, ranksSet)) {
+                ++resCnt;
+            }
+        }
+
+        //create the result:
+        int[][] res = new int[resCnt][];
+        int resInd = 0;
+        for (int rank = 0; rank < totalRanks; ++rank) {
+            if (tidsGenHelper.isStoreTidForRank(rank, ranksSet)) {
+                res[resInd++] = new int[]{rank, (int) tid};
+            }
+        }
+        return res;
+    }
+
+    /**
      * See {@link #genTransactionC2s} for columns structure. <br/>
      * E.g. {0, 3, 1, 6, 1, 9, 1}. <br/>
      * That is, after the first item, we use a kind of linked list (2nd item, count),
      * i.e. a sparse representation of a map: item -> count.
      */
-    int[] mergeC2Columns(int[] col1, int[] col2) {
+    int[] mergeColumns(int[] col1, int[] col2) {
         if (col1.length <= 1) {
             return Arrays.copyOf(col2, col2.length);
         }
@@ -140,24 +167,51 @@ public class AprCandidateFisGenerator implements Serializable {
             return col1;
         }
 
-        int diffItemsCount = getDifferentItemsCountForC2s(col1, col2);
+        int diffItemsCount = getDifferentItemsCountInColumns(col1, col2);
         int resLength = 1 + 2 * diffItemsCount;
         if (resLength > col1.length) {
             int[] res = new int[resLength];
-            mergeC2ColumnsToRes(res, col1, col2);
+            mergeColumnsToRes(res, col1, col2);
             return res;
         } else {
-            mergeC2ColumnsToCol1(col1, col2);
+            mergeColumnsToCol1(col1, col2);
             return col1;
         }
     }
 
     /**
-     * Filter C2's by min support. <br/>
+     * The TID-list column structure is: [rank, tid1, tid2, ... tidN]
+     */
+    int[] mergeTids(int[] col1, int[] col2) {
+        if (col1.length <= 1) {
+            return Arrays.copyOf(col2, col2.length);
+        }
+        if (col2.length <= 1) {
+            return col1;
+        }
+
+        int diffTidsCount = getDifferentTidsCount(col1, col2);
+        int resLength = 1 + diffTidsCount;
+        //check whether col1 or col2 already contain all the TIDs from both columns:
+        if (resLength == col1.length) {
+            return col1;
+        }
+        if (resLength == col2.length) {
+            return Arrays.copyOf(col2, col2.length);
+        }
+
+        //need to create a new array:
+        int[] res = new int[resLength];
+        mergeTidListsToRes(res, col1, col2);
+        return res;
+    }
+
+    /**
+     * Filter columns by min support. <br/>
      * See {@link #genTransactionC2s} for the column structure. <br/>
      * E.g. {0, 3, 1, 6, 1, 9, 1}. <br/>
      */
-    int[] getC2sFilteredByMinSupport(int[] col, long minSuppCount) {
+    int[] getColumnsFilteredByMinSupport(int[] col, long minSuppCount) {
         int goodElemCnt = 0;
         for (int ii = 2; ii < col.length; ii += 2) {
             if (col[ii] >= minSuppCount) {
@@ -200,11 +254,7 @@ public class AprCandidateFisGenerator implements Serializable {
         return res;
     }
 
-    private int getDifferentItemsCountForC2s(int[] col1, int[] col2) {
-        if (col1.length <= 1) {
-            return col2.length;
-        }
-
+    private int getDifferentItemsCountInColumns(int[] col1, int[] col2) {
         int i1 = 1, i2 = 1; //1 since skipping over the first element of the pair
         int res = 0;
         while (i1 < col1.length && i2 < col2.length) {
@@ -222,8 +272,26 @@ public class AprCandidateFisGenerator implements Serializable {
         return res;
     }
 
-    private void mergeC2ColumnsToRes(int[] res, int[] col1, int[] col2) {
-        res[0] = (col1.length > 0) ? col1[0] : col2[0];
+    private int getDifferentTidsCount(int[] col1, int[] col2) {
+        int i1 = 1, i2 = 1; //1 since skipping over the 'rank'
+        int res = 0;
+        while (i1 < col1.length && i2 < col2.length) {
+            int cmp = Integer.compare(col1[i1], col2[i2]);
+            ++res;
+            if (cmp <= 0) {
+                ++i1;
+            }
+            if (cmp >= 0) {
+                ++i2;
+            }
+        }
+
+        res += ((col1.length - i1) + (col2.length - i2)); //length of the tails
+        return res;
+    }
+
+    private void mergeColumnsToRes(int[] res, int[] col1, int[] col2) {
+        res[0] = col1[0]; //the first elem of the pair
         int i1 = 1, i2 = 1, ir = 1;
         while (i1 < col1.length && i2 < col2.length) {
             int cmp = Integer.compare(col1[i1], col2[i2]);
@@ -251,8 +319,32 @@ public class AprCandidateFisGenerator implements Serializable {
         }
     }
 
+    private void mergeTidListsToRes(int[] res, int[] col1, int[] col2) {
+        res[0] = col1[0]; //the rank
+        int i1 = 1, i2 = 1, ir = 1;
+        while (i1 < col1.length && i2 < col2.length) {
+            int cmp = Integer.compare(col1[i1], col2[i2]);
+            if (cmp < 0) {
+                res[ir++] = col1[i1++];
+            } else if (cmp > 0) {
+                res[ir++] = col2[i2++];
+            } else {
+                res[ir++] = col1[i1++];
+                ++i2;
+            }
+        }
+
+        //tails:
+        if (i1 < col1.length) {
+            System.arraycopy(col1, i1, res, ir, col1.length-i1);
+        } else if (i2 < col2.length) {
+            System.arraycopy(col2, i2, res, ir, col2.length-i2);
+        }
+    }
+
+
     //Assumes col2 elements set is a subset of col1's elements
-    private void mergeC2ColumnsToCol1(int[] col1, int[] col2) {
+    private void mergeColumnsToCol1(int[] col1, int[] col2) {
         int i1 = 1, i2 = 1;
         while (i1 < col1.length && i2 < col2.length) {
             if (col1[i1] == col2[i2]) {
@@ -270,7 +362,7 @@ public class AprCandidateFisGenerator implements Serializable {
         final int arrSize = sortedTr.length - 1;
         int[] ranks = new int[arrSize * (arrSize - 1) / 2];
         //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem:
-        int resInd=0;
+        int resInd = 0;
         for (int ii = 1; ii < arrSize; ++ii) {
             int elem1 = sortedTr[ii];
             for (int jj = ii + 1; jj < sortedTr.length; ++jj) {
@@ -291,8 +383,8 @@ public class AprCandidateFisGenerator implements Serializable {
         final int elem2Cnt = sortedRanksKm1.length;
         //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem
         // in k-itemsets represented as pairs:
-        int[] resRanksK = new int[(elem1Cnt-1) * elem2Cnt];
-        int resInd=0;
+        int[] resRanksK = new int[(elem1Cnt - 1) * elem2Cnt];
+        int resInd = 0;
         for (int ii = 1; ii < elem1Cnt; ++ii) {
             int elem1 = sortedTr[ii];
             for (int jj = 0; jj < elem2Cnt; ++jj) {

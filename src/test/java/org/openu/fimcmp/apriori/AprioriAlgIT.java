@@ -1,6 +1,7 @@
 package org.openu.fimcmp.apriori;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
@@ -8,6 +9,7 @@ import org.junit.Test;
 import org.openu.fimcmp.AlgITBase;
 import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemset;
+import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
 
 import java.util.List;
@@ -64,14 +66,21 @@ public class AprioriAlgIT extends AlgITBase {
 
         CurrSizeFiRanks preprocessedF3 = CurrSizeFiRanks.construct(f3, totalFreqItems, f2.size(), f2Ranks);
         JavaRDD<Tuple2<int[], int[]>> ranks1And3 = apr.toRddOfRanks1AndK(ranks1And2, preprocessedF3);
+
+        TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
+        JavaPairRDD<Tuple2<int[], int[]>, Long> ranks13WithTids = ranks1And3.zipWithIndex();
+//        flatMap(tr -> new IteratorOverArray<>(
+//                candidateFisGenerator.genNextSizeCands_ByItems(k-1, tr, genHelper)))
+
         pp("zzz");
-        List<int[]> f4AsArrays = apr.computeFk(4, ranks1And3, preprocessedF3);
-        pp("F4 as arrays size: "+f4AsArrays.size());
-        List<int[]> f4 = apr.fkAsArraysToRankPairs(f4AsArrays);
-        pp("F4 size: "+f4.size());
-        List<FreqItemset<String>> f4Res = apr.fkAsArraysToResItemsets(f4AsArrays, itemToRank, preprocessedF3, preprocessedF2);
-        f4Res = f4Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
-        pp("F4: " + StringUtils.join(f4Res.subList(0, Math.min(3, f4Res.size())), "\n"));
+
+//        List<int[]> f4AsArrays = apr.computeFk(4, ranks1And3, preprocessedF3);
+//        pp("F4 as arrays size: "+f4AsArrays.size());
+//        List<int[]> f4 = apr.fkAsArraysToRankPairs(f4AsArrays);
+//        pp("F4 size: "+f4.size());
+//        List<FreqItemset<String>> f4Res = apr.fkAsArraysToResItemsets(f4AsArrays, itemToRank, preprocessedF3, preprocessedF2);
+//        f4Res = f4Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
+//        pp("F4: " + StringUtils.join(f4Res.subList(0, Math.min(3, f4Res.size())), "\n"));
 
     }
 }

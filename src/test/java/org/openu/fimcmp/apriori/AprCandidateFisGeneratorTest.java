@@ -108,84 +108,171 @@ public class AprCandidateFisGeneratorTest {
     }
 
     @Test
-    public void mergeC2Columns_diffValues() throws Exception {
+    public void mergeColumns_diffValues() throws Exception {
         int[] col1 = {0, 3, 1, 6, 1, 9, 2};
         int[] col2 = {0, 1, 1, 2, 1, 3, 2, 5, 1, 6, 1};
 
-        int[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeColumns(col1, col2);
 
         int[] expRes = {0, 1, 1, 2, 1, 3, 3, 5, 1, 6, 2, 9, 2};
         assertThat(res, is(expRes));
     }
 
     @Test
-    public void mergeC2Columns_sameValues() throws Exception {
+    public void mergeTids_diffValues_1() throws Exception {
+        int[] col1 = {0, 3, 6, 9};
+        int[] col2 = {0, 1, 2, 3, 5, 6};
+
+        int[] res = gen.mergeTids(col1, col2);
+
+        int[] expRes = {0, 1, 2, 3, 5, 6, 9};
+        assertThat(res, is(expRes));
+    }
+
+    @Test
+    public void mergeTids_diffValues_2() throws Exception {
+        int[] col1 = {0, 1, 2, 3, 5, 6};
+        int[] col2 = {0, 3, 6, 9};
+
+        int[] res = gen.mergeTids(col1, col2);
+
+        int[] expRes = {0, 1, 2, 3, 5, 6, 9};
+        assertThat(res, is(expRes));
+    }
+
+    @Test
+    public void mergeColumns_sameValues() throws Exception {
         int[] col1 = {0, 3, 1, 6, 1, 9, 2};
         int[] col2 = {0, 3, 2, 6, 1, 9, 3};
 
-        int[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeColumns(col1, col2);
 
         int[] expRes = {0, 3, 3, 6, 2, 9, 5};
         assertThat(res, is(expRes));
     }
 
     @Test
-    public void mergeC2Columns_firstEmpty() throws Exception {
+    public void mergeTids_sameValues() throws Exception {
+        int[] col1 = {0, 3, 6, 9};
+        int[] col2 = {0, 3, 6, 9};
+
+        int[] res = gen.mergeTids(col1, col2);
+
+        int[] expRes = {0, 3, 6, 9};
+        assertThat(res, is(expRes));
+    }
+
+    @Test
+    public void mergeColumns_firstEmpty() throws Exception {
         int[] col1 = {};
         int[] col2 = {0, 3, 2, 6, 1, 9, 3};
 
-        int[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeColumns(col1, col2);
 
         assertThat(res, is(col2));
         assertThat(res, not(sameInstance(col2)));
     }
 
     @Test
-    public void mergeC2Columns_bothEmpty() throws Exception {
+    public void mergeTids_firstEmpty() throws Exception {
+        int[] col1 = {};
+        int[] col2 = {0, 3, 6, 9};
+
+        int[] res = gen.mergeTids(col1, col2);
+
+        assertThat(res, is(col2));
+        assertThat(res, not(sameInstance(col2)));
+    }
+
+    @Test
+    public void mergeColumns_bothEmpty() throws Exception {
         int[] col1 = {};
         int[] col2 = {};
 
-        int[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeColumns(col1, col2);
 
         assertThat(res, is(col2));
     }
 
     @Test
-    public void mergeC2Columns_col2IsSubsetOfCol1_noTail() throws Exception {
+    public void mergeTids_bothEmpty() throws Exception {
+        int[] col1 = {};
+        int[] col2 = {};
+
+        int[] res = gen.mergeTids(col1, col2);
+
+        assertThat(res, is(col2));
+    }
+
+    @Test
+    public void mergeColumns_col2IsSubsetOfCol1_noTail() throws Exception {
         int[] col1 = {0, 19, 2, 20, 2, 21, 2};
         int[] col2 = {0, 19, 1, 21, 1};
 
-        int[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeColumns(col1, col2);
 
         int[] expRes = {0, 19, 3, 20, 2, 21, 3};
         assertThat(res, is(expRes));
     }
 
     @Test
-    public void mergeC2Columns_col2IsSubsetOfCol1_withTail() throws Exception {
+    public void mergeTids_col2IsSubsetOfCol1_noTail() throws Exception {
+        int[] col1 = {0, 19, 20, 21};
+        int[] col2 = {0, 19, 21};
+
+        int[] res = gen.mergeTids(col1, col2);
+
+        int[] expRes = {0, 19, 20, 21};
+        assertThat(res, is(expRes));
+    }
+
+    @Test
+    public void mergeColumns_col2IsSubsetOfCol1_withTail() throws Exception {
         int[] col1 = {0, 19, 2, 20, 2, 21, 2, 22, 1};
         int[] col2 = {0, 19, 1, 21, 1};
 
-        int[] res = gen.mergeC2Columns(col1, col2);
+        int[] res = gen.mergeColumns(col1, col2);
 
         int[] expRes = {0, 19, 3, 20, 2, 21, 3, 22, 1};
         assertThat(res, is(expRes));
     }
 
     @Test
-    public void getC2sFilteredByMinSupport_normal() throws Exception {
-        int[] col = {0, 3, 1, 6, 3, 9, 2};
+    public void mergeTids_col2IsSubsetOfCol1_withTail() throws Exception {
+        int[] col1 = {0, 19, 20, 21, 22};
+        int[] col2 = {0, 19, 21};
 
-        assertThat(gen.getC2sFilteredByMinSupport(col, 1), is(col));
-        assertThat(gen.getC2sFilteredByMinSupport(col, 2), is(new int[]{0, 6, 3, 9, 2}));
-        assertThat(gen.getC2sFilteredByMinSupport(col, 3), is(new int[]{0, 6, 3}));
-        assertThat(gen.getC2sFilteredByMinSupport(col, 4), is(new int[]{}));
+        int[] res = gen.mergeTids(col1, col2);
+
+        int[] expRes = {0, 19, 20, 21, 22};
+        assertThat(res, is(expRes));
     }
 
     @Test
-    public void getC2sFilteredByMinSupport_empty() throws Exception {
+    public void mergeTids_col1IsSubsetOfCol2_withTail() throws Exception {
+        int[] col1 = {0, 19, 21};
+        int[] col2 = {0, 19, 20, 21, 22};
+
+        int[] res = gen.mergeTids(col1, col2);
+
+        int[] expRes = {0, 19, 20, 21, 22};
+        assertThat(res, is(expRes));
+    }
+
+    @Test
+    public void getColumnsFilteredByMinSupport_normal() throws Exception {
+        int[] col = {0, 3, 1, 6, 3, 9, 2};
+
+        assertThat(gen.getColumnsFilteredByMinSupport(col, 1), is(col));
+        assertThat(gen.getColumnsFilteredByMinSupport(col, 2), is(new int[]{0, 6, 3, 9, 2}));
+        assertThat(gen.getColumnsFilteredByMinSupport(col, 3), is(new int[]{0, 6, 3}));
+        assertThat(gen.getColumnsFilteredByMinSupport(col, 4), is(new int[]{}));
+    }
+
+    @Test
+    public void getColumnsFilteredByMinSupport_empty() throws Exception {
         int[] col = {};
-        assertThat(gen.getC2sFilteredByMinSupport(col, 1), is(col));
+        assertThat(gen.getColumnsFilteredByMinSupport(col, 1), is(col));
     }
 
     @Test
