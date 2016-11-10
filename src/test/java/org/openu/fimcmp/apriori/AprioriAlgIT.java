@@ -1,7 +1,6 @@
 package org.openu.fimcmp.apriori;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
@@ -9,7 +8,6 @@ import org.junit.Test;
 import org.openu.fimcmp.AlgITBase;
 import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemset;
-import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
 
 import java.util.List;
@@ -28,6 +26,7 @@ public class AprioriAlgIT extends AlgITBase {
     @Test
     public void test() throws Exception {
         final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.8, false);
+//        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false);
         apr = new AprioriAlg<>(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
         int totalFreqItems = sortedF1.size();
@@ -62,18 +61,20 @@ public class AprioriAlgIT extends AlgITBase {
         pp("F3 size: "+f3.size());
         List<FreqItemset<String>> f3Res = apr.fkAsArraysToResItemsets(f3AsArrays, itemToRank, preprocessedF2);
         f3Res = f3Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
-        pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(3, f3Res.size())), "\n"));
+        pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(50, f3Res.size())), "\n"));
 
         CurrSizeFiRanks preprocessedF3 = CurrSizeFiRanks.construct(f3, totalFreqItems, f2.size(), f2Ranks);
         JavaRDD<Tuple2<int[], int[]>> ranks1And3 = apr.toRddOfRanks1AndK(ranks1And2, preprocessedF3);
 
         TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
-        JavaPairRDD<Tuple2<int[], int[]>, Long> ranks13WithTids = ranks1And3.zipWithIndex();
-//        flatMap(tr -> new IteratorOverArray<>(
-//                candidateFisGenerator.genNextSizeCands_ByItems(k-1, tr, genHelper)))
+        JavaRDD<int[]> tidsRdd = apr.toRddOfTids(ranks1And3, tidsGenHelper);
+        List<List<Integer>> allTids = apr.tmpToListOfTidLists(tidsRdd).collect();
+        pp("TIDs:");
+        for (List<Integer> tids : allTids) {
+            System.out.println(tids);
+        }
 
-        pp("zzz");
-
+//        pp("zzz");
 //        List<int[]> f4AsArrays = apr.computeFk(4, ranks1And3, preprocessedF3);
 //        pp("F4 as arrays size: "+f4AsArrays.size());
 //        List<int[]> f4 = apr.fkAsArraysToRankPairs(f4AsArrays);

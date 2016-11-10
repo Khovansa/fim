@@ -2,6 +2,7 @@ package org.openu.fimcmp.apriori;
 
 import org.openu.fimcmp.util.Assert;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
@@ -10,7 +11,7 @@ import java.util.Set;
  * The TID list per k-itemset rank will be either represented directly or as 'not',
  * i.e. all the TIDs that don't contain this k-itemset.
  */
-class TidsGenHelper {
+public class TidsGenHelper implements Serializable {
     private final boolean[] rankToIsStoreContainingTids;
 
     static TidsGenHelper construct(List<int[]> fk, PairRanks rankPairsK, int totalTids) {

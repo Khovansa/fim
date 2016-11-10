@@ -137,7 +137,7 @@ public class AprCandidateFisGenerator implements Serializable {
         final int totalRanks = tidsGenHelper.totalRanks();
         int resCnt = 0;
         for (int rank = 0; rank < totalRanks; ++rank) {
-            if (tidsGenHelper.isStoreTidForRank(rank, ranksSet)) {
+            if (tidsGenHelper.isStoreTidForRank(rank, ranksSet) || ranksSet.contains(rank)) {
                 ++resCnt;
             }
         }
@@ -148,6 +148,8 @@ public class AprCandidateFisGenerator implements Serializable {
         for (int rank = 0; rank < totalRanks; ++rank) {
             if (tidsGenHelper.isStoreTidForRank(rank, ranksSet)) {
                 res[resInd++] = new int[]{rank, (int) tid};
+            } else if (ranksSet.contains(rank)) {
+                res[resInd++] = new int[]{rank}; //need to have it for the case this rank is present in all transactions
             }
         }
         return res;
@@ -356,11 +358,10 @@ public class AprCandidateFisGenerator implements Serializable {
     }
 
     private int[] computeSortedRanks2(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
-        final int arrSize = sortedTr.length - 1;
+        final int arrSize = sortedTr.length;
         int[] ranks = new int[arrSize * (arrSize - 1) / 2];
-        //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem:
         int resInd = 0;
-        for (int ii = 1; ii < arrSize; ++ii) {
+        for (int ii = 0; ii < arrSize; ++ii) {
             int elem1 = sortedTr[ii];
             for (int jj = ii + 1; jj < sortedTr.length; ++jj) {
                 int elem2 = sortedTr[jj];
@@ -376,16 +377,12 @@ public class AprCandidateFisGenerator implements Serializable {
     }
 
     private int[] computeSortedRanksK(int[] sortedTr, int[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
-        final int elem1Cnt = sortedTr.length - 1;
+        final int elem1Cnt = sortedTr.length;
         final int elem2Cnt = sortedRanksKm1.length;
-        //OPTIMIZATION: skipping the 1st element - the pairs are expected to be the new 2nd elem
-        // in k-itemsets represented as pairs:
-        int[] resRanksK = new int[(elem1Cnt - 1) * elem2Cnt];
+        int[] resRanksK = new int[elem1Cnt * elem2Cnt];
         int resInd = 0;
-        for (int ii = 1; ii < elem1Cnt; ++ii) {
-            int elem1 = sortedTr[ii];
-            for (int jj = 0; jj < elem2Cnt; ++jj) {
-                int rankKm1 = sortedRanksKm1[jj];
+        for (int elem1 : sortedTr) {
+            for (int rankKm1 : sortedRanksKm1) {
                 int rankK = fkRanksHelper.getCurrSizeFiRankByPair(elem1, rankKm1);
                 if (rankK >= 0) {
                     resRanksK[resInd++] = rankK;
@@ -396,6 +393,4 @@ public class AprCandidateFisGenerator implements Serializable {
         Arrays.sort(resRanksK, 0, resInd);
         return Arrays.copyOf(resRanksK, resInd);
     }
-
-
 }

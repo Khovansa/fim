@@ -9,6 +9,7 @@ import scala.Tuple2;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -76,6 +77,33 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .collect();
     }
 
+    public JavaRDD<int[]> toRddOfTids(JavaRDD<Tuple2<int[], int[]>> ranks1AndK, TidsGenHelper tidsGenHelper) {
+        return ranks1AndK
+                .zipWithIndex()
+                .flatMap(trAndTid -> new IteratorOverArray<>(
+                        candidateFisGenerator.getRankToTid(trAndTid._1._2, trAndTid._2, tidsGenHelper)))
+                .mapToPair(col -> new Tuple2<>(col[0], col))
+                .foldByKey(new int[]{}, candidateFisGenerator::mergeTids)
+                .sortByKey()
+                .values();
+    }
+
+    public JavaRDD<List<Integer>> tmpToListOfTidLists(JavaRDD<int[]> tidsRdd) {
+        return tidsRdd.map(this::tmpToShortedTids);
+    }
+    public List<Integer> tmpToShortedTids(int[] tids) {
+        if (tids.length == 0) {
+            return Collections.emptyList();
+        }
+        int totElemsToCopy = Math.min(tids.length, 100);
+        List<Integer> res = new ArrayList<>(2 + totElemsToCopy);
+        res.add(tids[0]);
+        res.add(tids.length-1);
+        for (int ii=1; ii<totElemsToCopy; ++ii) {
+            res.add(tids[ii]);
+        }
+        return res;
+    }
     public List<int[]> fkAsArraysToRankPairs(List<int[]> cols) {
         List<int[]> res = new ArrayList<>(cols.size() * cols.size());
         for (int[] col : cols) {
