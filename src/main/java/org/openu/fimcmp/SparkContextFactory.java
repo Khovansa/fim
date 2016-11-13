@@ -2,10 +2,7 @@ package org.openu.fimcmp;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.openu.fimcmp.apriori.AprCandidateFisGenerator;
-import org.openu.fimcmp.apriori.AprioriAlg;
-import org.openu.fimcmp.apriori.PairRanks;
-import org.openu.fimcmp.apriori.TidsGenHelper;
+import org.openu.fimcmp.apriori.*;
 import org.openu.fimcmp.util.BoundedIntPairSet;
 import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
@@ -41,7 +38,7 @@ public class SparkContextFactory {
                 Tuple2.class, Tuple2[].class,
                 new ArrayList<>().iterator().getClass(),
                 AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class, PairRanks.class,
-                TidsGenHelper.class, boolean[].class
+                TidsGenHelper.class, boolean[].class, TidMergeSet.class
         });
 
         JavaSparkContext sc = new JavaSparkContext(conf);

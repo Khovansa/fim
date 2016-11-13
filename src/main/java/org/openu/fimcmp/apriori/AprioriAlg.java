@@ -8,10 +8,7 @@ import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -77,33 +74,67 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .collect();
     }
 
-    public JavaRDD<int[]> toRddOfTids(JavaRDD<Tuple2<int[], int[]>> ranks1AndK, TidsGenHelper tidsGenHelper) {
+    public JavaRDD<long[]> toRddOfTids(JavaRDD<Tuple2<int[], int[]>> ranks1AndK, TidsGenHelper tidsGenHelper) {
         return ranks1AndK
                 .zipWithIndex()
                 .flatMap(trAndTid -> new IteratorOverArray<>(
                         candidateFisGenerator.getRankToTid(trAndTid._1._2, trAndTid._2, tidsGenHelper)))
                 .mapToPair(col -> new Tuple2<>(col[0], col))
-                .foldByKey(new int[]{}, candidateFisGenerator::mergeTids)
+                .foldByKey(new long[]{}, candidateFisGenerator::mergeTids)
                 .sortByKey()
                 .values();
     }
 
-    public JavaRDD<List<Integer>> tmpToListOfTidLists(JavaRDD<int[]> tidsRdd) {
+    public JavaRDD<long[]> toRddOfTidsNew(
+            JavaRDD<Tuple2<int[], int[]>> ranks1AndK, TidsGenHelper tidsGenHelper, long totalTids) {
+        return ranks1AndK
+                .zipWithIndex()
+                .flatMap(trAndTid -> new IteratorOverArray<>(
+                        candidateFisGenerator.getRankToTid(trAndTid._1._2, trAndTid._2, tidsGenHelper)))
+                .mapToPair(col -> new Tuple2<>(col[0], col))
+                .aggregateByKey(
+                        new long[]{},
+                        (tidSet, elem) -> TidMergeSet.mergeElem(tidSet, elem, totalTids),
+                        (s1, s2) -> TidMergeSet.mergeSets(s1, s2)
+                )
+                .sortByKey()
+                .values();
+    }
+
+    public JavaRDD<List<Long>> tmpToListOfTidLists(JavaRDD<long[]> tidsRdd) {
         return tidsRdd.map(this::tmpToShortedTids);
     }
-    public List<Integer> tmpToShortedTids(int[] tids) {
+    public List<Long> tmpToShortedTids(long[] tids) {
         if (tids.length == 0) {
             return Collections.emptyList();
         }
         int totElemsToCopy = Math.min(tids.length, 100);
-        List<Integer> res = new ArrayList<>(2 + totElemsToCopy);
+        List<Long> res = new ArrayList<>(2 + totElemsToCopy);
         res.add(tids[0]);
-        res.add(tids.length-1);
+        res.add((long)tids.length-1);
         for (int ii=1; ii<totElemsToCopy; ++ii) {
             res.add(tids[ii]);
         }
         return res;
     }
+    public JavaRDD<List<Long>> tmpToListOfTidListsNew(JavaRDD<long[]> tidsRdd, int maxTidsInRes) {
+        return tidsRdd.map(tidSet -> TidMergeSet.toNormalListOfTids(tidSet, maxTidsInRes));
+    }
+
+    public JavaRDD<List<Long>> tmpToTidCnts(JavaRDD<long[]> tidsRdd) {
+        return tidsRdd.map(AprioriAlg::tmpToTidsCntList);
+    }
+
+    private static List<Long> tmpToTidsCntList(long[] tidSet) {
+        List<Long> res = new ArrayList<>(2);
+        res.add(tidSet[0]);
+        if (tidSet.length > 1) {
+            res.add(tidSet[1]);
+            res.add((long)TidMergeSet.count(tidSet));
+        }
+        return res;
+    }
+
     public List<int[]> fkAsArraysToRankPairs(List<int[]> cols) {
         List<int[]> res = new ArrayList<>(cols.size() * cols.size());
         for (int[] col : cols) {

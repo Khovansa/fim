@@ -120,23 +120,23 @@ public class AprCandidateFisGeneratorTest {
 
     @Test
     public void mergeTids_diffValues_1() throws Exception {
-        int[] col1 = {0, 3, 6, 9};
-        int[] col2 = {0, 1, 2, 3, 5, 6};
+        long[] col1 = {0, 3, 6, 9};
+        long[] col2 = {0, 1, 2, 3, 5, 6};
 
-        int[] res = gen.mergeTids(col1, col2);
+        long[] res = gen.mergeTids(col1, col2);
 
-        int[] expRes = {0, 1, 2, 3, 5, 6, 9};
+        long[] expRes = {0, 1, 2, 3, 5, 6, 9};
         assertThat(res, is(expRes));
     }
 
     @Test
     public void mergeTids_diffValues_2() throws Exception {
-        int[] col1 = {0, 1, 2, 3, 5, 6};
-        int[] col2 = {0, 3, 6, 9};
+        long[] col1 = {0, 1, 2, 3, 5, 6};
+        long[] col2 = {0, 3, 6, 9};
 
-        int[] res = gen.mergeTids(col1, col2);
+        long[] res = gen.mergeTids(col1, col2);
 
-        int[] expRes = {0, 1, 2, 3, 5, 6, 9};
+        long[] expRes = {0, 1, 2, 3, 5, 6, 9};
         assertThat(res, is(expRes));
     }
 
@@ -153,12 +153,12 @@ public class AprCandidateFisGeneratorTest {
 
     @Test
     public void mergeTids_sameValues() throws Exception {
-        int[] col1 = {0, 3, 6, 9};
-        int[] col2 = {0, 3, 6, 9};
+        long[] col1 = {0, 3, 6, 9};
+        long[] col2 = {0, 3, 6, 9};
 
-        int[] res = gen.mergeTids(col1, col2);
+        long[] res = gen.mergeTids(col1, col2);
 
-        int[] expRes = {0, 3, 6, 9};
+        long[] expRes = {0, 3, 6, 9};
         assertThat(res, is(expRes));
     }
 
@@ -175,10 +175,10 @@ public class AprCandidateFisGeneratorTest {
 
     @Test
     public void mergeTids_firstEmpty() throws Exception {
-        int[] col1 = {};
-        int[] col2 = {0, 3, 6, 9};
+        long[] col1 = {};
+        long[] col2 = {0, 3, 6, 9};
 
-        int[] res = gen.mergeTids(col1, col2);
+        long[] res = gen.mergeTids(col1, col2);
 
         assertThat(res, is(col2));
         assertThat(res, not(sameInstance(col2)));
@@ -196,10 +196,10 @@ public class AprCandidateFisGeneratorTest {
 
     @Test
     public void mergeTids_bothEmpty() throws Exception {
-        int[] col1 = {};
-        int[] col2 = {};
+        long[] col1 = {};
+        long[] col2 = {};
 
-        int[] res = gen.mergeTids(col1, col2);
+        long[] res = gen.mergeTids(col1, col2);
 
         assertThat(res, is(col2));
     }
@@ -217,12 +217,12 @@ public class AprCandidateFisGeneratorTest {
 
     @Test
     public void mergeTids_col2IsSubsetOfCol1_noTail() throws Exception {
-        int[] col1 = {0, 19, 20, 21};
-        int[] col2 = {0, 19, 21};
+        long[] col1 = {0, 19, 20, 21};
+        long[] col2 = {0, 19, 21};
 
-        int[] res = gen.mergeTids(col1, col2);
+        long[] res = gen.mergeTids(col1, col2);
 
-        int[] expRes = {0, 19, 20, 21};
+        long[] expRes = {0, 19, 20, 21};
         assertThat(res, is(expRes));
     }
 
@@ -239,23 +239,23 @@ public class AprCandidateFisGeneratorTest {
 
     @Test
     public void mergeTids_col2IsSubsetOfCol1_withTail() throws Exception {
-        int[] col1 = {0, 19, 20, 21, 22};
-        int[] col2 = {0, 19, 21};
+        long[] col1 = {0, 19, 20, 21, 22};
+        long[] col2 = {0, 19, 21};
 
-        int[] res = gen.mergeTids(col1, col2);
+        long[] res = gen.mergeTids(col1, col2);
 
-        int[] expRes = {0, 19, 20, 21, 22};
+        long[] expRes = {0, 19, 20, 21, 22};
         assertThat(res, is(expRes));
     }
 
     @Test
     public void mergeTids_col1IsSubsetOfCol2_withTail() throws Exception {
-        int[] col1 = {0, 19, 21};
-        int[] col2 = {0, 19, 20, 21, 22};
+        long[] col1 = {0, 19, 21};
+        long[] col2 = {0, 19, 20, 21, 22};
 
-        int[] res = gen.mergeTids(col1, col2);
+        long[] res = gen.mergeTids(col1, col2);
 
-        int[] expRes = {0, 19, 20, 21, 22};
+        long[] expRes = {0, 19, 20, 21, 22};
         assertThat(res, is(expRes));
     }
 

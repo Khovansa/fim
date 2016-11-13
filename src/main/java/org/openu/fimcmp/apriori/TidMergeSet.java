@@ -1,8 +1,10 @@
 package org.openu.fimcmp.apriori;
 
-import scala.Tuple2;
-
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Set of TIDs optimized for merge operations. <br/>
@@ -41,9 +43,25 @@ public class TidMergeSet implements Serializable {
     private static final int LAST_ELEM_IND = 3;
     private static final int AUXILIARY_FIELDS_CNT = 4; //rank, size, first, last
 
-    static long[] mergeElem(long[] tidSet, Tuple2<Integer, Long> rankAndTid, long totalTids) {
-        final int rank = rankAndTid._1;
-        final long tid = rankAndTid._2;
+    /**
+     * <pre>
+     * Cases:
+     * - {}: initial empty set, need to be replaced at least by {rank, ...} - created by Spark
+     * - {rank}: 'normal' empty set that includes rank - created by us
+     * - {rank, -1}: single element (itemset rank);
+     *   the case when the itemset is present in a transaction, but we only aggregate those that are not present
+     * - {rank, TID}: single element (itemset rank) - normal case when we want to aggregate the TID for this itemset
+     * - {rank, size, first_elem_ind, last_elem_ind, bitset, ...} - the normal set
+     * </pre>
+     */
+    static long[] merge(long[] s1, long[] s2, long totalTids) {
+        //TODO
+        return new long[]{};
+    }
+
+    static long[] mergeElem(long[] tidSet, long[] rankAndTid, long totalTids) {
+        final int rank = (int)rankAndTid[0];
+        final long tid = rankAndTid[1];
 
         if (tidSet.length <= 1) {
             return newSetWithElem(rank, tid, totalTids);
@@ -69,6 +87,49 @@ public class TidMergeSet implements Serializable {
         return s1;
     }
 
+    static List<Long> toNormalListOfTids(long[] tidSet, int maxTidsInRes) {
+        if (tidSet.length == 0) {
+            return Collections.emptyList();
+        }
+        if (tidSet.length == 1) {
+            return Collections.singletonList(tidSet[0]);
+        }
+
+        ArrayList<Long> res = new ArrayList<>((int)tidSet[SIZE_IND] * 64);
+        int currElemInd = (int)tidSet[FIRST_ELEM_IND];
+        //reserve space for auxiliary stuff, '-1' will not move during the sorting:
+        res.addAll(Arrays.asList(-1L, -1L, -1L));
+        do {
+            long bitSet = tidSet[currElemInd];
+            addAsNormalTids(res, currElemInd, bitSet);
+            currElemInd = (int)tidSet[currElemInd + LONG_BITSETS_PER_PTR];
+        } while(currElemInd != 0);
+
+//        res.sort(null);
+        int actSize = res.size();
+        res = new ArrayList<>(res.subList(0, 3 + Math.min(res.size(), maxTidsInRes)));
+        res.set(0, tidSet[0]);
+        res.set(1, (long) actSize);
+        res.set(2, tidSet[1]);
+        return res;
+    }
+
+    static int count(long[] tidSet) {
+        if (tidSet.length <= 1) {
+            return 0;
+        }
+
+        int res = 0;
+        int currElemInd = (int)tidSet[FIRST_ELEM_IND];
+        do {
+            long bitSet = tidSet[currElemInd];
+            List<Long> tmpRes = new ArrayList<>(64);
+            addAsNormalTids(tmpRes, currElemInd, bitSet);
+            res += tmpRes.size();
+            currElemInd = (int)tidSet[currElemInd + LONG_BITSETS_PER_PTR];
+        } while(currElemInd != 0);
+        return res;
+    }
     private static long[] copyOf(long[] s2) {
         long[] res = new long[s2.length];
         System.arraycopy(s2, 0, res, 0, AUXILIARY_FIELDS_CNT);
@@ -119,6 +180,23 @@ public class TidMergeSet implements Serializable {
             ++tidSet[SIZE_IND];
             int lastElemPtr = (int) tidSet[LAST_ELEM_IND] + LONG_BITSETS_PER_PTR;
             tidSet[LAST_ELEM_IND] = tidSet[lastElemPtr] = newIndex;
+        }
+    }
+
+    private static void addAsNormalTids(List<Long> res, int currElemInd, long bitSet) {
+        int indexInPureBitSet = (currElemInd - AUXILIARY_FIELDS_CNT) / (LONG_BITSETS_PER_PTR + 1);
+        long base = (indexInPureBitSet << REMAINDER_BITS_CNT);
+
+        long currBitSet = bitSet;
+        int currBitInd = 0;
+        while (currBitSet != 0) {
+            int bit = (int)(currBitSet & 1);
+            if (bit != 0) {
+                res.add(base + currBitInd);
+            }
+            ++currBitInd;
+            //shift and make sure the MSB=0 after the shift (not the case for negative numbers):
+            currBitSet = (currBitSet >> 1) & 0x7fffffffffffffffL;
         }
     }
 

@@ -127,7 +127,7 @@ public class AprCandidateFisGenerator implements Serializable {
      * Return array of [rank, tid] for all ranks that require this
      * (see {@link TidsGenHelper#isStoreTidForRank} for details. <br/>
      */
-    int[][] getRankToTid(int[] transactionRanksK, long tid, TidsGenHelper tidsGenHelper) {
+    long[][] getRankToTid(int[] transactionRanksK, long tid, TidsGenHelper tidsGenHelper) {
         Set<Integer> ranksSet = new HashSet<>(transactionRanksK.length * 2);
         for (int rank : transactionRanksK) {
             ranksSet.add(rank);
@@ -143,13 +143,13 @@ public class AprCandidateFisGenerator implements Serializable {
         }
 
         //create the result:
-        int[][] res = new int[resCnt][];
+        long[][] res = new long[resCnt][];
         int resInd = 0;
         for (int rank = 0; rank < totalRanks; ++rank) {
             if (tidsGenHelper.isStoreTidForRank(rank, ranksSet)) {
-                res[resInd++] = new int[]{rank, (int) tid};
+                res[resInd++] = new long[]{rank, tid};
             } else if (ranksSet.contains(rank)) {
-                res[resInd++] = new int[]{rank}; //need to have it for the case this rank is present in all transactions
+                res[resInd++] = new long[]{rank, -1}; //need to have it for the case this rank is present in all transactions
             }
         }
         return res;
@@ -184,11 +184,11 @@ public class AprCandidateFisGenerator implements Serializable {
     /**
      * The TID-list column structure is: [rank, tid1, tid2, ... tidN]
      */
-    int[] mergeTids(int[] col1, int[] col2) {
-        if (col1.length <= 1) {
+    long[] mergeTids(long[] col1, long[] col2) {
+        if (col1.length <= 1 || col1[1] < 0) {
             return Arrays.copyOf(col2, col2.length);
         }
-        if (col2.length <= 1) {
+        if (col2.length <= 1 || col2[1] < 0) {
             return col1;
         }
 
@@ -203,7 +203,7 @@ public class AprCandidateFisGenerator implements Serializable {
         }
 
         //need to create a new array:
-        int[] res = new int[resLength];
+        long[] res = new long[resLength];
         mergeTidListsToRes(res, col1, col2);
         return res;
     }
@@ -274,11 +274,11 @@ public class AprCandidateFisGenerator implements Serializable {
         return res;
     }
 
-    private int getDifferentTidsCount(int[] col1, int[] col2) {
+    private int getDifferentTidsCount(long[] col1, long[] col2) {
         int i1 = 1, i2 = 1; //1 since skipping over the 'rank'
         int res = 0;
         while (i1 < col1.length && i2 < col2.length) {
-            int cmp = Integer.compare(col1[i1], col2[i2]);
+            int cmp = Long.compare(col1[i1], col2[i2]);
             ++res;
             if (cmp <= 0) {
                 ++i1;
@@ -318,11 +318,11 @@ public class AprCandidateFisGenerator implements Serializable {
         }
     }
 
-    private void mergeTidListsToRes(int[] res, int[] col1, int[] col2) {
+    private void mergeTidListsToRes(long[] res, long[] col1, long[] col2) {
         res[0] = col1[0]; //the rank
         int i1 = 1, i2 = 1, ir = 1;
         while (i1 < col1.length && i2 < col2.length) {
-            int cmp = Integer.compare(col1[i1], col2[i2]);
+            int cmp = Long.compare(col1[i1], col2[i2]);
             if (cmp < 0) {
                 res[ir++] = col1[i1++];
             } else if (cmp > 0) {

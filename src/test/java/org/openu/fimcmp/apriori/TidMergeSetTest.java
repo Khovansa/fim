@@ -1,30 +1,32 @@
 package org.openu.fimcmp.apriori;
 
 import org.junit.Test;
-import scala.Tuple2;
 
 import java.util.Arrays;
-
-import static org.junit.Assert.*;
 
 public class TidMergeSetTest {
     @Test
     public void tmp() {
         final long totalTids = 180L;
         final int rank = 17;
-        long[] res = TidMergeSet.mergeElem(new long[]{}, new Tuple2<>(rank, 23L), totalTids);
-        res = TidMergeSet.mergeElem(res, new Tuple2<>(rank, 0L), totalTids);
-        res = TidMergeSet.mergeElem(res, new Tuple2<>(rank, 2L), totalTids);
-        res = TidMergeSet.mergeElem(res, new Tuple2<>(rank, 5L), totalTids);
-        res = TidMergeSet.mergeElem(res, new Tuple2<>(rank, 179L), totalTids);
-        res = TidMergeSet.mergeElem(res, new Tuple2<>(rank, 129L), totalTids);
-        res = TidMergeSet.mergeElem(res, new Tuple2<>(rank, 128L), totalTids);
+        long[] res = TidMergeSet.mergeElem(new long[]{}, new long[]{rank, 23L}, totalTids);
+        res = TidMergeSet.mergeElem(res, new long[]{rank, 0L}, totalTids);
+        res = TidMergeSet.mergeElem(res, new long[]{rank, 2L}, totalTids);
+        res = TidMergeSet.mergeElem(res, new long[]{rank, 5L}, totalTids);
+        res = TidMergeSet.mergeElem(res, new long[]{rank, 179L}, totalTids);
+        res = TidMergeSet.mergeElem(res, new long[]{rank, 129L}, totalTids);
+        res = TidMergeSet.mergeElem(res, new long[]{rank, 128L}, totalTids);
 
-        long[] res2 = TidMergeSet.mergeElem(new long[]{}, new Tuple2<>(rank, 23L), totalTids);
-        res2 = TidMergeSet.mergeElem(res2, new Tuple2<>(rank, 64L), totalTids);
-        res2 = TidMergeSet.mergeElem(res2, new Tuple2<>(rank, 65L), totalTids);
-        res2 = TidMergeSet.mergeElem(res2, new Tuple2<>(rank, 66L), totalTids);
-        res2 = TidMergeSet.mergeElem(res2, new Tuple2<>(rank, 127L), totalTids);
+        long[] res2 = TidMergeSet.mergeElem(new long[]{}, new long[]{rank, 23L}, totalTids);
+        res2 = TidMergeSet.mergeElem(res2, new long[]{rank, 64L}, totalTids);
+        res2 = TidMergeSet.mergeElem(res2, new long[]{rank, 65L}, totalTids);
+        res2 = TidMergeSet.mergeElem(res2, new long[]{rank, 66L}, totalTids);
+        res2 = TidMergeSet.mergeElem(res2, new long[]{rank, 127L}, totalTids);
+        res2 = TidMergeSet.mergeElem(res2, new long[]{rank, 126L}, totalTids);
+        res2 = TidMergeSet.mergeElem(res2, new long[]{rank, 125L}, totalTids);
+        res2 = TidMergeSet.mergeElem(res2, new long[]{rank, 124L}, totalTids);
+        res2 = TidMergeSet.mergeElem(res2, new long[]{rank, 0L}, totalTids);
+        res2 = TidMergeSet.mergeElem(res2, new long[]{rank, 1L}, totalTids);
         System.out.println("s1:");
         System.out.println(Arrays.toString(res));
         System.out.println(Long.toBinaryString(res[(int)res[2]]));
@@ -40,6 +42,8 @@ public class TidMergeSetTest {
         System.out.println(Arrays.toString(res));
         System.out.println(Long.toBinaryString(res[(int)res[2]]));
         System.out.println(Long.toBinaryString(res[(int)res[3]]));
+
+        System.out.println(TidMergeSet.toNormalListOfTids(res, 100));
     }
 
 }
