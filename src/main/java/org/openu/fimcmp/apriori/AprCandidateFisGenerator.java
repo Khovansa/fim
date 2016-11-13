@@ -128,16 +128,16 @@ public class AprCandidateFisGenerator implements Serializable {
      * (see {@link TidsGenHelper#isStoreTidForRank} for details. <br/>
      */
     long[][] getRankToTid(int[] transactionRanksK, long tid, TidsGenHelper tidsGenHelper) {
-        Set<Integer> ranksSet = new HashSet<>(transactionRanksK.length * 2);
+        final int totalRanks = tidsGenHelper.totalRanks();
+        BitSet ranksSet = new BitSet(totalRanks);
         for (int rank : transactionRanksK) {
-            ranksSet.add(rank);
+            ranksSet.set(rank);
         }
 
         //count the result:
-        final int totalRanks = tidsGenHelper.totalRanks();
         int resCnt = 0;
         for (int rank = 0; rank < totalRanks; ++rank) {
-            if (tidsGenHelper.isStoreTidForRank(rank, ranksSet) || ranksSet.contains(rank)) {
+            if (tidsGenHelper.isStoreTidForRank(rank, ranksSet) || ranksSet.get(rank)) {
                 ++resCnt;
             }
         }
@@ -148,7 +148,7 @@ public class AprCandidateFisGenerator implements Serializable {
         for (int rank = 0; rank < totalRanks; ++rank) {
             if (tidsGenHelper.isStoreTidForRank(rank, ranksSet)) {
                 res[resInd++] = new long[]{rank, tid};
-            } else if (ranksSet.contains(rank)) {
+            } else if (ranksSet.get(rank)) {
                 res[resInd++] = new long[]{rank, -1}; //need to have it for the case this rank is present in all transactions
             }
         }

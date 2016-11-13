@@ -25,7 +25,7 @@ public class AprioriAlgIT extends AlgITBase {
 
     @Test
     public void test() throws Exception {
-        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.06, false);
+        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.2, false);
 //        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false);
         apr = new AprioriAlg<>(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
