@@ -126,12 +126,16 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     }
 
     private static List<Long> tmpToTidsCntList(long[] tidSet) {
-        List<Long> res = new ArrayList<>(2);
+        List<Long> res = new ArrayList<>(10);
         res.add(tidSet[0]);
         if (tidSet.length > 1) {
-            res.add(tidSet[1]);
+            res.add(tidSet[TidMergeSet.SIZE_IND]);
             res.add((long)TidMergeSet.count(tidSet));
+            res.add(tidSet[TidMergeSet.COPY_CNT_IND]);
+            res.add(tidSet[TidMergeSet.MERGE_CNT_IND]);
+            res.add(tidSet[TidMergeSet.INSERT_CNT_IND]);
         }
+
         return res;
     }
 

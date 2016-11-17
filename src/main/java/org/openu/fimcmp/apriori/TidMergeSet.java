@@ -38,10 +38,13 @@ public class TidMergeSet implements Serializable {
     private static final long REMAINDER_MASK = (2L << REMAINDER_BITS_CNT)-1; //0..0111111
 
     private static final int RANK_IND = 0;
-    private static final int SIZE_IND = 1;
-    private static final int FIRST_ELEM_IND = 2;
-    private static final int LAST_ELEM_IND = 3;
-    private static final int AUXILIARY_FIELDS_CNT = 4; //rank, size, first, last
+    public static final int COPY_CNT_IND = 1;
+    public static final int MERGE_CNT_IND = 2;
+    public static final int INSERT_CNT_IND = 3;
+    public static final int SIZE_IND = 4;
+    private static final int FIRST_ELEM_IND = 5;
+    private static final int LAST_ELEM_IND = 6;
+    private static final int AUXILIARY_FIELDS_CNT = 7; //rank, size, first, last
 
     /**
      * <pre>
@@ -54,11 +57,6 @@ public class TidMergeSet implements Serializable {
      * - {rank, size, first_elem_ind, last_elem_ind, bitset, ...} - the normal set
      * </pre>
      */
-    static long[] merge(long[] s1, long[] s2, long totalTids) {
-        //TODO
-        return new long[]{};
-    }
-
     static long[] mergeElem(long[] tidSet, long[] rankAndTid, long totalTids) {
         final int rank = (int)rankAndTid[0];
         final long tid = rankAndTid[1];
@@ -75,6 +73,9 @@ public class TidMergeSet implements Serializable {
         if (s2.length <= 1) {
             return s1;
         }
+//        if (true) {
+//            throw new RuntimeException();
+//        }
         if (s1.length <= 1) {
             return copyOf(s2);
         }
@@ -84,6 +85,9 @@ public class TidMergeSet implements Serializable {
             addBitsetToExistingSet(s1, currElemInd, s2[currElemInd]);
             currElemInd = (int)s2[currElemInd + LONG_BITSETS_PER_PTR];
         } while(currElemInd !=  0);
+        s1[COPY_CNT_IND] += s2[COPY_CNT_IND];
+        s1[MERGE_CNT_IND] += s2[MERGE_CNT_IND] + 1;
+        s1[INSERT_CNT_IND] += s2[INSERT_CNT_IND] + 1;
         return s1;
     }
 
@@ -140,6 +144,7 @@ public class TidMergeSet implements Serializable {
             System.arraycopy(s2, currElemInd, res, currElemInd, LONG_BITSETS_PER_PTR+1);
             currElemInd = (int)s2[currElemInd + LONG_BITSETS_PER_PTR];
         } while(currElemInd !=  0);
+        ++res[COPY_CNT_IND];
         return res;
     }
 
@@ -156,6 +161,7 @@ public class TidMergeSet implements Serializable {
         int index = getIndex(tid);
         res[FIRST_ELEM_IND] = res[LAST_ELEM_IND] = index;
         res[index] = getRemainderAsBit(tid);
+        res[INSERT_CNT_IND] = 1;
         return res;
     }
 
@@ -169,6 +175,7 @@ public class TidMergeSet implements Serializable {
         int newIndex = getIndex(tid);
         long bitSet = getRemainderAsBit(tid);
         addBitsetToExistingSet(tidSet, newIndex, bitSet);
+        ++tidSet[INSERT_CNT_IND];
     }
 
     private static void addBitsetToExistingSet(long[] tidSet, int newIndex, long bitSet) {

@@ -137,7 +137,7 @@ public class AprCandidateFisGenerator implements Serializable {
         //count the result:
         int resCnt = 0;
         for (int rank = 0; rank < totalRanks; ++rank) {
-            if (tidsGenHelper.isStoreTidForRank(rank, ranksSet) || ranksSet.get(rank)) {
+            if (tidsGenHelper.isStoreTidForRank(rank, ranksSet)/* || ranksSet.get(rank)*/) {
                 ++resCnt;
             }
         }
@@ -148,9 +148,10 @@ public class AprCandidateFisGenerator implements Serializable {
         for (int rank = 0; rank < totalRanks; ++rank) {
             if (tidsGenHelper.isStoreTidForRank(rank, ranksSet)) {
                 res[resInd++] = new long[]{rank, tid};
-            } else if (ranksSet.get(rank)) {
-                res[resInd++] = new long[]{rank, -1}; //need to have it for the case this rank is present in all transactions
             }
+//            else if (ranksSet.get(rank)) {
+//                res[resInd++] = new long[]{rank, -1}; //need to have it for the case this rank is present in all transactions
+//            }
         }
         return res;
     }
