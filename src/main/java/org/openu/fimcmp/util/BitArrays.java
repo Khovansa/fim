@@ -34,13 +34,13 @@ public class BitArrays {
             long word = words[wordIndex];
             if (word != 0) {
                 int base = (wordIndex - bitSetStartInd) * BITS_PER_WORD;
-                resInd = addWordBitsAsNumbers(res, resInd, base, word);
+                resInd = getWordBitsAsNumbers(res, resInd, base, word);
             }
         }
         return res;
     }
 
-    private static int addWordBitsAsNumbers(int[] res, int resInd, int base, long word) {
+    public static int getWordBitsAsNumbers(int[] res, int resInd, int base, long word) {
         long currWord = word;
         while (currWord != 0) {
             int bitIndex = Long.numberOfTrailingZeros(currWord);
@@ -50,6 +50,9 @@ public class BitArrays {
         return resInd;
     }
 
+    public static int base(int wordInd, int bitSetStartInd) {
+        return BITS_PER_WORD * (wordInd - bitSetStartInd);
+    }
 
     private static int wordIndex(int bitSetStartInd, int bitIndex) {
         return bitSetStartInd + (bitIndex >> ADDRESS_BITS_PER_WORD);
