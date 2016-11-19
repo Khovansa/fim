@@ -8,6 +8,7 @@ public class BitArrays {
     private final static int ADDRESS_BITS_PER_WORD = 6;
     private final static int BITS_PER_WORD = (1<<ADDRESS_BITS_PER_WORD);
 
+    @SuppressWarnings("unused")
     public static void setAll(long[] words, int bitSetStartInd, int[] bitIndexes) {
         for (int bitIndex : bitIndexes) {
             set(words, bitSetStartInd, bitIndex);
@@ -30,6 +31,30 @@ public class BitArrays {
             sum += Long.bitCount(words[i]);
         }
         return sum;
+    }
+
+    public static void and(long[] words1AndRes, long[] words2, int startInd, int endInd) {
+        int actEndInd = Math.min(words1AndRes.length, words2.length);
+        int andEndInd = Math.min(actEndInd, endInd);
+        for (int ii = startInd; ii<andEndInd; ++ii) {
+            words1AndRes[ii] &= words2[ii];
+        }
+
+        for (int ii=andEndInd+1; ii<actEndInd; ++ii) {
+            words1AndRes[ii] = 0;
+        }
+    }
+
+    public static void or(long[] words1AndRes, long[] words2, int startInd, int endInd) {
+        int actEndInd = Math.min(words1AndRes.length, words2.length);
+        int orEndInd = Math.min(actEndInd, endInd);
+        for (int ii = startInd; ii<orEndInd; ++ii) {
+            words1AndRes[ii] |= words2[ii];
+        }
+
+        for (int ii=orEndInd+1; ii<actEndInd; ++ii) {
+            words1AndRes[ii] = 1;
+        }
     }
 
     public static int[] asNumbers(long[] words, int bitSetStartInd) {
@@ -63,7 +88,7 @@ public class BitArrays {
         return 1 + wordIndex(maxBitIndex, bitSetStartInd);
     }
 
-    private static int wordIndex(int bitIndex, int bitSetStartInd) {
+    public static int wordIndex(int bitIndex, int bitSetStartInd) {
         return bitSetStartInd + (bitIndex >> ADDRESS_BITS_PER_WORD);
     }
 

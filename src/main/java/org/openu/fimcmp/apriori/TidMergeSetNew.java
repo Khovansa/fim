@@ -1,5 +1,6 @@
 package org.openu.fimcmp.apriori;
 
+import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;
 
@@ -67,6 +68,9 @@ public class TidMergeSetNew implements Serializable {
         }
     }
 
+    /**
+     * Assuming the two sets' ranges do not intersect
+     */
     static long[] mergeSets(long[] s1, long[] s2) {
         if (s2.length <= 1) {
             return s1;
@@ -75,11 +79,23 @@ public class TidMergeSetNew implements Serializable {
             return copyOf(s2);
         }
 
-        //TODO: implement
-        if (true) {
-            throw new RuntimeException("Should not be here");
-        }
-        return s1;
+        long[] lowerSet = (s1[MIN_ELEM_IND] < s2[MIN_ELEM_IND]) ? s1 : s2;
+        long[] higherSet = (s1[MIN_ELEM_IND] < s2[MIN_ELEM_IND]) ? s2 : s1;
+        Assert.isTrue(lowerSet[MAX_ELEM_IND] < higherSet[MIN_ELEM_IND]);
+
+        long[] res = new long[BitArrays.requiredSize((int)higherSet[MAX_ELEM_IND], FIRST_ELEM_IND)];
+        res[RANK_IND] = lowerSet[RANK_IND];
+        res[SIZE_IND] = lowerSet[SIZE_IND] + higherSet[SIZE_IND];
+        res[MIN_ELEM_IND] = lowerSet[MIN_ELEM_IND];
+        res[MAX_ELEM_IND] = higherSet[MAX_ELEM_IND];
+
+        //first set
+        System.arraycopy(lowerSet, FIRST_ELEM_IND, res, FIRST_ELEM_IND, (lowerSet.length - FIRST_ELEM_IND));
+        //second set
+        int destInd = BitArrays.wordIndex((int)higherSet[MIN_ELEM_IND], FIRST_ELEM_IND);
+        System.arraycopy(higherSet, FIRST_ELEM_IND, res, destInd, (higherSet.length - FIRST_ELEM_IND));
+
+        return res;
     }
 
     static int count(long[] tidSet) {
@@ -97,7 +113,7 @@ public class TidMergeSetNew implements Serializable {
             res.add(tidSet[SIZE_IND]);
             res.add(tidSet[MIN_ELEM_IND]);
             res.add(tidSet[MAX_ELEM_IND]);
-            res.add((long)count(tidSet));
+//            res.add((long)count(tidSet));
         }
 
         return res;

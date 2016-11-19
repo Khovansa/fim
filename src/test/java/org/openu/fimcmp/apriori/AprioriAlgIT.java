@@ -25,7 +25,7 @@ public class AprioriAlgIT extends AlgITBase {
 
     @Test
     public void test() throws Exception {
-        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.9, false);
+        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false);
 //        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false);
         apr = new AprioriAlg<>(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
@@ -53,7 +53,7 @@ public class AprioriAlgIT extends AlgITBase {
 //        pp("zzz");
 //        List<Integer[]> f3AsArrays = apr.computeFk(filteredTrs, preprocessedF2);
         JavaRDD<Tuple2<int[], int[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
-        ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
+//        ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
         pp("zzz");
         List<int[]> f3AsArrays = apr.computeFk(3, ranks1And2, preprocessedF2);
         pp("F3 as arrays size: "+f3AsArrays.size());
@@ -74,7 +74,12 @@ public class AprioriAlgIT extends AlgITBase {
         pp("Avg 3-ranks count: " + 1.0 * sum / lens.size());
 
         TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
-        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew3(ranks1And3, tidsGenHelper, prep.totalTrs);
+        JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen(ranks1And3, tidsGenHelper, prep.totalTrs);
+        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
+
+        pp("Starting collecting the TIDs ");
+//        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew3(ranks1And3, tidsGenHelper, prep.totalTrs);
+        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew4(tidAndRanksBitset, prep.totalTrs);
 //        List<List<Long>> allTids = apr.tmpToListOfTidListsNew(tidsRdd, 100).collect();
         List<List<Long>> allTids = apr.tmpToTidCntsNew(tidsRdd).collect();
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTids(ranks1And3, tidsGenHelper);

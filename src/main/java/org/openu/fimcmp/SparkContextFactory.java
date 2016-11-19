@@ -23,6 +23,7 @@ public class SparkContextFactory {
 //        conf.set("spark.kryo.registrationRequired", "true");
         conf.set("spark.kryoserializer.buffer", "100m");
         conf.set("spark.kryoserializer.buffer.max", "256m");
+//        conf.set("spark.reducer.maxSizeInFlight", "48m"); //try 5m
         conf.registerKryoClasses(new Class[]{
                 org.apache.spark.mllib.fpm.FPTree.class, org.apache.spark.mllib.fpm.FPTree.Node.class,
                 /*org.apache.spark.mllib.fpm.FPTree.Summary.class, */
@@ -38,7 +39,8 @@ public class SparkContextFactory {
                 Tuple2.class, Tuple2[].class,
                 new ArrayList<>().iterator().getClass(),
                 AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class, PairRanks.class,
-                TidsGenHelper.class, boolean[].class, TidMergeSet.class
+                TidsGenHelper.class, boolean[].class, TidMergeSet.class,
+                TidMergeSetNew.class, IteratorOverTidAndRanksBitset.class
         });
 
         JavaSparkContext sc = new JavaSparkContext(conf);

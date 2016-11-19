@@ -130,6 +130,24 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .sortByKey()
                 .values();
     }
+    public JavaRDD<long[]> toRddOfTidsNew4(JavaRDD<long[]> tidAndRanksBitset, long totalTids) {
+        return tidAndRanksBitset
+                .flatMap(IteratorOverTidAndRanksBitset::new)
+                .mapToPair(rankAndTid -> new Tuple2<>(rankAndTid._1, rankAndTid))
+                .aggregateByKey(
+                        new long[]{},
+                        (tidSet, elem) -> TidMergeSetNew.mergeElem(tidSet, elem, totalTids),
+                        TidMergeSetNew::mergeSets
+                )
+                .sortByKey()
+                .values();
+    }
+    public JavaRDD<long[]> prepareToTidsGen(
+            JavaRDD<Tuple2<int[], int[]>> ranks1AndK, TidsGenHelper tidsGenHelper, long totalTids) {
+        return ranks1AndK
+                .zipWithIndex()
+                .map(trAndTid -> candidateFisGenerator.getRankToTidNew(trAndTid._1._2, trAndTid._2, tidsGenHelper));
+    }
 
     public JavaRDD<List<Long>> tmpToListOfTidLists(JavaRDD<long[]> tidsRdd) {
         return tidsRdd.map(this::tmpToShortedTids);
