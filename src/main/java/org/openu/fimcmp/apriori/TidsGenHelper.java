@@ -1,6 +1,7 @@
 package org.openu.fimcmp.apriori;
 
 import org.openu.fimcmp.util.Assert;
+import org.openu.fimcmp.util.BitArrays;
 
 import java.io.Serializable;
 import java.util.BitSet;
@@ -44,6 +45,12 @@ public class TidsGenHelper implements Serializable {
         //store TID if the transaction contains the itemset and we should store the TIDs containing the itemset
         //OR if the transaction does not contain the itemset and we should store the TIDs NOT containing the itemset:
         return transactionRanks.get(rank) == rankToIsStoreContainingTids[rank];
+    }
+
+    boolean isStoreTidForRank(int rank, long[] transactionRanksAsBitset) {
+        //store TID if the transaction contains the itemset and we should store the TIDs containing the itemset
+        //OR if the transaction does not contain the itemset and we should store the TIDs NOT containing the itemset:
+        return BitArrays.get(transactionRanksAsBitset, 0, rank) == rankToIsStoreContainingTids[rank];
     }
 
     private TidsGenHelper(boolean[] rankToIsStoreContainingTids) {

@@ -1,5 +1,6 @@
 package org.openu.fimcmp.apriori;
 
+import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;
 
 import java.io.Serializable;
@@ -152,6 +153,25 @@ public class AprCandidateFisGenerator implements Serializable {
 //            else if (ranksSet.get(rank)) {
 //                res[resInd++] = new long[]{rank, -1}; //need to have it for the case this rank is present in all transactions
 //            }
+        }
+        return res;
+    }
+    long[] getRankToTidNew(int[] transactionRanksK, long tid, TidsGenHelper tidsGenHelper) {
+        final int START_IND = 1;
+        final int totalRanks = tidsGenHelper.totalRanks();
+        long[] res = new long[BitArrays.requiredSize(totalRanks - 1, START_IND)];
+        res[0] = tid;
+//        BitArrays.setAll(res, 1, transactionRanksK);
+
+        long[] ranksSet = new long[BitArrays.requiredSize(totalRanks - 1, 0)];
+        for (int rank : transactionRanksK) {
+            BitArrays.set(ranksSet, 0, rank);
+        }
+
+        for (int rank = 0; rank < totalRanks; ++rank) {
+            if (tidsGenHelper.isStoreTidForRank(rank, ranksSet)) {
+                BitArrays.set(res, START_IND, rank);
+            }
         }
         return res;
     }

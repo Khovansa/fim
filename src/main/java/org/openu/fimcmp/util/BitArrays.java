@@ -8,15 +8,20 @@ public class BitArrays {
     private final static int ADDRESS_BITS_PER_WORD = 6;
     private final static int BITS_PER_WORD = (1<<ADDRESS_BITS_PER_WORD);
 
+    public static void setAll(long[] words, int bitSetStartInd, int[] bitIndexes) {
+        for (int bitIndex : bitIndexes) {
+            set(words, bitSetStartInd, bitIndex);
+        }
+    }
+
     public static void set(long[] words, int bitSetStartInd, int bitIndex) {
-        int wordIndex = wordIndex(bitSetStartInd, bitIndex);
+        int wordIndex = wordIndex(bitIndex, bitSetStartInd);
         words[wordIndex] |= asBit(bitIndex);
     }
 
     public static boolean get(long[] words, int bitSetStartInd, int bitIndex) {
-        int wordIndex = wordIndex(bitSetStartInd, bitIndex);
+        int wordIndex = wordIndex(bitIndex, bitSetStartInd);
         return ((words[wordIndex] & (1L << bitIndex)) != 0);
-
     }
 
     public static int cardinality(long[] words, int bitSetStartInd) {
@@ -54,7 +59,11 @@ public class BitArrays {
         return BITS_PER_WORD * (wordInd - bitSetStartInd);
     }
 
-    private static int wordIndex(int bitSetStartInd, int bitIndex) {
+    public static int requiredSize(int maxBitIndex, int bitSetStartInd) {
+        return 1 + wordIndex(maxBitIndex, bitSetStartInd);
+    }
+
+    private static int wordIndex(int bitIndex, int bitSetStartInd) {
         return bitSetStartInd + (bitIndex >> ADDRESS_BITS_PER_WORD);
     }
 

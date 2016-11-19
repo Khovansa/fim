@@ -15,8 +15,8 @@ public class BitArraysTest {
 
     @Test
     public void test() {
-        long[] words = new long[23];
         int[] indexes = {0, 1, 7, 63, 64, 65, 128, 192, 200, 213, 214, 1034, 1234};
+        long[] words = new long[BitArrays.requiredSize(indexes[indexes.length-1], START_IND)];
         for (int bitIndex : indexes) {
             BitArrays.set(words, START_IND, bitIndex);
         }

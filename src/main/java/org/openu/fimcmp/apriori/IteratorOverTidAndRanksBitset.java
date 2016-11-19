@@ -10,7 +10,7 @@ import java.util.Iterator;
  * long[0] = TID <br/>
  * long[1..end) = bitset of integer ranks
  */
-public class IteratorOverTidAndRanksBitset implements Iterator<Tuple2<Long, Integer>> {
+public class IteratorOverTidAndRanksBitset implements Iterator<Tuple2<Integer, Long>> {
     static final int START_IND = 1; //one place for TID
     private static final int BITS_PER_WORD = 64;
     private static final int NO_NEXT_NUM_IND = -2;
@@ -35,8 +35,8 @@ public class IteratorOverTidAndRanksBitset implements Iterator<Tuple2<Long, Inte
     }
 
     @Override
-    public Tuple2<Long, Integer> next() {
-        return new Tuple2<>(words[0], nextRank());
+    public Tuple2<Integer, Long> next() {
+        return new Tuple2<>(nextRank(), words[0]);
     }
 
     private int nextRank() {

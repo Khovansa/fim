@@ -21,14 +21,14 @@ public class IteratorOverTidAndRanksBitsetTest {
         words[0] = TID;
 
         int[] ranks = {0, 1, 7, 63, 64, 65, 128, 192, 200, 213, 214, 1034, 1234};
-        List<Tuple2<Long, Integer>> expRes = new ArrayList<>(ranks.length);
+        List<Tuple2<Integer, Long>> expRes = new ArrayList<>(ranks.length);
         for (int rank : ranks) {
             BitArrays.set(words, START_IND, rank);
-            expRes.add(new Tuple2<>(TID, rank));
+            expRes.add(new Tuple2<>(rank, TID));
         }
 
         IteratorOverTidAndRanksBitset it = new IteratorOverTidAndRanksBitset(words);
-        List<Tuple2<Long, Integer>> actRes = new ArrayList<>(ranks.length);
+        List<Tuple2<Integer, Long>> actRes = new ArrayList<>(ranks.length);
         while (it.hasNext()) {
             actRes.add(it.next());
         }
@@ -43,7 +43,7 @@ public class IteratorOverTidAndRanksBitsetTest {
         BitArrays.set(words, START_IND, 5);
         IteratorOverTidAndRanksBitset it = new IteratorOverTidAndRanksBitset(words);
 
-        assertThat(it.next(), is(new Tuple2<>(TID, 5)));
+        assertThat(it.next(), is(new Tuple2<>(5, TID)));
         it.next();
     }
 

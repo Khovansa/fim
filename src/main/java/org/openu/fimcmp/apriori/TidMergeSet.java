@@ -1,5 +1,7 @@
 package org.openu.fimcmp.apriori;
 
+import scala.Tuple2;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,7 +62,16 @@ public class TidMergeSet implements Serializable {
     static long[] mergeElem(long[] tidSet, long[] rankAndTid, long totalTids) {
         final int rank = (int)rankAndTid[0];
         final long tid = rankAndTid[1];
+        return mergeElem(tidSet, rank, tid, totalTids);
+    }
 
+    static long[] mergeElem(long[] tidSet, Tuple2<Integer, Long> rankAndTid, long totalTids) {
+        final int rank = rankAndTid._1;
+        final long tid = rankAndTid._2;
+        return mergeElem(tidSet, rank, tid, totalTids);
+    }
+
+    static long[] mergeElem(long[] tidSet, int rank, long tid, long totalTids) {
         if (tidSet.length <= 1) {
             return newSetWithElem(rank, tid, totalTids);
         } else {
@@ -68,7 +79,6 @@ public class TidMergeSet implements Serializable {
             return tidSet;
         }
     }
-
     static long[] mergeSets(long[] s1, long[] s2) {
         if (s2.length <= 1) {
             return s1;
