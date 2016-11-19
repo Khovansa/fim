@@ -95,7 +95,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .aggregateByKey(
                         new long[]{},
                         (tidSet, elem) -> TidMergeSet.mergeElem(tidSet, elem, totalTids),
-                        (s1, s2) -> TidMergeSet.mergeSets(s1, s2)
+                        TidMergeSet::mergeSets
                 )
                 .sortByKey()
                 .values();
@@ -110,7 +110,22 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .aggregateByKey(
                         new long[]{},
                         (tidSet, elem) -> TidMergeSet.mergeElem(tidSet, elem, totalTids),
-                        (s1, s2) -> TidMergeSet.mergeSets(s1, s2)
+                        TidMergeSet::mergeSets
+                )
+                .sortByKey()
+                .values();
+    }
+    public JavaRDD<long[]> toRddOfTidsNew3(
+            JavaRDD<Tuple2<int[], int[]>> ranks1AndK, TidsGenHelper tidsGenHelper, long totalTids) {
+        return ranks1AndK
+                .zipWithIndex()
+                .flatMap(trAndTid -> new IteratorOverTidAndRanksBitset(
+                        candidateFisGenerator.getRankToTidNew(trAndTid._1._2, trAndTid._2, tidsGenHelper)))
+                .mapToPair(rankAndTid -> new Tuple2<>(rankAndTid._1, rankAndTid))
+                .aggregateByKey(
+                        new long[]{},
+                        (tidSet, elem) -> TidMergeSetNew.mergeElem(tidSet, elem, totalTids),
+                        TidMergeSetNew::mergeSets
                 )
                 .sortByKey()
                 .values();
@@ -137,21 +152,11 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     }
 
     public JavaRDD<List<Long>> tmpToTidCnts(JavaRDD<long[]> tidsRdd) {
-        return tidsRdd.map(AprioriAlg::tmpToTidsCntList);
+        return tidsRdd.map(TidMergeSet::describeAsList);
     }
 
-    private static List<Long> tmpToTidsCntList(long[] tidSet) {
-        List<Long> res = new ArrayList<>(10);
-        res.add(tidSet[0]);
-        if (tidSet.length > 1) {
-            res.add(tidSet[TidMergeSet.SIZE_IND]);
-            res.add((long)TidMergeSet.count(tidSet));
-            res.add(tidSet[TidMergeSet.COPY_CNT_IND]);
-            res.add(tidSet[TidMergeSet.MERGE_CNT_IND]);
-            res.add(tidSet[TidMergeSet.INSERT_CNT_IND]);
-        }
-
-        return res;
+    public JavaRDD<List<Long>> tmpToTidCntsNew(JavaRDD<long[]> tidsRdd) {
+        return tidsRdd.map(TidMergeSetNew::describeAsList);
     }
 
     public List<int[]> fkAsArraysToRankPairs(List<int[]> cols) {

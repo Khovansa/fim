@@ -25,7 +25,7 @@ public class AprioriAlgIT extends AlgITBase {
 
     @Test
     public void test() throws Exception {
-        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false);
+        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.9, false);
 //        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false);
         apr = new AprioriAlg<>(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
@@ -74,9 +74,9 @@ public class AprioriAlgIT extends AlgITBase {
         pp("Avg 3-ranks count: " + 1.0 * sum / lens.size());
 
         TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
-        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew2(ranks1And3, tidsGenHelper, prep.totalTrs);
+        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew3(ranks1And3, tidsGenHelper, prep.totalTrs);
 //        List<List<Long>> allTids = apr.tmpToListOfTidListsNew(tidsRdd, 100).collect();
-        List<List<Long>> allTids = apr.tmpToTidCnts(tidsRdd).collect();
+        List<List<Long>> allTids = apr.tmpToTidCntsNew(tidsRdd).collect();
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTids(ranks1And3, tidsGenHelper);
 //        List<List<Long>> allTids = apr.tmpToListOfTidLists(tidsRdd).collect();
         pp("TIDs:");

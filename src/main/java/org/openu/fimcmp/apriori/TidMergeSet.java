@@ -40,10 +40,10 @@ public class TidMergeSet implements Serializable {
     private static final long REMAINDER_MASK = (2L << REMAINDER_BITS_CNT)-1; //0..0111111
 
     private static final int RANK_IND = 0;
-    public static final int COPY_CNT_IND = 1;
-    public static final int MERGE_CNT_IND = 2;
-    public static final int INSERT_CNT_IND = 3;
-    public static final int SIZE_IND = 4;
+    private static final int COPY_CNT_IND = 1;
+    private static final int MERGE_CNT_IND = 2;
+    private static final int INSERT_CNT_IND = 3;
+    private static final int SIZE_IND = 4;
     private static final int FIRST_ELEM_IND = 5;
     private static final int LAST_ELEM_IND = 6;
     private static final int AUXILIARY_FIELDS_CNT = 7; //rank, size, first, last
@@ -64,7 +64,6 @@ public class TidMergeSet implements Serializable {
         final long tid = rankAndTid[1];
         return mergeElem(tidSet, rank, tid, totalTids);
     }
-
     static long[] mergeElem(long[] tidSet, Tuple2<Integer, Long> rankAndTid, long totalTids) {
         final int rank = rankAndTid._1;
         final long tid = rankAndTid._2;
@@ -144,6 +143,21 @@ public class TidMergeSet implements Serializable {
         } while(currElemInd != 0);
         return res;
     }
+
+    static List<Long> describeAsList(long[] tidSet) {
+        List<Long> res = new ArrayList<>(10);
+        res.add(tidSet[0]);
+        if (tidSet.length > 1) {
+            res.add(tidSet[SIZE_IND]);
+            res.add((long)count(tidSet));
+            res.add(tidSet[COPY_CNT_IND]);
+            res.add(tidSet[MERGE_CNT_IND]);
+            res.add(tidSet[INSERT_CNT_IND]);
+        }
+
+        return res;
+    }
+
     private static long[] copyOf(long[] s2) {
         long[] res = new long[s2.length];
         System.arraycopy(s2, 0, res, 0, AUXILIARY_FIELDS_CNT);

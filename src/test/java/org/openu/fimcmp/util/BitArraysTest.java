@@ -35,6 +35,23 @@ public class BitArraysTest {
         assertThat(nums, is(asList(indexes)));
     }
 
+    @Test
+    public void tmp() {
+        long num = 345123456789123L;
+        long right = (num & 0xFFFFFFFFL);
+        int rightInt = (int)right;
+        long left = (num>>>32);
+        int leftInt = (int)left;
+        long restoredNum = (((long)leftInt)<<32) + rightInt;
+        System.out.println(String.format("%64s", Long.toBinaryString(num)));
+        System.out.println(String.format("%64s", Long.toBinaryString(right)));
+        System.out.println(String.format("%64s", Long.toBinaryString(rightInt)));
+        System.out.println(String.format("%32s", Long.toBinaryString(left)));
+        System.out.println(String.format("%32s", Long.toBinaryString(leftInt)));
+        System.out.println(String.format("%64s", Long.toBinaryString(restoredNum)));
+        assertThat(restoredNum, is(num));
+    }
+
     private static List<Integer> asList(int[] nums) {
         return Arrays.asList(ArrayUtils.toObject(nums));
     }
