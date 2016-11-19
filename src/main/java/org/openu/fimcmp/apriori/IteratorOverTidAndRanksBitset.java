@@ -11,55 +11,70 @@ import java.util.Iterator;
  * long[1..end) = bitset of integer ranks
  */
 public class IteratorOverTidAndRanksBitset implements Iterator<Tuple2<Long, Integer>> {
-    private static final int START_IND = 1;
-    private final long[] tidAndRanksBitset;
-    private int wordInd;
-    private int[] nums = new int[64];
-    private int numInd = -2;
+    static final int START_IND = 1; //one place for TID
+    private static final int BITS_PER_WORD = 64;
+    private static final int NO_NEXT_NUM_IND = -2;
+    private static final int HEAD_NUM_IND = 0; //the first index
+    private static final int NUMS_END_VALUE = -1;
+
+    private final long[] words;
+    private final int[] nums;
+    private int nextWordInd;
+    private int nextNumInd;
 
     public IteratorOverTidAndRanksBitset(long[] tidAndRanksBitset) {
-        this.tidAndRanksBitset = tidAndRanksBitset;
-        moveWordIndexBeforeNextNonZeroWord();
+        this.words = tidAndRanksBitset;
+        this.nums = new int[BITS_PER_WORD + 1];
+        this.nextWordInd = START_IND - 1; //just before the start
+        moveWordIndexToNextNonZeroWord();
     }
 
     @Override
     public boolean hasNext() {
-        return numInd >= -1 || wordInd + 1 < tidAndRanksBitset.length;
+        return hasNextNum() || nextWordInd < words.length;
     }
 
     @Override
     public Tuple2<Long, Integer> next() {
-        return new Tuple2<>(tidAndRanksBitset[0], nextRank());
+        return new Tuple2<>(words[0], nextRank());
     }
 
     private int nextRank() {
         //compute the result:
-        if (numInd < -1) { //the current word is not converted to numbers
-            //convert the next word to numbers
-            ++wordInd;
-            int base = BitArrays.base(wordInd, START_IND);
-            int endNumInd = BitArrays.getWordBitsAsNumbers(nums, 0, base, tidAndRanksBitset[wordInd]);
-            if (endNumInd < nums.length) {
-                nums[endNumInd] = 0;
-            }
-            numInd = -1;
+        if (!hasNextNum()) { //need to go to the next word
+            recomputeNums(); //convert the next word to numbers
         }
-        int res = nums[++numInd];
+        int res = nums[nextNumInd++];
 
-        //move just before the next value:
-        if (numInd + 1 >= nums.length || nums[numInd]==0) {
-            moveWordIndexBeforeNextNonZeroWord();
+        if (atNumsEnd()) { //no next value in 'nums'
+            moveWordIndexToNextNonZeroWord(); //move 'nextWordInd' to the next non-zero word
         }
 
         return res;
     }
 
-    private void moveWordIndexBeforeNextNonZeroWord() {
-        int currWordInd = START_IND;
-        while (currWordInd<tidAndRanksBitset.length && tidAndRanksBitset[currWordInd] == 0) {
-            ++currWordInd;
+    private boolean hasNextNum() {
+        return nextNumInd != NO_NEXT_NUM_IND && !atNumsEnd();
+    }
+
+    private void recomputeNums() {
+        int base = BitArrays.base(nextWordInd, START_IND);
+        int endNumInd = BitArrays.getWordBitsAsNumbers(nums, 0, base, words[nextWordInd]);
+        nums[endNumInd] = NUMS_END_VALUE;
+        nextNumInd = HEAD_NUM_IND;
+    }
+
+    private boolean atNumsEnd() {
+        return nums[nextNumInd] == NUMS_END_VALUE;
+    }
+
+    //move 'nextWordInd' to point to the next non-zero word
+    private void moveWordIndexToNextNonZeroWord() {
+        nextNumInd = NO_NEXT_NUM_IND;
+
+        ++nextWordInd;
+        while (nextWordInd < words.length && words[nextWordInd] == 0) {
+            ++nextWordInd;
         }
-        wordInd = currWordInd-1;
-        numInd = -2;
     }
 }
