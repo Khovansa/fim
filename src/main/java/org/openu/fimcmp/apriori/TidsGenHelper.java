@@ -15,8 +15,9 @@ import java.util.Set;
  */
 public class TidsGenHelper implements Serializable {
     private final boolean[] rankToIsStoreContainingTids;
+    private final int totalFreqItems;
 
-    static TidsGenHelper construct(List<int[]> fk, PairRanks rankPairsK, int totalTids) {
+    static TidsGenHelper construct(List<int[]> fk, PairRanks rankPairsK, int totalTids, int totalFreqItems) {
         Assert.isTrue(totalTids > 0);
 
         final int totalRanks = rankPairsK.totalRanks();
@@ -34,11 +35,15 @@ public class TidsGenHelper implements Serializable {
             rankToIsStoreContainingTids[rank] = (2 * rankToSupport[rank] <= totalTids);
         }
 
-        return new TidsGenHelper(rankToIsStoreContainingTids);
+        return new TidsGenHelper(rankToIsStoreContainingTids, totalFreqItems);
     }
 
     int totalRanks() {
         return rankToIsStoreContainingTids.length;
+    }
+
+    public int getTotalFreqItems() {
+        return totalFreqItems;
     }
 
     boolean isStoreTidForRank(int rank, BitSet transactionRanks) {
@@ -53,7 +58,8 @@ public class TidsGenHelper implements Serializable {
         return BitArrays.get(transactionRanksAsBitset, 0, rank) == rankToIsStoreContainingTids[rank];
     }
 
-    private TidsGenHelper(boolean[] rankToIsStoreContainingTids) {
+    private TidsGenHelper(boolean[] rankToIsStoreContainingTids, int totalFreqItems) {
         this.rankToIsStoreContainingTids = rankToIsStoreContainingTids;
+        this.totalFreqItems = totalFreqItems;
     }
 }

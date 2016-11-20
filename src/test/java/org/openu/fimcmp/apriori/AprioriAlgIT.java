@@ -29,7 +29,7 @@ public class AprioriAlgIT extends AlgITBase {
 //        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false);
         apr = new AprioriAlg<>(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
-        int totalFreqItems = sortedF1.size();
+        final int totalFreqItems = sortedF1.size();
         pp("F1 size = " + totalFreqItems);
         pp(sortedF1);
         Map<String, Integer> itemToRank = BasicOps.itemToRank(sortedF1);
@@ -53,7 +53,7 @@ public class AprioriAlgIT extends AlgITBase {
 //        pp("zzz");
 //        List<Integer[]> f3AsArrays = apr.computeFk(filteredTrs, preprocessedF2);
         JavaRDD<Tuple2<int[], int[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
-//        ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
+        ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
         pp("zzz");
         List<int[]> f3AsArrays = apr.computeFk(3, ranks1And2, preprocessedF2);
         pp("F3 as arrays size: "+f3AsArrays.size());
@@ -61,7 +61,7 @@ public class AprioriAlgIT extends AlgITBase {
         pp("F3 size: "+f3.size());
         List<FreqItemset<String>> f3Res = apr.fkAsArraysToResItemsets(f3AsArrays, itemToRank, preprocessedF2);
         f3Res = f3Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
-        pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(50, f3Res.size())), "\n"));
+        pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(10, f3Res.size())), "\n"));
 
         CurrSizeFiRanks preprocessedF3 = CurrSizeFiRanks.construct(f3, totalFreqItems, f2.size(), f2Ranks);
         JavaRDD<Tuple2<int[], int[]>> ranks1And3 = apr.toRddOfRanks1AndK(ranks1And2, preprocessedF3);
@@ -73,7 +73,7 @@ public class AprioriAlgIT extends AlgITBase {
         }
         pp("Avg 3-ranks count: " + 1.0 * sum / lens.size());
 
-        TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
+        TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs, totalFreqItems);
         JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen(ranks1And3, tidsGenHelper, prep.totalTrs);
         tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
 
@@ -85,7 +85,7 @@ public class AprioriAlgIT extends AlgITBase {
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTids(ranks1And3, tidsGenHelper);
 //        List<List<Long>> allTids = apr.tmpToListOfTidLists(tidsRdd).collect();
         pp("TIDs:");
-        for (List<Long> tids : allTids) {
+        for (List<Long> tids : allTids.subList(0, 20)) {
             System.out.println(tids);
         }
 

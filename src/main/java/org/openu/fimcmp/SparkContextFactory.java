@@ -23,7 +23,7 @@ public class SparkContextFactory {
 //        conf.set("spark.kryo.registrationRequired", "true");
         conf.set("spark.kryoserializer.buffer", "100m");
         conf.set("spark.kryoserializer.buffer.max", "256m");
-//        conf.set("spark.reducer.maxSizeInFlight", "48m"); //try 5m
+//        conf.set("spark.reducer.maxSizeInFlight", "48m"); //500K worked a bit better
         conf.registerKryoClasses(new Class[]{
                 org.apache.spark.mllib.fpm.FPTree.class, org.apache.spark.mllib.fpm.FPTree.Node.class,
                 /*org.apache.spark.mllib.fpm.FPTree.Summary.class, */
