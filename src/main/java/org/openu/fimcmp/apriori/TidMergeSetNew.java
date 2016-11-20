@@ -1,8 +1,10 @@
 package org.openu.fimcmp.apriori;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;
+import scala.Tuple3;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -36,6 +38,31 @@ public class TidMergeSetNew implements Serializable {
     private static final int MAX_ELEM_IND = 3;
     private static final int FIRST_ELEM_IND = 4;
 
+
+    static long[][] mergeElem2D(
+            long[][] rankKm1ToTidSet,
+            Tuple3<Integer, Integer, Long> rank1RankKAndTid,
+            long totalTids,
+            TidsGenHelper tidsGenHelper) {
+
+        if (rankKm1ToTidSet.length == 0) {
+            rankKm1ToTidSet = new long[tidsGenHelper.getTotalRanksKm1()][];
+        }
+
+        final int rankK = rank1RankKAndTid._2();
+        final long tid = rank1RankKAndTid._3();
+        final int rankKm1 = tidsGenHelper.getRankKm1(rankK);
+        long[] tidSet = rankKm1ToTidSet[rankKm1];
+        rankKm1ToTidSet[rankKm1] = mergeElem(tidSet, rankK, tid, totalTids);
+
+        return rankKm1ToTidSet;
+    }
+
+    static long[][] mergeSets2D(long[][] s1, long[][] s2) {
+        throw new NotImplementedException();
+    }
+
+
     /**
      * <pre>
      * Cases:
@@ -60,7 +87,7 @@ public class TidMergeSetNew implements Serializable {
     }
 
     static long[] mergeElem(long[] tidSet, int rank, long tid, long totalTids) {
-        if (tidSet.length <= 1) {
+        if (tidSet == null || tidSet.length <= 1) {
             return newSetWithElem(rank, tid, totalTids);
         } else {
             addElemToExistingSet(tidSet, tid);

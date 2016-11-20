@@ -1,11 +1,13 @@
 package org.openu.fimcmp.apriori;
 
 import org.apache.spark.HashPartitioner;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
+import scala.Tuple3;
 
 import java.io.Serializable;
 import java.util.*;
@@ -142,8 +144,33 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .sortByKey()
                 .values();
     }
+    public JavaRDD<long[]> toRddOfTidsNew_2D(
+            JavaRDD<long[]> tidAndRanksBitset, long totalTids, TidsGenHelper tidsGenHelper) {
+
+        JavaPairRDD<Integer, Tuple3<Integer, Integer, Long>> keyToTripletRdd = tidAndRanksBitset
+                .flatMap(tidAndRanks -> new IteratorOverTidAndRanksBitset_WithRank1(tidAndRanks, tidsGenHelper))
+                .mapToPair(r1RkTid -> new Tuple2<>(r1RkTid._1(), r1RkTid));
+
+        JavaRDD<long[][]> r1ToRkm1ToTidSet = keyToTripletRdd
+                .aggregateByKey(
+                        new long[][]{},
+                        (rkm1ToTidSet, elem) -> TidMergeSetNew.mergeElem2D(rkm1ToTidSet, elem, totalTids, tidsGenHelper),
+                        TidMergeSetNew::mergeSets2D
+                )
+                .values()
+                .filter(arr -> (arr != null))
+                ;
+
+        return r1ToRkm1ToTidSet
+                .flatMap(IteratorOverArray::new)
+                .filter(arr -> (arr != null))
+                .mapToPair(tidSet -> new Tuple2<>(tidSet[0], tidSet))
+                .sortByKey()
+                .values();
+    }
+
     public JavaRDD<long[]> prepareToTidsGen(
-            JavaRDD<Tuple2<int[], int[]>> ranks1AndK, TidsGenHelper tidsGenHelper, long totalTids) {
+            JavaRDD<Tuple2<int[], int[]>> ranks1AndK, TidsGenHelper tidsGenHelper) {
         return ranks1AndK
                 .zipWithIndex()
                 .map(trAndTid -> candidateFisGenerator.getRankToTidNew(trAndTid._1._2, trAndTid._2, tidsGenHelper));

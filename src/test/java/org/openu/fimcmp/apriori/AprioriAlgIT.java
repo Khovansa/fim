@@ -74,12 +74,13 @@ public class AprioriAlgIT extends AlgITBase {
         pp("Avg 3-ranks count: " + 1.0 * sum / lens.size());
 
         TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
-        JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen(ranks1And3, tidsGenHelper, prep.totalTrs);
+        JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen(ranks1And3, tidsGenHelper);
         tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
 
         pp("Starting collecting the TIDs ");
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew3(ranks1And3, tidsGenHelper, prep.totalTrs);
-        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew4(tidAndRanksBitset, prep.totalTrs);
+//        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew4(tidAndRanksBitset, prep.totalTrs);
+        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew_2D(tidAndRanksBitset, prep.totalTrs, tidsGenHelper);
 //        List<List<Long>> allTids = apr.tmpToListOfTidListsNew(tidsRdd, 100).collect();
         List<List<Long>> allTids = apr.tmpToTidCntsNew(tidsRdd).collect();
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTids(ranks1And3, tidsGenHelper);
