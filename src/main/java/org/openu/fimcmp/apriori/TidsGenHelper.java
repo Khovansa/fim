@@ -6,7 +6,6 @@ import org.openu.fimcmp.util.BitArrays;
 import java.io.Serializable;
 import java.util.BitSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Auxiliary class to help to initialize the TID list per k-itemset (i.e. per its rank). <br/>
@@ -15,35 +14,29 @@ import java.util.Set;
  */
 public class TidsGenHelper implements Serializable {
     private final boolean[] rankToIsStoreContainingTids;
-    private final int totalFreqItems;
+    private final PairRanks rankPairsK;
+    private final int totalRanks1;
+    private final int totalRanksKm1;
 
-    static TidsGenHelper construct(List<int[]> fk, PairRanks rankPairsK, int totalTids, int totalFreqItems) {
+    static TidsGenHelper construct(List<int[]> fk, PairRanks rankPairsK, int totalTids) {
         Assert.isTrue(totalTids > 0);
 
-        final int totalRanks = rankPairsK.totalRanks();
-        int[] rankToSupport = new int[totalRanks]; //initialized with 0's
-        for (int[] itemsetAsPairAndSupport : fk) {
-            int rankK = rankPairsK.pairToRank[itemsetAsPairAndSupport[0]][itemsetAsPairAndSupport[1]];
-            int support = itemsetAsPairAndSupport[2];
-            rankToSupport[rankK] = support;
-        }
+        int[] rankToSupport = computeRankToSupport(fk, rankPairsK);
+        boolean[] rankToIsStoreContainingTids = computeRankToIsStoreContainingTids(rankToSupport, totalTids);
 
-        //whether to store TIDs that contain the itemset or to store TIDs that don't contain the itemset.
-        //The decision is made per k-itemset, i.e. per k-itemset rank:
-        boolean[] rankToIsStoreContainingTids = new boolean[totalRanks];
-        for (int rank=0; rank<totalRanks; ++rank) {
-            rankToIsStoreContainingTids[rank] = (2 * rankToSupport[rank] <= totalTids);
-        }
-
-        return new TidsGenHelper(rankToIsStoreContainingTids, totalFreqItems);
+        return new TidsGenHelper(rankToIsStoreContainingTids, rankPairsK);
     }
 
     int totalRanks() {
         return rankToIsStoreContainingTids.length;
     }
 
-    public int getTotalFreqItems() {
-        return totalFreqItems;
+    public int getTotalRanks1() {
+        return totalRanks1;
+    }
+
+    public int getTotalRanksKm1() {
+        return totalRanksKm1;
     }
 
     boolean isStoreTidForRank(int rank, BitSet transactionRanks) {
@@ -58,8 +51,40 @@ public class TidsGenHelper implements Serializable {
         return BitArrays.get(transactionRanksAsBitset, 0, rank) == rankToIsStoreContainingTids[rank];
     }
 
-    private TidsGenHelper(boolean[] rankToIsStoreContainingTids, int totalFreqItems) {
+    int getRank1(int rankK) {
+        return rankPairsK.rankToPair[rankK][0];
+    }
+
+    int getRankKm1(int rankK) {
+        return rankPairsK.rankToPair[rankK][1];
+    }
+
+    private static int[] computeRankToSupport(List<int[]> fk, PairRanks rankPairsK) {
+        final int totalRanks = rankPairsK.totalRanks();
+        int[] rankToSupport = new int[totalRanks]; //initialized with 0's
+        for (int[] itemsetAsPairAndSupport : fk) {
+            int rankK = rankPairsK.pairToRank[itemsetAsPairAndSupport[0]][itemsetAsPairAndSupport[1]];
+            int support = itemsetAsPairAndSupport[2];
+            rankToSupport[rankK] = support;
+        }
+        return rankToSupport;
+    }
+
+    //Whether to store TIDs that contain the itemset or to store TIDs that don't contain the itemset.
+    //The decision is made per k-itemset, i.e. per k-itemset rank:
+    private static boolean[] computeRankToIsStoreContainingTids(int[] rankToSupport, int totalTids) {
+        final int totalRanks = rankToSupport.length;
+        boolean[] rankToIsStoreContainingTids = new boolean[totalRanks];
+        for (int rank=0; rank<totalRanks; ++rank) {
+            rankToIsStoreContainingTids[rank] = (2 * rankToSupport[rank] <= totalTids);
+        }
+        return rankToIsStoreContainingTids;
+    }
+
+    private TidsGenHelper(boolean[] rankToIsStoreContainingTids, PairRanks rankPairsK) {
         this.rankToIsStoreContainingTids = rankToIsStoreContainingTids;
-        this.totalFreqItems = totalFreqItems;
+        this.rankPairsK = rankPairsK;
+        this.totalRanks1 = 1 + rankPairsK.computeMaxElem1();
+        this.totalRanksKm1 = 1 + rankPairsK.computeMaxElem2();
     }
 }

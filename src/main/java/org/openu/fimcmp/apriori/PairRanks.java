@@ -29,6 +29,31 @@ public class PairRanks implements Serializable {
         return rankToPair.length;
     }
 
+    int totalElems1() {
+        return pairToRank.length;
+    }
+
+    int computeMaxElem1() {
+        return computeMaxElem(0);
+    }
+
+    int totalElems2() {
+        Assert.isTrue(pairToRank.length > 0);
+        return pairToRank[0].length;
+    }
+
+    int computeMaxElem2() {
+        return computeMaxElem(1);
+    }
+
+    private int computeMaxElem(int firstOrSecond) {
+        int res = -1;
+        for (int[] pair : rankToPair) {
+            res = Math.max(res, pair[firstOrSecond]);
+        }
+        Assert.isTrue(res >= 0);
+        return res;
+    }
     private static int[][] constructPairRankToPair(List<int[]> sortedPairs) {
         final int arrSize = sortedPairs.size();
         int[][] res = new int[arrSize][];

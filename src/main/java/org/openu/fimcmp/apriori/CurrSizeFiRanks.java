@@ -59,8 +59,8 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         return currSizeRanks.pairToRank[rank1][rankKm1];
     }
 
-    TidsGenHelper constructTidGenHelper(List<int[]> fk, int totalTids, int totalFreqItems) {
-        return TidsGenHelper.construct(fk, currSizeRanks, totalTids, totalFreqItems);
+    TidsGenHelper constructTidGenHelper(List<int[]> fk, int totalTids) {
+        return TidsGenHelper.construct(fk, currSizeRanks, totalTids);
     }
 
     private static List<int[]> getSortedByDecreasingFreq(List<int[]> currSizeFisAsPairs) {

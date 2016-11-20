@@ -73,7 +73,7 @@ public class AprioriAlgIT extends AlgITBase {
         }
         pp("Avg 3-ranks count: " + 1.0 * sum / lens.size());
 
-        TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs, totalFreqItems);
+        TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
         JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen(ranks1And3, tidsGenHelper, prep.totalTrs);
         tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
 
