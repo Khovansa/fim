@@ -12,7 +12,7 @@ import java.util.List;
  * The TID list per k-itemset rank will be either represented directly or as 'not',
  * i.e. all the TIDs that don't contain this k-itemset.
  */
-public class TidsGenHelper implements Serializable {
+public class TidsGenHelper implements Serializable, Rank1Provider {
     private final boolean[] rankToIsStoreContainingTids;
     private final PairRanks rankPairsK;
     private final int totalRanks1;
@@ -51,11 +51,12 @@ public class TidsGenHelper implements Serializable {
         return BitArrays.get(transactionRanksAsBitset, 0, rank) == rankToIsStoreContainingTids[rank];
     }
 
-    int getRank1(int rankK) {
+    @Override
+    public int getRank1(int rankK) {
         return rankPairsK.rankToPair[rankK][0];
     }
 
-    int getRankKm1(int rankK) {
+    public int getRankKm1(int rankK) {
         return rankPairsK.rankToPair[rankK][1];
     }
 
