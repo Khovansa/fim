@@ -6,7 +6,7 @@ package org.openu.fimcmp.util;
  */
 public class BitArrays {
     private final static int ADDRESS_BITS_PER_WORD = 6;
-    private final static int BITS_PER_WORD = (1<<ADDRESS_BITS_PER_WORD);
+    public final static int BITS_PER_WORD = (1<<ADDRESS_BITS_PER_WORD);
 
     @SuppressWarnings("unused")
     public static void setAll(long[] words, int bitSetStartInd, int[] bitIndexes) {
@@ -31,6 +31,28 @@ public class BitArrays {
             sum += Long.bitCount(words[i]);
         }
         return sum;
+    }
+
+    public static int min(long[] words, int startInd) {
+        for (int wordInd=startInd; wordInd<words.length; ++wordInd) {
+            long word = words[wordInd];
+            if (word != 0) {
+                int base = (wordInd - startInd) * BITS_PER_WORD;
+                return base + Long.numberOfTrailingZeros(word);
+            }
+        }
+        return -1;
+    }
+
+    public static int max(long[] words, int startInd) {
+        for (int wordInd=words.length-1; wordInd>=startInd; --wordInd) {
+            long word = words[wordInd];
+            if (word != 0) {
+                int base = (wordInd - startInd) * BITS_PER_WORD;
+                return base + BITS_PER_WORD - 1 - Long.numberOfLeadingZeros(word);
+            }
+        }
+        return -1;
     }
 
     public static void and(long[] words1AndRes, long[] words2, int startInd, int endInd) {
@@ -68,6 +90,11 @@ public class BitArrays {
             }
         }
         return res;
+    }
+
+    public static int getWordBitsAsNumbersToArr(int[] res, long word, int startInd, int wordInd) {
+        int base = (wordInd - startInd) * BITS_PER_WORD;
+        return getWordBitsAsNumbers(res, 0, base, word);
     }
 
     public static int getWordBitsAsNumbers(int[] res, int resInd, int base, long word) {

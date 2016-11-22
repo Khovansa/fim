@@ -33,6 +33,9 @@ public class BitArraysTest {
 
         List<Integer> nums = asList(BitArrays.asNumbers(words, START_IND));
         assertThat(nums, is(asList(indexes)));
+
+        assertThat(BitArrays.min(words, START_IND), is(0));
+        assertThat(BitArrays.max(words, START_IND), is(1234));
     }
 
     @Test

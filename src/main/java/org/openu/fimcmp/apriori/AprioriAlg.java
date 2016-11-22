@@ -166,7 +166,8 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .filter(arr -> (arr != null))
                 .mapToPair(tidSet -> new Tuple2<>(tidSet[0], tidSet))
                 .sortByKey()
-                .values();
+                .values()
+                .map(TidMergeSetNew::withMetadata);
     }
 
     public JavaRDD<long[]> prepareToTidsGen(

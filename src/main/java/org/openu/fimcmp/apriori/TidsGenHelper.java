@@ -60,6 +60,10 @@ public class TidsGenHelper implements Serializable, Rank1Provider {
         return rankPairsK.rankToPair[rankK][1];
     }
 
+    int getRankK(int rank1, int rankKm1) {
+        return rankPairsK.pairToRank[rank1][rankKm1];
+    }
+
     private static int[] computeRankToSupport(List<int[]> fk, PairRanks rankPairsK) {
         final int totalRanks = rankPairsK.totalRanks();
         int[] rankToSupport = new int[totalRanks]; //initialized with 0's
