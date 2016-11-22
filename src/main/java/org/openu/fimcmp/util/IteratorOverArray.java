@@ -15,6 +15,10 @@ public class IteratorOverArray<V> implements Iterator<V> {
         this.arr = arr;
     }
 
+    public IteratorOverArray(V[] arr, boolean b) {
+        this.arr = arr;
+    }
+
     @Override
     public boolean hasNext() {
         return ii < arr.length - 1;

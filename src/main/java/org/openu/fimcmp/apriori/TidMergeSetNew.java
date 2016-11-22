@@ -133,13 +133,13 @@ public class TidMergeSetNew implements Serializable {
         }
     }
 
-    static List<Long> describeAsList(long[] tidSet) {
-        List<Long> res = new ArrayList<>(10);
-        res.add(tidSet[RANK_IND]);
+    static long[] describeAsList(long[] tidSet) {
+        long[] res = new long[4];
+        res[0] = tidSet[RANK_IND];
         if (tidSet.length > 1) {
-            res.add(tidSet[SIZE_IND]);
-            res.add(tidSet[MIN_ELEM_IND]);
-            res.add(tidSet[MAX_ELEM_IND]);
+            res[1] = tidSet[SIZE_IND];
+            res[2] = tidSet[MIN_ELEM_IND];
+            res[3] = tidSet[MAX_ELEM_IND];
 //            res.add((long)count(tidSet));
         }
 

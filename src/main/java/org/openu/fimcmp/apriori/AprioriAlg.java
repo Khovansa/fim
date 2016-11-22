@@ -162,7 +162,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 ;
 
         return r1ToRkm1ToTidSet
-                .flatMap(IteratorOverArray::new)
+                .flatMap(arr -> new IteratorOverArray<>(arr, true))
                 .filter(arr -> (arr != null))
                 .mapToPair(tidSet -> new Tuple2<>(tidSet[0], tidSet))
                 .sortByKey()
@@ -200,7 +200,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return tidsRdd.map(TidMergeSet::describeAsList);
     }
 
-    public JavaRDD<List<Long>> tmpToTidCntsNew(JavaRDD<long[]> tidsRdd) {
+    public JavaRDD<long[]> tmpToTidCntsNew(JavaRDD<long[]> tidsRdd) {
         return tidsRdd.map(TidMergeSetNew::describeAsList);
     }
 

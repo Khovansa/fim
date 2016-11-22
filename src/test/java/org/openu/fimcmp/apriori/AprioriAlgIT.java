@@ -10,6 +10,7 @@ import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemset;
 import scala.Tuple2;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,6 +55,7 @@ public class AprioriAlgIT extends AlgITBase {
 //        List<Integer[]> f3AsArrays = apr.computeFk(filteredTrs, preprocessedF2);
         JavaRDD<Tuple2<int[], int[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
         ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
+//        ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_AND_DISK_SER());
         pp("zzz");
         List<int[]> f3AsArrays = apr.computeFk(3, ranks1And2, preprocessedF2);
         pp("F3 as arrays size: "+f3AsArrays.size());
@@ -65,29 +67,31 @@ public class AprioriAlgIT extends AlgITBase {
 
         CurrSizeFiRanks preprocessedF3 = CurrSizeFiRanks.construct(f3, totalFreqItems, f2.size(), f2Ranks);
         JavaRDD<Tuple2<int[], int[]>> ranks1And3 = apr.toRddOfRanks1AndK(ranks1And2, preprocessedF3);
+//        ranks1And3 = ranks1And3.persist(StorageLevel.MEMORY_AND_DISK_SER());
 
-        List<Integer> lens = ranks1And3.map(t -> t._2.length).collect();
-        long sum = 0;
-        for (Integer len : lens) {
-            sum += len;
-        }
-        pp("Avg 3-ranks count: " + 1.0 * sum / lens.size());
+//        List<Integer> lens = ranks1And3.map(t -> t._2.length).collect();
+//        long sum = 0;
+//        for (Integer len : lens) {
+//            sum += len;
+//        }
+//        pp("Avg 3-ranks count: " + 1.0 * sum / lens.size());
 
         TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
         JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen(ranks1And3, tidsGenHelper);
-        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
+//        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
+        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_AND_DISK_SER());
 
-        pp("Starting collecting the TIDs ");
+        pp("Starting collecting the TIDs");
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew3(ranks1And3, tidsGenHelper, prep.totalTrs);
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew4(tidAndRanksBitset, prep.totalTrs);
         JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew_2D(tidAndRanksBitset, prep.totalTrs, tidsGenHelper);
 //        List<List<Long>> allTids = apr.tmpToListOfTidListsNew(tidsRdd, 100).collect();
-        List<List<Long>> allTids = apr.tmpToTidCntsNew(tidsRdd).collect();
+        List<long[]> allTids = apr.tmpToTidCntsNew(tidsRdd).collect();
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTids(ranks1And3, tidsGenHelper);
 //        List<List<Long>> allTids = apr.tmpToListOfTidLists(tidsRdd).collect();
         pp("TIDs:");
-        for (List<Long> tids : allTids.subList(0, 20)) {
-            System.out.println(tids);
+        for (long[] tids : allTids.subList(0, 20)) {
+            System.out.println(Arrays.toString(tids));
         }
 
 //        pp("zzz");
