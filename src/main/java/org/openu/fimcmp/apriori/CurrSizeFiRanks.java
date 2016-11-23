@@ -52,6 +52,10 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         return currSizeRanks.rankToPair[rank];
     }
 
+    int getTotalCurrSizeRanks() {
+        return currSizeRanks.totalRanks();
+    }
+
     /**
      * See {@link #construct} for definition of rank1 and rankKm1 (elem1 and elem2)
      */

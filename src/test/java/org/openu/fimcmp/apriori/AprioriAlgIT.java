@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.openu.fimcmp.AlgITBase;
 import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemset;
+import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;
 
 import java.util.Arrays;
@@ -66,10 +67,12 @@ public class AprioriAlgIT extends AlgITBase {
         pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(10, f3Res.size())), "\n"));
 
         CurrSizeFiRanks preprocessedF3 = CurrSizeFiRanks.construct(f3, totalFreqItems, f2.size(), f2Ranks);
-        JavaRDD<Tuple2<int[], int[]>> ranks1And3 = apr.toRddOfRanks1AndK(ranks1And2, preprocessedF3);
+//        JavaRDD<Tuple2<int[], int[]>> ranks1And3 = apr.toRddOfRanks1AndK(ranks1And2, preprocessedF3);
+        JavaRDD<Tuple2<int[], long[]>> ranks1And3 = apr.toRddOfRanks1AndK_BitSet(ranks1And2, preprocessedF3);
 //        ranks1And3 = ranks1And3.persist(StorageLevel.MEMORY_AND_DISK_SER());
 
 //        List<Integer> lens = ranks1And3.map(t -> t._2.length).collect();
+//        List<Integer> lens = ranks1And3.map(t -> BitArrays.cardinality(t._2, 0)).collect();
 //        long sum = 0;
 //        for (Integer len : lens) {
 //            sum += len;
@@ -78,7 +81,8 @@ public class AprioriAlgIT extends AlgITBase {
 
         TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
 //        JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen(ranks1And3, tidsGenHelper);
-        JavaRDD<long[][]> tidAndRanksBitset = apr.prepareToTidsGen2D_AllAtOnce(ranks1And3, tidsGenHelper);
+//        JavaRDD<long[][]> tidAndRanksBitset = apr.prepareToTidsGen2D_AllAtOnce(ranks1And3, tidsGenHelper);
+        JavaRDD<long[][]> tidAndRanksBitset = apr.prepareToTidsGen2D_AllAtOnce_BitSet(ranks1And3, tidsGenHelper);
 //        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
         tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_AND_DISK_SER());
 

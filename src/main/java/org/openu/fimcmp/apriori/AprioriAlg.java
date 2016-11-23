@@ -62,6 +62,10 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
             JavaRDD<Tuple2<int[], int[]>> ranks1AndKm1, CurrSizeFiRanks preprocessedFk) {
         return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK(row._1, row._2, preprocessedFk));
     }
+    public JavaRDD<Tuple2<int[], long[]>> toRddOfRanks1AndK_BitSet(
+            JavaRDD<Tuple2<int[], int[]>> ranks1AndKm1, CurrSizeFiRanks preprocessedFk) {
+        return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK_BitSet_Tmp(row._1, row._2, preprocessedFk));
+    }
 
     public List<int[]> computeFk(
             int k, JavaRDD<Tuple2<int[], int[]>> ranks1AndKm1, NextSizeItemsetGenHelper genHelper) {
@@ -207,6 +211,13 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return ranks1AndK
                 .zipWithIndex()
                 .map(trAndTid -> candidateFisGenerator.getRankToTidNew2D_AllAtOnce(trAndTid._1._2, trAndTid._2, tidsGenHelper));
+    }
+    public JavaRDD<long[][]> prepareToTidsGen2D_AllAtOnce_BitSet(
+            JavaRDD<Tuple2<int[], long[]>> ranks1AndK, TidsGenHelper tidsGenHelper) {
+        return ranks1AndK
+                .zipWithIndex()
+                .map(trAndTid -> candidateFisGenerator
+                        .getRankToTidNew2D_AllAtOnce_BitSet(trAndTid._1._2, trAndTid._2, tidsGenHelper));
     }
 
     public JavaRDD<List<Long>> tmpToListOfTidLists(JavaRDD<long[]> tidsRdd) {

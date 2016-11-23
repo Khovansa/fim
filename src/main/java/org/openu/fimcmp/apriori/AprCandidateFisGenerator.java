@@ -124,6 +124,12 @@ public class AprCandidateFisGenerator implements Serializable {
         return new Tuple2<>(sortedTr, ranksK);
     }
 
+    Tuple2<int[], long[]> toSortedRanks1AndK_BitSet_Tmp(
+            int[] sortedTr, int[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
+        long[] ranksK = computeSortedRanksK_BitSet_Tmp(sortedTr, sortedRanksKm1, fkRanksHelper);
+        return new Tuple2<>(sortedTr, ranksK);
+    }
+
     /**
      * Return array of [rank, tid] for all ranks that require this
      * (see {@link TidsGenHelper#isStoreTidForRank} for details. <br/>
@@ -200,6 +206,32 @@ public class AprCandidateFisGenerator implements Serializable {
                 resCol[1] = tid;
             }
             BitArrays.set(resCol, START_IND, rankKm1);
+        }
+
+        return res;
+    }
+
+    long[][] getRankToTidNew2D_AllAtOnce_BitSet(long[] kRanksBs, long tid, TidsGenHelper tidsGenHelper) {
+        final int RES_START_IND = 2;
+        final int totalR1s = tidsGenHelper.getTotalRanks1();
+        final int totalRanksKm1 = tidsGenHelper.getTotalRanksKm1();
+        final int resArrSize1D = BitArrays.requiredSize(totalRanksKm1, RES_START_IND);
+        long[][] res = new long[totalR1s][];
+
+        final int totalRanks = tidsGenHelper.totalRanks();
+        for (int rankK = 0; rankK < totalRanks; ++rankK) {
+            if (!tidsGenHelper.isStoreTidForRank(rankK, kRanksBs)) {
+                continue;
+            }
+            int rank1 = tidsGenHelper.getRank1(rankK);
+            int rankKm1 = tidsGenHelper.getRankKm1(rankK);
+            long[] resCol = res[rank1];
+            if (resCol == null) {
+                resCol = res[rank1] = new long[resArrSize1D];
+                resCol[0] = rank1;
+                resCol[1] = tid;
+            }
+            BitArrays.set(resCol, RES_START_IND, rankKm1);
         }
 
         return res;
@@ -362,9 +394,9 @@ public class AprCandidateFisGenerator implements Serializable {
 
         //tails:
         if (i1 < col1.length) {
-            System.arraycopy(col1, i1, res, ir, col1.length-i1);
+            System.arraycopy(col1, i1, res, ir, col1.length - i1);
         } else if (i2 < col2.length) {
-            System.arraycopy(col2, i2, res, ir, col2.length-i2);
+            System.arraycopy(col2, i2, res, ir, col2.length - i2);
         }
     }
 
@@ -385,9 +417,9 @@ public class AprCandidateFisGenerator implements Serializable {
 
         //tails:
         if (i1 < col1.length) {
-            System.arraycopy(col1, i1, res, ir, col1.length-i1);
+            System.arraycopy(col1, i1, res, ir, col1.length - i1);
         } else if (i2 < col2.length) {
-            System.arraycopy(col2, i2, res, ir, col2.length-i2);
+            System.arraycopy(col2, i2, res, ir, col2.length - i2);
         }
     }
 
@@ -442,5 +474,20 @@ public class AprCandidateFisGenerator implements Serializable {
 
         Arrays.sort(resRanksK, 0, resInd);
         return Arrays.copyOf(resRanksK, resInd);
+    }
+
+    private long[] computeSortedRanksK_BitSet_Tmp(int[] sortedTr, int[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
+        final int START_IND = 0;
+        long[] resRanksK = new long[BitArrays.requiredSize(fkRanksHelper.getTotalCurrSizeRanks(), START_IND)];
+        for (int elem1 : sortedTr) {
+            for (int rankKm1 : sortedRanksKm1) {
+                int rankK = fkRanksHelper.getCurrSizeFiRankByPair(elem1, rankKm1);
+                if (rankK >= 0) {
+                    BitArrays.set(resRanksK, START_IND, rankK);
+                }
+            }
+        }
+
+        return resRanksK;
     }
 }
