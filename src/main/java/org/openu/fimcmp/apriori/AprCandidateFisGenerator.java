@@ -175,6 +175,35 @@ public class AprCandidateFisGenerator implements Serializable {
         }
         return res;
     }
+    long[][] getRankToTidNew2D_AllAtOnce(int[] transactionRanksK, long tid, TidsGenHelper tidsGenHelper) {
+        final int START_IND = 2;
+        final int totalR1s = tidsGenHelper.getTotalRanks1();
+        final int totalRanksKm1 = tidsGenHelper.getTotalRanksKm1();
+        long[][] res = new long[totalR1s][];
+
+        final int totalRanks = tidsGenHelper.totalRanks();
+        long[] ranksSet = new long[BitArrays.requiredSize(totalRanks, 0)];
+        for (int rank : transactionRanksK) {
+            BitArrays.set(ranksSet, 0, rank);
+        }
+
+        for (int rankK = 0; rankK < totalRanks; ++rankK) {
+            if (!tidsGenHelper.isStoreTidForRank(rankK, ranksSet)) {
+                continue;
+            }
+            int rank1 = tidsGenHelper.getRank1(rankK);
+            int rankKm1 = tidsGenHelper.getRankKm1(rankK);
+            long[] resCol = res[rank1];
+            if (resCol == null) {
+                resCol = res[rank1] = new long[BitArrays.requiredSize(totalRanksKm1, START_IND)];
+                resCol[0] = rank1;
+                resCol[1] = tid;
+            }
+            BitArrays.set(resCol, START_IND, rankKm1);
+        }
+
+        return res;
+    }
 
     /**
      * See {@link #genTransactionC2s} for columns structure. <br/>

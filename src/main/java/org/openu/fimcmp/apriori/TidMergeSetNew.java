@@ -64,11 +64,11 @@ public class TidMergeSetNew implements Serializable {
             rankKm1ToTidSet = new long[tidsGenHelper.getTotalRanksKm1()][];
         }
 
-        //TODO
+        final int START_IND = 2;
         final int rank1 = (int)elem_r1TidRkm1BitSet[0];
         final long tid = elem_r1TidRkm1BitSet[1];
-        final int START_IND = 2;
-        int[] wordNums = new int[BitArrays.BITS_PER_WORD];
+
+        int[] wordNums = new int[BitArrays.BITS_PER_WORD];  //tmp buffer to hold the current word's numbers
         for (int wordInd=START_IND; wordInd<elem_r1TidRkm1BitSet.length; ++wordInd) {
             long word = elem_r1TidRkm1BitSet[wordInd];
             if (word != 0) {

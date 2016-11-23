@@ -169,12 +169,44 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .values()
                 .map(TidMergeSetNew::withMetadata);
     }
+    public JavaRDD<long[]> toRddOfTidsNew2D_AllAtOnce(
+            JavaRDD<long[][]> tidAndRanksBitset, long totalTids, TidsGenHelper tidsGenHelper) {
+
+        JavaPairRDD<Integer, long[]> keyToTripletRdd = tidAndRanksBitset
+                .flatMap(tidAndRanks -> new IteratorOverArray<>(tidAndRanks, true))
+                .filter(arr -> (arr != null))
+                .mapToPair(r1TidRkm1s -> new Tuple2<>((int)r1TidRkm1s[0], r1TidRkm1s));
+
+        JavaRDD<long[][]> r1ToRkm1ToTidSet = keyToTripletRdd
+                .aggregateByKey(
+                        new long[][]{},
+                        (res, elem) -> TidMergeSetNew.mergeElem2D_AllAtOnce(res, elem, totalTids, tidsGenHelper),
+                        TidMergeSetNew::mergeSets2D
+                )
+                .values()
+                .filter(arr -> (arr != null))
+                ;
+
+        return r1ToRkm1ToTidSet
+                .flatMap(arr -> new IteratorOverArray<>(arr, true))
+                .filter(arr -> (arr != null))
+                .mapToPair(tidSet -> new Tuple2<>(tidSet[0], tidSet))
+                .sortByKey()
+                .values()
+                .map(TidMergeSetNew::withMetadata);
+    }
 
     public JavaRDD<long[]> prepareToTidsGen(
             JavaRDD<Tuple2<int[], int[]>> ranks1AndK, TidsGenHelper tidsGenHelper) {
         return ranks1AndK
                 .zipWithIndex()
                 .map(trAndTid -> candidateFisGenerator.getRankToTidNew(trAndTid._1._2, trAndTid._2, tidsGenHelper));
+    }
+    public JavaRDD<long[][]> prepareToTidsGen2D_AllAtOnce(
+            JavaRDD<Tuple2<int[], int[]>> ranks1AndK, TidsGenHelper tidsGenHelper) {
+        return ranks1AndK
+                .zipWithIndex()
+                .map(trAndTid -> candidateFisGenerator.getRankToTidNew2D_AllAtOnce(trAndTid._1._2, trAndTid._2, tidsGenHelper));
     }
 
     public JavaRDD<List<Long>> tmpToListOfTidLists(JavaRDD<long[]> tidsRdd) {
