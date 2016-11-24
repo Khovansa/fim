@@ -213,25 +213,33 @@ public class AprCandidateFisGenerator implements Serializable {
 
     long[][] getRankToTidNew2D_AllAtOnce_BitSet(long[] kRanksBs, long tid, TidsGenHelper tidsGenHelper) {
         final int RES_START_IND = 2;
+        final int INPUT_START_IND = 0;
         final int totalR1s = tidsGenHelper.getTotalRanks1();
         final int totalRanksKm1 = tidsGenHelper.getTotalRanksKm1();
         final int resArrSize1D = BitArrays.requiredSize(totalRanksKm1, RES_START_IND);
         long[][] res = new long[totalR1s][];
 
-        final int totalRanks = tidsGenHelper.totalRanks();
-        for (int rankK = 0; rankK < totalRanks; ++rankK) {
-            if (!tidsGenHelper.isStoreTidForRank(rankK, kRanksBs)) {
+        long[] ranksToStoreBitSet = tidsGenHelper.getRanksToBeStoredBitSet(kRanksBs);
+        //iterate over 'ranksToStoreBitSet' and fill res[rank1's]=bit set of matching rank(k-1)'s:
+        int[] wordNums = new int[BitArrays.BITS_PER_WORD];  //tmp buffer to hold the current word's numbers
+        for (int wordInd = INPUT_START_IND; wordInd < ranksToStoreBitSet.length; ++wordInd) {
+            long word = ranksToStoreBitSet[wordInd];
+            if (word == 0) {
                 continue;
             }
-            int rank1 = tidsGenHelper.getRank1(rankK);
-            int rankKm1 = tidsGenHelper.getRankKm1(rankK);
-            long[] resCol = res[rank1];
-            if (resCol == null) {
-                resCol = res[rank1] = new long[resArrSize1D];
-                resCol[0] = rank1;
-                resCol[1] = tid;
+            int resInd = BitArrays.getWordBitsAsNumbersToArr(wordNums, word, INPUT_START_IND, wordInd);
+            for (int numInd=0; numInd<resInd; ++numInd) {
+                int rankK = wordNums[numInd];
+                int rank1 = tidsGenHelper.getRank1(rankK);
+                int rankKm1 = tidsGenHelper.getRankKm1(rankK);
+                long[] resCol = res[rank1];
+                if (resCol == null) {
+                    resCol = res[rank1] = new long[resArrSize1D];
+                    resCol[0] = rank1;
+                    resCol[1] = tid;
+                }
+                BitArrays.set(resCol, RES_START_IND, rankKm1);
             }
-            BitArrays.set(resCol, RES_START_IND, rankKm1);
         }
 
         return res;

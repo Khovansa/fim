@@ -67,6 +67,18 @@ public class BitArrays {
         }
     }
 
+    public static void notXor(long[] words1AndRes, long[] words2, int startInd, int endInd) {
+        int actEndInd = Math.min(words1AndRes.length, words2.length);
+        int andEndInd = Math.min(actEndInd, endInd);
+        for (int ii = startInd; ii<andEndInd; ++ii) {
+            words1AndRes[ii] = ~(words1AndRes[ii] ^ words2[ii]);
+        }
+
+        for (int ii=andEndInd+1; ii<actEndInd; ++ii) {
+            words1AndRes[ii] = ~(words1AndRes[ii]);
+        }
+    }
+
     public static void or(long[] words1AndRes, long[] words2, int startInd, int endInd) {
         int actEndInd = Math.min(words1AndRes.length, words2.length);
         int orEndInd = Math.min(actEndInd, endInd);

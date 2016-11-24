@@ -4,6 +4,7 @@ import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 
@@ -13,7 +14,8 @@ import java.util.List;
  * i.e. all the TIDs that don't contain this k-itemset.
  */
 public class TidsGenHelper implements Serializable, Rank1Provider {
-    private final boolean[] rankToIsStoreContainingTids;
+    private final boolean[] rankToIsStoreTids;
+    private final long[] rankToIsStoreTidsBitSet;
     private final PairRanks rankPairsK;
     private final int totalRanks1;
     private final int totalRanksKm1;
@@ -28,7 +30,7 @@ public class TidsGenHelper implements Serializable, Rank1Provider {
     }
 
     int totalRanks() {
-        return rankToIsStoreContainingTids.length;
+        return rankToIsStoreTids.length;
     }
 
     public int getTotalRanks1() {
@@ -42,13 +44,20 @@ public class TidsGenHelper implements Serializable, Rank1Provider {
     boolean isStoreTidForRank(int rank, BitSet transactionRanks) {
         //store TID if the transaction contains the itemset and we should store the TIDs containing the itemset
         //OR if the transaction does not contain the itemset and we should store the TIDs NOT containing the itemset:
-        return transactionRanks.get(rank) == rankToIsStoreContainingTids[rank];
+        return transactionRanks.get(rank) == rankToIsStoreTids[rank];
     }
 
     boolean isStoreTidForRank(int rank, long[] transactionRanksAsBitset) {
         //store TID if the transaction contains the itemset and we should store the TIDs containing the itemset
         //OR if the transaction does not contain the itemset and we should store the TIDs NOT containing the itemset:
-        return BitArrays.get(transactionRanksAsBitset, 0, rank) == rankToIsStoreContainingTids[rank];
+        return BitArrays.get(transactionRanksAsBitset, 0, rank) == rankToIsStoreTids[rank];
+    }
+
+    long[] getRanksToBeStoredBitSet(long[] ranksBitSet) {
+        Assert.isTrue(rankToIsStoreTidsBitSet.length == ranksBitSet.length);
+        long[] res = Arrays.copyOf(rankToIsStoreTidsBitSet, rankToIsStoreTidsBitSet.length);
+        BitArrays.notXor(res, ranksBitSet, 0, res.length);
+        return res;
     }
 
     @Override
@@ -86,10 +95,31 @@ public class TidsGenHelper implements Serializable, Rank1Provider {
         return rankToIsStoreContainingTids;
     }
 
-    private TidsGenHelper(boolean[] rankToIsStoreContainingTids, PairRanks rankPairsK) {
-        this.rankToIsStoreContainingTids = rankToIsStoreContainingTids;
+    private TidsGenHelper(boolean[] rankToIsStoreTids, PairRanks rankPairsK) {
+        this.rankToIsStoreTids = rankToIsStoreTids;
+
+        this.rankToIsStoreTidsBitSet = getRankToIsStoreTidsBitSet(rankToIsStoreTids);
+
         this.rankPairsK = rankPairsK;
         this.totalRanks1 = 1 + rankPairsK.computeMaxElem1();
         this.totalRanksKm1 = 1 + rankPairsK.computeMaxElem2();
+    }
+
+    private static long[] getRankToIsStoreTidsBitSet(boolean[] rankToIsStoreTids) {
+        final int totalRanks = rankToIsStoreTids.length;
+        long[] res = new long[BitArrays.requiredSize(totalRanks - 1, 0)];
+        for (int rank = 0; rank< totalRanks; ++rank) {
+            if (rankToIsStoreTids[rank]) {
+                BitArrays.set(res, 0, rank);
+            }
+        }
+
+        //setting the tail as 1's since notXor(1, 0) = 0 - that's what is required:
+        int totalBits = res.length * BitArrays.BITS_PER_WORD;
+        for (int nonExistingTailRank=totalRanks; nonExistingTailRank < totalBits; ++nonExistingTailRank) {
+            BitArrays.set(res, 0, nonExistingTailRank);
+        }
+
+        return res;
     }
 }

@@ -71,14 +71,15 @@ public class TidMergeSetNew implements Serializable {
         int[] wordNums = new int[BitArrays.BITS_PER_WORD];  //tmp buffer to hold the current word's numbers
         for (int wordInd=START_IND; wordInd<elem_r1TidRkm1BitSet.length; ++wordInd) {
             long word = elem_r1TidRkm1BitSet[wordInd];
-            if (word != 0) {
-                int resInd = BitArrays.getWordBitsAsNumbersToArr(wordNums, word, START_IND, wordInd);
-                for (int numInd=0; numInd<resInd; ++numInd) {
-                    int rankKm1 = wordNums[numInd];
-                    int rankK = tidsGenHelper.getRankK(rank1, rankKm1);
-                    long[] tidSet = rankKm1ToTidSet[rankKm1];
-                    rankKm1ToTidSet[rankKm1] = mergeElemFast(tidSet, rankK, tid, totalTids);
-                }
+            if (word == 0) {
+                continue;
+            }
+            int resInd = BitArrays.getWordBitsAsNumbersToArr(wordNums, word, START_IND, wordInd);
+            for (int numInd=0; numInd<resInd; ++numInd) {
+                int rankKm1 = wordNums[numInd];
+                int rankK = tidsGenHelper.getRankK(rank1, rankKm1);
+                long[] tidSet = rankKm1ToTidSet[rankKm1];
+                rankKm1ToTidSet[rankKm1] = mergeElemFast(tidSet, rankK, tid, totalTids);
             }
         }
         return rankKm1ToTidSet;
