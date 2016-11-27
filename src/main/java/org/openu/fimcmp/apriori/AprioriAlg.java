@@ -57,14 +57,18 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
             JavaRDD<int[]> filteredTrs, CurrSizeFiRanks preprocessedF2) {
         return filteredTrs.map(tr -> candidateFisGenerator.toSortedRanks1And2(tr, preprocessedF2));
     }
+    public JavaRDD<Tuple2<int[], long[]>> toRddOfRanks1And2_BitSet(
+            JavaRDD<int[]> filteredTrs, CurrSizeFiRanks preprocessedF2) {
+        return filteredTrs.map(tr -> candidateFisGenerator.toSortedRanks1And2_BitSet_Tmp(tr, preprocessedF2));
+    }
 
     public JavaRDD<Tuple2<int[], int[]>> toRddOfRanks1AndK(
             JavaRDD<Tuple2<int[], int[]>> ranks1AndKm1, CurrSizeFiRanks preprocessedFk) {
         return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK(row._1, row._2, preprocessedFk));
     }
     public JavaRDD<Tuple2<int[], long[]>> toRddOfRanks1AndK_BitSet(
-            JavaRDD<Tuple2<int[], int[]>> ranks1AndKm1, CurrSizeFiRanks preprocessedFk) {
-        return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK_BitSet_Tmp(row._1, row._2, preprocessedFk));
+            JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, CurrSizeFiRanks preprocessedFk) {
+        return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK_BitSet(row._1, row._2, preprocessedFk));
     }
 
     public List<int[]> computeFk(
@@ -72,6 +76,18 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return ranks1AndKm1
                 .flatMap(tr -> new IteratorOverArray<>(
                         candidateFisGenerator.genNextSizeCands_ByItems(k-1, tr, genHelper)))
+                .mapToPair(col -> new Tuple2<>(col[0], col))
+                .foldByKey(new int[]{}, candidateFisGenerator::mergeColumns)
+                .mapValues(col -> candidateFisGenerator.getColumnsFilteredByMinSupport(col, minSuppCount))
+                .sortByKey()
+                .values()
+                .collect();
+    }
+    public List<int[]> computeFk_BitSet(
+            int k, JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, NextSizeItemsetGenHelper genHelper) {
+        return ranks1AndKm1
+                .flatMap(tr -> new IteratorOverArray<>(
+                        candidateFisGenerator.genNextSizeCands_ByItems_BitSet(k-1, tr, genHelper)))
                 .mapToPair(col -> new Tuple2<>(col[0], col))
                 .foldByKey(new int[]{}, candidateFisGenerator::mergeColumns)
                 .mapValues(col -> candidateFisGenerator.getColumnsFilteredByMinSupport(col, minSuppCount))
@@ -176,12 +192,12 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     public JavaRDD<long[]> toRddOfTidsNew2D_AllAtOnce(
             JavaRDD<long[][]> tidAndRanksBitset, long totalTids, TidsGenHelper tidsGenHelper) {
 
-        JavaPairRDD<Integer, long[]> keyToTripletRdd = tidAndRanksBitset
+        JavaPairRDD<Integer, long[]> keyToR1TidRkm1sRdd = tidAndRanksBitset
                 .flatMap(tidAndRanks -> new IteratorOverArray<>(tidAndRanks, true))
                 .filter(arr -> (arr != null))
                 .mapToPair(r1TidRkm1s -> new Tuple2<>((int)r1TidRkm1s[0], r1TidRkm1s));
 
-        JavaRDD<long[][]> r1ToRkm1ToTidSet = keyToTripletRdd
+        JavaRDD<long[][]> r1ToRkm1ToTidSet = keyToR1TidRkm1sRdd
                 .aggregateByKey(
                         new long[][]{},
                         (res, elem) -> TidMergeSetNew.mergeElem2D_AllAtOnce(res, elem, totalTids, tidsGenHelper),
@@ -198,6 +214,19 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .sortByKey()
                 .values()
                 .map(TidMergeSetNew::withMetadata);
+    }
+    public long[][] toRddOfTidsNew2D_AllAtOnce2(
+            JavaRDD<long[]> tidAndRanksBitset, long totalTids, TidsGenHelper tidsGenHelper) {
+
+        JavaPairRDD<Integer, long[][]> rkToTids = tidAndRanksBitset.mapToPair(t -> new Tuple2<>(1, t))
+                .aggregateByKey(
+                        new long[][]{},
+                        1,
+                        (res, elem) -> TidMergeSetNew.mergeElem2D_AllAtOnce2(res, elem, totalTids, tidsGenHelper),
+                        TidMergeSetNew::mergeSets2D
+                );
+        return rkToTids.values().collect().get(0);
+    //                .filter(arr -> (arr != null))
     }
 
     public JavaRDD<long[]> prepareToTidsGen(
@@ -218,6 +247,13 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .zipWithIndex()
                 .map(trAndTid -> candidateFisGenerator
                         .getRankToTidNew2D_AllAtOnce_BitSet(trAndTid._1._2, trAndTid._2, tidsGenHelper));
+    }
+    public JavaRDD<long[]> prepareToTidsGen2D_AllAtOnce_BitSet2(
+            JavaRDD<Tuple2<int[], long[]>> ranks1AndK, TidsGenHelper tidsGenHelper) {
+        return ranks1AndK
+                .zipWithIndex()
+                .map(trAndTid -> candidateFisGenerator
+                        .getRankToTidNew2D_AllAtOnce_BitSet2(trAndTid._1._2, trAndTid._2, tidsGenHelper));
     }
 
     public JavaRDD<List<Long>> tmpToListOfTidLists(JavaRDD<long[]> tidsRdd) {

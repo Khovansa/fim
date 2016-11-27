@@ -40,6 +40,7 @@ public class AprioriAlgIT extends AlgITBase {
         //TODO: keep the partition of the transaction!
         JavaRDD<int[]> filteredTrs = prep.trs.map(t -> BasicOps.getMappedFilteredAndSortedTrs(t, itemToRank));
         filteredTrs = filteredTrs.persist(StorageLevel.MEMORY_ONLY_SER());
+//        filteredTrs = filteredTrs.persist(StorageLevel.MEMORY_AND_DISK_SER());
         pp("filtered and saved");
 
         List<int[]> f2AsArrays = apr.computeF2(filteredTrs);
@@ -54,11 +55,13 @@ public class AprioriAlgIT extends AlgITBase {
         CurrSizeFiRanks preprocessedF2 = CurrSizeFiRanks.construct(f2, totalFreqItems, totalFreqItems, f2Ranks);
 //        pp("zzz");
 //        List<Integer[]> f3AsArrays = apr.computeFk(filteredTrs, preprocessedF2);
-        JavaRDD<Tuple2<int[], int[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
+//        JavaRDD<Tuple2<int[], int[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
+        JavaRDD<Tuple2<int[], long[]>> ranks1And2 = apr.toRddOfRanks1And2_BitSet(filteredTrs, preprocessedF2);
         ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
 //        ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_AND_DISK_SER());
         pp("zzz");
-        List<int[]> f3AsArrays = apr.computeFk(3, ranks1And2, preprocessedF2);
+//        List<int[]> f3AsArrays = apr.computeFk(3, ranks1And2, preprocessedF2);
+        List<int[]> f3AsArrays = apr.computeFk_BitSet(3, ranks1And2, preprocessedF2);
         pp("F3 as arrays size: "+f3AsArrays.size());
         List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays);
         pp("F3 size: "+f3.size());
@@ -82,7 +85,8 @@ public class AprioriAlgIT extends AlgITBase {
         TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
 //        JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen(ranks1And3, tidsGenHelper);
 //        JavaRDD<long[][]> tidAndRanksBitset = apr.prepareToTidsGen2D_AllAtOnce(ranks1And3, tidsGenHelper);
-        JavaRDD<long[][]> tidAndRanksBitset = apr.prepareToTidsGen2D_AllAtOnce_BitSet(ranks1And3, tidsGenHelper);
+//        JavaRDD<long[][]> tidAndRanksBitset = apr.prepareToTidsGen2D_AllAtOnce_BitSet(ranks1And3, tidsGenHelper);
+        JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen2D_AllAtOnce_BitSet2(ranks1And3, tidsGenHelper);
 //        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
         tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_AND_DISK_SER());
 
@@ -90,16 +94,25 @@ public class AprioriAlgIT extends AlgITBase {
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew3(ranks1And3, tidsGenHelper, prep.totalTrs);
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew4(tidAndRanksBitset, prep.totalTrs);
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew_2D(tidAndRanksBitset, prep.totalTrs, tidsGenHelper);
-        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew2D_AllAtOnce(tidAndRanksBitset, prep.totalTrs, tidsGenHelper);
+//        JavaRDD<long[]> tidsRdd = apr.toRddOfTidsNew2D_AllAtOnce(tidAndRanksBitset, prep.totalTrs, tidsGenHelper);
+        long[][] tidsRdd = apr.toRddOfTidsNew2D_AllAtOnce2(tidAndRanksBitset, prep.totalTrs, tidsGenHelper);
 
 //        List<List<Long>> allTids = apr.tmpToListOfTidListsNew(tidsRdd, 100).collect();
-        List<long[]> allTids = apr.tmpToTidCntsNew(tidsRdd).collect();
+//        List<long[]> allTids = apr.tmpToTidCntsNew(tidsRdd).collect();
 //        JavaRDD<long[]> tidsRdd = apr.toRddOfTids(ranks1And3, tidsGenHelper);
 //        List<List<Long>> allTids = apr.tmpToListOfTidLists(tidsRdd).collect();
         pp("TIDs:");
-        for (long[] tids : allTids.subList(0, 20)) {
-            System.out.println(Arrays.toString(tids));
-        }
+//        for (long[] tids : allTids.subList(0, 20)) {
+//            System.out.println(Arrays.toString(tids));
+//        }
+//        for (long[][] res: tidsRdd) {
+            for (int ii = 0, cnt=0; ii < 500 && cnt<20; ++ii) {
+                if (tidsRdd[ii] != null) {
+                    ++cnt;
+                    System.out.println(Arrays.toString(TidMergeSetNew.describeAsList(TidMergeSetNew.withMetadata(tidsRdd[ii]))));
+                }
+            }
+//        }
 
 //        pp("zzz");
 //        List<int[]> f4AsArrays = apr.computeFk(4, ranks1And3, preprocessedF3);

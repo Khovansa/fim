@@ -56,8 +56,13 @@ public class TidsGenHelper implements Serializable, Rank1Provider {
     long[] getRanksToBeStoredBitSet(long[] ranksBitSet) {
         Assert.isTrue(rankToIsStoreTidsBitSet.length == ranksBitSet.length);
         long[] res = Arrays.copyOf(rankToIsStoreTidsBitSet, rankToIsStoreTidsBitSet.length);
-        BitArrays.notXor(res, ranksBitSet, 0, res.length);
+        BitArrays.notXor(res, 0, ranksBitSet, 0);
         return res;
+    }
+    void setToResRanksToBeStoredBitSet(long[] res, int resStartInd, long[] ranksBitSet) {
+        Assert.isTrue(rankToIsStoreTidsBitSet.length == ranksBitSet.length);
+        System.arraycopy(rankToIsStoreTidsBitSet, 0, res, resStartInd, rankToIsStoreTidsBitSet.length);
+        BitArrays.notXor(res, resStartInd, ranksBitSet, 0);
     }
 
     @Override

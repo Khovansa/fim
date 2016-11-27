@@ -73,6 +73,29 @@ public class AprCandidateFisGenerator implements Serializable {
 
         return res;
     }
+    int[][] genNextSizeCands_ByItems_BitSet(
+            int currItemsetSize, Tuple2<int[], long[]> itemsAndCurrItemsets,
+            NextSizeItemsetGenHelper genHelper) {
+        int[] sortedTr = itemsAndCurrItemsets._1;
+        final int trSize = sortedTr.length;
+        if (trSize <= currItemsetSize) {
+            return EMPTY_COLS;
+        }
+        long[] currItemsetsBitSet = itemsAndCurrItemsets._2;
+        int[] currItemsets = BitArrays.asNumbers(currItemsetsBitSet, 0);
+        if (currItemsets.length == 0) {
+            return EMPTY_COLS;
+        }
+
+        final int resColumnsSize = trSize - currItemsetSize;
+        int[][] res = new int[resColumnsSize][];
+        for (int ii = 0; ii < resColumnsSize; ++ii) {
+            int item = sortedTr[ii];
+            res[ii] = genNextSizeCandsForItem(item, currItemsets, genHelper);
+        }
+
+        return res;
+    }
 
     private int[] genNextSizeCandsForItem(
             int item, int[] currItemsetRanks, NextSizeItemsetGenHelper genHelper) {
@@ -118,15 +141,19 @@ public class AprCandidateFisGenerator implements Serializable {
         int[] ranks2 = computeSortedRanks2(sortedTr, f2RanksHelper);
         return new Tuple2<>(sortedTr, ranks2);
     }
+    Tuple2<int[], long[]> toSortedRanks1And2_BitSet_Tmp(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
+        long[] ranks2 = computeSortedRanks2_BitSet_Tmp(sortedTr, f2RanksHelper);
+        return new Tuple2<>(sortedTr, ranks2);
+    }
 
     Tuple2<int[], int[]> toSortedRanks1AndK(int[] sortedTr, int[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
         int[] ranksK = computeSortedRanksK(sortedTr, sortedRanksKm1, fkRanksHelper);
         return new Tuple2<>(sortedTr, ranksK);
     }
 
-    Tuple2<int[], long[]> toSortedRanks1AndK_BitSet_Tmp(
-            int[] sortedTr, int[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
-        long[] ranksK = computeSortedRanksK_BitSet_Tmp(sortedTr, sortedRanksKm1, fkRanksHelper);
+    Tuple2<int[], long[]> toSortedRanks1AndK_BitSet(
+            int[] sortedTr, long[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
+        long[] ranksK = computeSortedRanksK_BitSet(sortedTr, sortedRanksKm1, fkRanksHelper);
         return new Tuple2<>(sortedTr, ranksK);
     }
 
@@ -242,6 +269,12 @@ public class AprCandidateFisGenerator implements Serializable {
             }
         }
 
+        return res;
+    }
+    long[] getRankToTidNew2D_AllAtOnce_BitSet2(long[] kRanksBs, long tid, TidsGenHelper tidsGenHelper) {
+        long[] res = new long[kRanksBs.length + 1];
+        res[0] = tid;
+        tidsGenHelper.setToResRanksToBeStoredBitSet(res, 1, kRanksBs);
         return res;
     }
 
@@ -465,6 +498,23 @@ public class AprCandidateFisGenerator implements Serializable {
         Arrays.sort(ranks, 0, resInd);
         return Arrays.copyOf(ranks, resInd);
     }
+    private long[] computeSortedRanks2_BitSet_Tmp(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
+        final int START_IND = 0;
+        long[] resRanks2 = new long[BitArrays.requiredSize(f2RanksHelper.getTotalCurrSizeRanks()-1, START_IND)];
+        final int arrSize = sortedTr.length;
+        for (int ii = 0; ii < arrSize; ++ii) {
+            int elem1 = sortedTr[ii];
+            for (int jj = ii + 1; jj < arrSize; ++jj) {
+                int elem2 = sortedTr[jj];
+                int rank2 = f2RanksHelper.getCurrSizeFiRankByPair(elem1, elem2);
+                if (rank2 >= 0) {
+                    BitArrays.set(resRanks2, START_IND, rank2);
+                }
+            }
+        }
+
+        return resRanks2;
+    }
 
     private int[] computeSortedRanksK(int[] sortedTr, int[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
         final int elem1Cnt = sortedTr.length;
@@ -484,14 +534,24 @@ public class AprCandidateFisGenerator implements Serializable {
         return Arrays.copyOf(resRanksK, resInd);
     }
 
-    private long[] computeSortedRanksK_BitSet_Tmp(int[] sortedTr, int[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
+    private long[] computeSortedRanksK_BitSet(int[] sortedTr, long[] sortedRanksKm1Bs, CurrSizeFiRanks fkRanksHelper) {
         final int START_IND = 0;
-        long[] resRanksK = new long[BitArrays.requiredSize(fkRanksHelper.getTotalCurrSizeRanks(), START_IND)];
-        for (int elem1 : sortedTr) {
-            for (int rankKm1 : sortedRanksKm1) {
-                int rankK = fkRanksHelper.getCurrSizeFiRankByPair(elem1, rankKm1);
-                if (rankK >= 0) {
-                    BitArrays.set(resRanksK, START_IND, rankK);
+        long[] resRanksK = new long[BitArrays.requiredSize(fkRanksHelper.getTotalCurrSizeRanks()-1, START_IND)];
+
+        int[] wordNums = new int[BitArrays.BITS_PER_WORD];  //tmp buffer to hold the current word's numbers
+        for (int wordInd=START_IND; wordInd<sortedRanksKm1Bs.length; ++wordInd) {
+            long word = sortedRanksKm1Bs[wordInd];
+            if (word == 0) {
+                continue;
+            }
+            int resInd = BitArrays.getWordBitsAsNumbersToArr(wordNums, word, START_IND, wordInd);
+            for (int numInd=0; numInd<resInd; ++numInd) {
+                int rankKm1 = wordNums[numInd];
+                for (int elem1 : sortedTr) {
+                    int rankK = fkRanksHelper.getCurrSizeFiRankByPair(elem1, rankKm1);
+                    if (rankK >= 0) {
+                        BitArrays.set(resRanksK, START_IND, rankK);
+                    }
                 }
             }
         }

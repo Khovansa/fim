@@ -84,6 +84,34 @@ public class TidMergeSetNew implements Serializable {
         }
         return rankKm1ToTidSet;
     }
+    static long[][] mergeElem2D_AllAtOnce2(
+            long[][] rankKToTidSet,
+            long[] elem_tidRkBitSet,
+            long totalTids,
+            TidsGenHelper tidsGenHelper) {
+
+        if (rankKToTidSet.length == 0) {
+            rankKToTidSet = new long[tidsGenHelper.totalRanks()][];
+        }
+
+        final int START_IND = 1;
+        final long tid = elem_tidRkBitSet[0];
+
+        int[] wordNums = new int[BitArrays.BITS_PER_WORD];  //tmp buffer to hold the current word's numbers
+        for (int wordInd=START_IND; wordInd<elem_tidRkBitSet.length; ++wordInd) {
+            long word = elem_tidRkBitSet[wordInd];
+            if (word == 0) {
+                continue;
+            }
+            int resInd = BitArrays.getWordBitsAsNumbersToArr(wordNums, word, START_IND, wordInd);
+            for (int numInd=0; numInd<resInd; ++numInd) {
+                int rankK = wordNums[numInd];
+                long[] tidSet = rankKToTidSet[rankK];
+                rankKToTidSet[rankK] = mergeElemFast(tidSet, rankK, tid, totalTids);
+            }
+        }
+        return rankKToTidSet;
+    }
 
     static long[][] mergeSets2D(long[][] s1, long[][] s2) {
         throw new NotImplementedException();
