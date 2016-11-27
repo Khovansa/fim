@@ -96,6 +96,29 @@ public class AprCandidateFisGenerator implements Serializable {
 
         return res;
     }
+    int[][] genNextSizeCands_ByItems_BitSet_Direct(
+            int currItemsetSize, Tuple2<int[], long[]> itemsAndCurrItemsets,
+            NextSizeItemsetGenHelper genHelper) {
+        int[] sortedTr = itemsAndCurrItemsets._1;
+        final int trSize = sortedTr.length;
+        if (trSize <= currItemsetSize) {
+            return EMPTY_COLS;
+        }
+        long[] currItemsetsBitSet = itemsAndCurrItemsets._2;
+        int[] currItemsets = BitArrays.asNumbers(currItemsetsBitSet, 0);
+        if (currItemsets.length == 0) {
+            return EMPTY_COLS;
+        }
+
+        final int resColumnsSize = trSize - currItemsetSize;
+        int[][] res = new int[resColumnsSize][];
+        for (int ii = 0; ii < resColumnsSize; ++ii) {
+            int item = sortedTr[ii];
+            res[ii] = genNextSizeCandsForItem_Direct(item, currItemsets, genHelper);
+        }
+
+        return res;
+    }
 
     private int[] genNextSizeCandsForItem(
             int item, int[] currItemsetRanks, NextSizeItemsetGenHelper genHelper) {
@@ -103,6 +126,23 @@ public class AprCandidateFisGenerator implements Serializable {
         List<Integer> filteredItemsetRanks = getFilteredItemsetRanksForItem(item, currItemsetRanks, genHelper);
 
         return createColumn(item, filteredItemsetRanks);
+    }
+    private int[] genNextSizeCandsForItem_Direct(
+            int item, int[] currItemsetRanks, NextSizeItemsetGenHelper genHelper) {
+
+        int totalRanksK = genHelper.getTotalCurrSizeRanks();
+        long[] fkBitSet = genHelper.getFkBitSet(item);
+
+        int[] res = new int[totalRanksK + 1];
+        int resInd = 0;
+        res[resInd++] = item;
+        for (int itemsetRank : currItemsetRanks) {
+            if (BitArrays.get(fkBitSet, 0, itemsetRank)) {
+                res[resInd++] = itemsetRank;
+            }
+        }
+
+        return Arrays.copyOf(res, resInd);
     }
 
     private List<Integer> getFilteredItemsetRanksForItem(
@@ -303,6 +343,33 @@ public class AprCandidateFisGenerator implements Serializable {
             return col1;
         }
     }
+    int[] mergeElem_Direct(int totalCands, int[] col, int[] elem) {
+        if (elem.length <= 1) {
+            return col;
+        }
+        if (col.length == 0) {
+            col = new int[totalCands + 1];
+            col[0] = elem[0];
+        }
+        for (int ii=1; ii<elem.length; ++ii) {
+            int rank = elem[ii];
+            ++col[rank];
+        }
+        return col;
+    }
+
+    int[] mergeColumns_Direct(int[] col1, int[] col2) {
+        if (col2.length == 0) {
+            return col1;
+        }
+        if (col1.length == 0) {
+            return Arrays.copyOf(col2, col2.length);
+        }
+        for (int ii=0; ii<col2.length; ++ii) {
+            col1[ii] += col2[ii];
+        }
+        return col1;
+    }
 
     /**
      * The TID-list column structure is: [rank, tid1, tid2, ... tidN]
@@ -375,6 +442,21 @@ public class AprCandidateFisGenerator implements Serializable {
         int item1 = col[0];
         for (int ii = 1; ii < col.length; ii += 2) {
             res.add(new int[]{item1, col[ii], col[ii + 1]});
+        }
+        return res;
+    }
+    List<int[]> fkColToPairs_Direct(int[] col, long minSuppCount) {
+        if (col.length <= 1) {
+            return Collections.emptyList();
+        }
+
+        int resLen = (col.length - 1);
+        List<int[]> res = new ArrayList<>(resLen);
+        int item1 = col[0];
+        for (int ii = 1; ii < col.length; ++ii) {
+            if (col[ii] >= minSuppCount) {
+                res.add(new int[]{item1, ii, col[ii]});
+            }
         }
         return res;
     }

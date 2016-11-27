@@ -95,6 +95,22 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .values()
                 .collect();
     }
+    public List<int[]> computeFk_BitSet_Direct(
+            int k, JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, NextSizeItemsetGenHelper genHelper) {
+        final int totalCands = genHelper.getTotalCurrSizeRanks();
+        return ranks1AndKm1
+                .flatMap(tr -> new IteratorOverArray<>(
+                        candidateFisGenerator.genNextSizeCands_ByItems_BitSet_Direct(k-1, tr, genHelper)))
+                .mapToPair(col -> new Tuple2<>(col[0], col))
+                .aggregateByKey(
+                        new int[]{},
+                        (col, elem) -> candidateFisGenerator.mergeElem_Direct(totalCands, col, elem),
+                        candidateFisGenerator::mergeColumns_Direct
+                )
+                .sortByKey()
+                .values()
+                .collect();
+    }
 
     public JavaRDD<long[]> toRddOfTids(JavaRDD<Tuple2<int[], int[]>> ranks1AndK, TidsGenHelper tidsGenHelper) {
         return ranks1AndK
@@ -291,6 +307,13 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         }
         return res;
     }
+    public List<int[]> fkAsArraysToRankPairs_Direct(List<int[]> cols, long minSuppCount) {
+        List<int[]> res = new ArrayList<>(cols.size() * cols.size());
+        for (int[] col : cols) {
+            res.addAll(candidateFisGenerator.fkColToPairs_Direct(col, minSuppCount));
+        }
+        return res;
+    }
 
     public List<FreqItemset<String>> fkAsArraysToResItemsets(
             List<int[]> cols, Map<String, Integer> itemToRank, CurrSizeFiRanks... fkToF2RanksArr) {
@@ -299,6 +322,34 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         List<FreqItemset<String>> res = new ArrayList<>((int) Math.pow(cols.size(), 3));
         for (int[] col : cols) {
             List<int[]> itemAndPairRanks = candidateFisGenerator.fkColToPairs(col);
+            for (int[] itemAndPairRank : itemAndPairRanks) {
+                ArrayList<String> resItemset = new ArrayList<>();
+                final int freq = itemAndPairRank[2];
+                resItemset.add(rankToItem[itemAndPairRank[0]]);
+
+                //currRank is a rank of (k-1)-FI, which in case of k=2 means an item rank
+                int currRank = itemAndPairRank[1];
+                for (CurrSizeFiRanks fiRanks : fkToF2RanksArr) {
+                    int[] pair = fiRanks.getCurrSizeFiAsPairByRank(currRank);
+                    resItemset.add(rankToItem[pair[0]]); //the first element of a pair is always an item
+                    currRank = pair[1]; //(i-1)-FI rank
+                }
+                resItemset.add(rankToItem[currRank]);
+
+                resItemset.trimToSize();
+                res.add(new FreqItemset<>(resItemset, freq));
+            }
+        }
+
+        return res;
+    }
+    public List<FreqItemset<String>> fkAsArraysToResItemsets_Direct(
+            long minSuppCount, List<int[]> cols, Map<String, Integer> itemToRank, CurrSizeFiRanks... fkToF2RanksArr) {
+        String[] rankToItem = BasicOps.getRankToItem(itemToRank);
+
+        List<FreqItemset<String>> res = new ArrayList<>((int) Math.pow(cols.size(), 3));
+        for (int[] col : cols) {
+            List<int[]> itemAndPairRanks = candidateFisGenerator.fkColToPairs_Direct(col, minSuppCount);
             for (int[] itemAndPairRank : itemAndPairRanks) {
                 ArrayList<String> resItemset = new ArrayList<>();
                 final int freq = itemAndPairRank[2];

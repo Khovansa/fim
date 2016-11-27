@@ -61,11 +61,15 @@ public class AprioriAlgIT extends AlgITBase {
 //        ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_AND_DISK_SER());
         pp("zzz");
 //        List<int[]> f3AsArrays = apr.computeFk(3, ranks1And2, preprocessedF2);
-        List<int[]> f3AsArrays = apr.computeFk_BitSet(3, ranks1And2, preprocessedF2);
+//        List<int[]> f3AsArrays = apr.computeFk_BitSet(3, ranks1And2, preprocessedF2);
+        List<int[]> f3AsArrays = apr.computeFk_BitSet_Direct(3, ranks1And2, preprocessedF2);
         pp("F3 as arrays size: "+f3AsArrays.size());
-        List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays);
+//        List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays);
+        List<int[]> f3 = apr.fkAsArraysToRankPairs_Direct(f3AsArrays, prep.minSuppCount);
         pp("F3 size: "+f3.size());
-        List<FreqItemset<String>> f3Res = apr.fkAsArraysToResItemsets(f3AsArrays, itemToRank, preprocessedF2);
+//        List<FreqItemset<String>> f3Res = apr.fkAsArraysToResItemsets(f3AsArrays, itemToRank, preprocessedF2);
+        List<FreqItemset<String>> f3Res = apr.fkAsArraysToResItemsets_Direct(
+                prep.minSuppCount, f3AsArrays, itemToRank, preprocessedF2);
         f3Res = f3Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
         pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(10, f3Res.size())), "\n"));
 
