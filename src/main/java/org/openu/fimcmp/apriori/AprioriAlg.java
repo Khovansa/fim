@@ -41,19 +41,9 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .map(t -> t._1).collect(Collectors.toList());
     }
 
-    public List<int[]> computeF2(JavaRDD<int[]> filteredTrs) {
-        return filteredTrs
-                .flatMap(tr -> new IteratorOverArray<>(candidateFisGenerator.genTransactionC2s(tr)))
-                .mapToPair(col -> new Tuple2<>(col[0], col))
-                .foldByKey(new int[]{}, candidateFisGenerator::mergeColumns)
-                .mapValues(col -> candidateFisGenerator.getColumnsFilteredByMinSupport(col, minSuppCount))
-                .sortByKey()
-                .values()
-                .collect();
-    }
     public List<int[]> computeF2_Direct(JavaRDD<int[]> filteredTrs, int totalFreqItems) {
         return filteredTrs
-                .flatMap(tr -> new IteratorOverArray<>(candidateFisGenerator.genTransactionC2s_Direct(tr, totalFreqItems)))
+                .flatMap(tr -> new IteratorOverArray<>(candidateFisGenerator.genTransactionC2s_Direct(tr)))
                 .mapToPair(elem -> new Tuple2<>(elem[0], elem))
                 .aggregateByKey(
                         new int[]{},
@@ -113,13 +103,6 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                         .getRankToTidNew2D_AllAtOnce_BitSet2(trAndTid._1._2, trAndTid._2, tidsGenHelper));
     }
 
-    public List<int[]> fkAsArraysToRankPairs(List<int[]> cols) {
-        List<int[]> res = new ArrayList<>(cols.size() * cols.size());
-        for (int[] col : cols) {
-            res.addAll(candidateFisGenerator.fkColToPairs(col));
-        }
-        return res;
-    }
     public List<int[]> fkAsArraysToRankPairs_Direct(List<int[]> cols, long minSuppCount) {
         List<int[]> res = new ArrayList<>(cols.size() * cols.size());
         for (int[] col : cols) {
@@ -128,34 +111,6 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return res;
     }
 
-    public List<FreqItemset<String>> fkAsArraysToResItemsets(
-            List<int[]> cols, Map<String, Integer> itemToRank, CurrSizeFiRanks... fkToF2RanksArr) {
-        String[] rankToItem = BasicOps.getRankToItem(itemToRank);
-
-        List<FreqItemset<String>> res = new ArrayList<>((int) Math.pow(cols.size(), 3));
-        for (int[] col : cols) {
-            List<int[]> itemAndPairRanks = candidateFisGenerator.fkColToPairs(col);
-            for (int[] itemAndPairRank : itemAndPairRanks) {
-                ArrayList<String> resItemset = new ArrayList<>();
-                final int freq = itemAndPairRank[2];
-                resItemset.add(rankToItem[itemAndPairRank[0]]);
-
-                //currRank is a rank of (k-1)-FI, which in case of k=2 means an item rank
-                int currRank = itemAndPairRank[1];
-                for (CurrSizeFiRanks fiRanks : fkToF2RanksArr) {
-                    int[] pair = fiRanks.getCurrSizeFiAsPairByRank(currRank);
-                    resItemset.add(rankToItem[pair[0]]); //the first element of a pair is always an item
-                    currRank = pair[1]; //(i-1)-FI rank
-                }
-                resItemset.add(rankToItem[currRank]);
-
-                resItemset.trimToSize();
-                res.add(new FreqItemset<>(resItemset, freq));
-            }
-        }
-
-        return res;
-    }
     public List<FreqItemset<String>> fkAsArraysToResItemsets_Direct(
             long minSuppCount, List<int[]> cols, Map<String, Integer> itemToRank, CurrSizeFiRanks... fkToF2RanksArr) {
         String[] rankToItem = BasicOps.getRankToItem(itemToRank);

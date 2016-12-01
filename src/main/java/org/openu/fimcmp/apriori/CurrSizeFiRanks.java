@@ -44,13 +44,6 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
     }
 
     @Override
-    public boolean isGoodNextSizeItemset(int item, int currItemsetRank) {
-        //Ordering: item < current-itemset[0] < current-itemset[1] < ...:
-//        return item < currSizeRanks.rankToPair[currItemsetRank][0] && nextSizeCands.contains(item, currItemsetRank);
-        return BitArrays.get(r1ToFkBitSet[item], 0, currItemsetRank);
-    }
-
-    @Override
     public long[] getFkBitSet(int item) {
         return r1ToFkBitSet[item];
     }
@@ -105,7 +98,9 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
                         couldBeFrequent(item1, item2, km1Rank, fkRanks, f2Ranks)) {
                     res.intPairs.add(item1, kFiRank);
                     if (item1 < fkRanks.rankToPair[kFiRank][0]) {
-                        BitArrays.set(res.r1ToFkBitSet[item1], 0, kFiRank); //see isGoodNextSizeItemset()
+                        //Ordering: item < current-itemset[0] < current-itemset[1] < ...:
+                        BitArrays.set(res.r1ToFkBitSet[item1], 0, kFiRank);
+
                     }
                 }
             }

@@ -3,8 +3,6 @@ package org.openu.fimcmp.apriori;
 import org.apache.commons.lang.NotImplementedException;
 import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
-import scala.Tuple2;
-import scala.Tuple3;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -12,7 +10,7 @@ import java.util.Arrays;
 /**
  * Set of TIDs optimized for merge operations. <br/>
  * Holds everything in long[]. <br/>
- * To allow working with RDD&lt;long[]> rather than with RDD&lt;TidMergeSet>,
+ * To allow working with RDD&lt;long[]> rather than with RDD&lt;TidMergeSetNew>,
  * has all its operations as static, taking long[] as its first argument. <br/>
  * <b>WARNING: assumes all the TIDs are in the range [0, total), see RDD.zipWithIndex()</b><br/>
  * <p>
@@ -36,54 +34,6 @@ public class TidMergeSetNew implements Serializable {
     private static final int FIRST_ELEM_IND = 4;
 
 
-    static long[][] mergeElem2D(
-            long[][] rankKm1ToTidSet,
-            Tuple3<Integer, Integer, Long> rank1RankKAndTid,
-            long totalTids,
-            TidsGenHelper tidsGenHelper) {
-
-        if (rankKm1ToTidSet.length == 0) {
-            rankKm1ToTidSet = new long[tidsGenHelper.getTotalRanksKm1()][];
-        }
-
-        final int rankK = rank1RankKAndTid._2();
-        final long tid = rank1RankKAndTid._3();
-        final int rankKm1 = tidsGenHelper.getRankKm1(rankK);
-        long[] tidSet = rankKm1ToTidSet[rankKm1];
-        rankKm1ToTidSet[rankKm1] = mergeElemFast(tidSet, rankK, tid, totalTids);
-
-        return rankKm1ToTidSet;
-    }
-    static long[][] mergeElem2D_AllAtOnce(
-            long[][] rankKm1ToTidSet,
-            long[] elem_r1TidRkm1BitSet,
-            long totalTids,
-            TidsGenHelper tidsGenHelper) {
-
-        if (rankKm1ToTidSet.length == 0) {
-            rankKm1ToTidSet = new long[tidsGenHelper.getTotalRanksKm1()][];
-        }
-
-        final int START_IND = 2;
-        final int rank1 = (int)elem_r1TidRkm1BitSet[0];
-        final long tid = elem_r1TidRkm1BitSet[1];
-
-        int[] wordNums = new int[BitArrays.BITS_PER_WORD];  //tmp buffer to hold the current word's numbers
-        for (int wordInd=START_IND; wordInd<elem_r1TidRkm1BitSet.length; ++wordInd) {
-            long word = elem_r1TidRkm1BitSet[wordInd];
-            if (word == 0) {
-                continue;
-            }
-            int resInd = BitArrays.getWordBitsAsNumbersToArr(wordNums, word, START_IND, wordInd);
-            for (int numInd=0; numInd<resInd; ++numInd) {
-                int rankKm1 = wordNums[numInd];
-                int rankK = tidsGenHelper.getRankK(rank1, rankKm1);
-                long[] tidSet = rankKm1ToTidSet[rankKm1];
-                rankKm1ToTidSet[rankKm1] = mergeElemFast(tidSet, rankK, tid, totalTids);
-            }
-        }
-        return rankKm1ToTidSet;
-    }
     static long[][] mergeElem2D_AllAtOnce2(
             long[][] rankKToTidSet,
             long[] elem_tidRkBitSet,
@@ -129,28 +79,7 @@ public class TidMergeSetNew implements Serializable {
      * - {rank, size, first_elem_ind, last_elem_ind, bitset, ...} - the normal set
      * </pre>
      */
-    static long[] mergeElem(long[] tidSet, long[] rankAndTid, long totalTids) {
-        final int rank = (int) rankAndTid[0];
-        final long tid = rankAndTid[1];
-        return mergeElem(tidSet, rank, tid, totalTids);
-    }
-
-    static long[] mergeElem(long[] tidSet, Tuple2<Integer, Long> rankAndTid, long totalTids) {
-        final int rank = rankAndTid._1;
-        final long tid = rankAndTid._2;
-        return mergeElem(tidSet, rank, tid, totalTids);
-    }
-
-    static long[] mergeElem(long[] tidSet, int rank, long tid, long totalTids) {
-        if (tidSet == null || tidSet.length <= 1) {
-            return newSetWithElem(rank, tid, totalTids);
-        } else {
-            addElemToExistingSet(tidSet, tid);
-            return tidSet;
-        }
-    }
-
-    static long[] mergeElemFast(long[] tidSet, int rank, long tid, long totalTids) {
+    private static long[] mergeElemFast(long[] tidSet, int rank, long tid, long totalTids) {
         if (tidSet != null && tidSet.length > 1) {
             BitArrays.set(tidSet, FIRST_ELEM_IND, (int) tid); //requires to set min, max and size later
             return tidSet;
@@ -241,15 +170,5 @@ public class TidMergeSetNew implements Serializable {
         res[MIN_ELEM_IND] = res[MAX_ELEM_IND] = tidAsInt;
         BitArrays.set(res, FIRST_ELEM_IND, tidAsInt);
         return res;
-    }
-
-    private static void addElemToExistingSet(long[] tidSet, long tid) {
-        int tidAsInt = (int) tid;
-        tidSet[MIN_ELEM_IND] = Math.min(tidSet[MIN_ELEM_IND], tidAsInt);
-        tidSet[MAX_ELEM_IND] = Math.max(tidSet[MAX_ELEM_IND], tidAsInt);
-        if (!BitArrays.get(tidSet, FIRST_ELEM_IND, tidAsInt)) {
-            ++tidSet[SIZE_IND];
-            BitArrays.set(tidSet, FIRST_ELEM_IND, tidAsInt);
-        }
     }
 }

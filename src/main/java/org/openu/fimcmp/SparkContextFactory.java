@@ -39,8 +39,8 @@ public class SparkContextFactory {
                 Tuple2.class, Tuple2[].class,
                 new ArrayList<>().iterator().getClass(),
                 AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class, PairRanks.class,
-                TidsGenHelper.class, boolean[].class, TidMergeSet.class,
-                TidMergeSetNew.class, IteratorOverTidAndRanksBitset.class
+                TidsGenHelper.class, boolean[].class,
+                TidMergeSetNew.class,
         });
 
         JavaSparkContext sc = new JavaSparkContext(conf);
