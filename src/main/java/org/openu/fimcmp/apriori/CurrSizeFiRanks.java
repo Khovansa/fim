@@ -12,7 +12,6 @@ import java.util.*;
  */
 class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
     private final PairRanks currSizeRanks;
-    private final BoundedIntPairSet nextSizeCands; //(item, pair) -> is possible
     private final long[][] r1ToFkBitSet;
 
     static PairRanks constructF2Ranks(List<int[]> f2, int totalFreqItems) {
@@ -41,7 +40,7 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         //construct a bit set (item, k-FI as rank) -> whether has chance to be frequent:
         IntPairsAndBitSets nextSizeCands = constructNextSizeCands(totalFreqItems, sortedFk, fkRanks, f2Ranks);
 
-        return new CurrSizeFiRanks(fkRanks, nextSizeCands.intPairs, nextSizeCands.r1ToFkBitSet);
+        return new CurrSizeFiRanks(fkRanks, nextSizeCands.r1ToFkBitSet);
     }
 
     @Override
@@ -124,9 +123,8 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         return f2Ranks.existsPair(item1, item2) && fkRanks.existsPair(item1, km1FiRank);
     }
 
-    private CurrSizeFiRanks(PairRanks currSizeRanks, BoundedIntPairSet nextSizeCands, long[][] r1ToFkBitSet) {
+    private CurrSizeFiRanks(PairRanks currSizeRanks, long[][] r1ToFkBitSet) {
         this.currSizeRanks = currSizeRanks;
-        this.nextSizeCands = nextSizeCands;
         this.r1ToFkBitSet = r1ToFkBitSet;
     }
 }

@@ -46,6 +46,23 @@ public class AprCandidateFisGenerator implements Serializable {
 
         return res;
     }
+    int[][] genTransactionC2s_Direct(int[] sortedTr, int totalFreqItems) {
+        final int trSize = sortedTr.length;
+        if (trSize <= 1) {
+            return EMPTY_COLS;
+        }
+
+        int[][] res = new int[trSize - 1][];
+        for (int ii = 0; ii < trSize - 1; ++ii) {
+            final int secondElemsCnt = trSize - 1 - ii;
+            int[] resCol = res[ii] = new int[secondElemsCnt + 1];
+            resCol[0] = sortedTr[ii]; //the first element of the pair
+            //Adding the second elements of the pairs (whose first element is sortedTr[ii]):
+            System.arraycopy(sortedTr, ii+1, resCol, 1, secondElemsCnt);
+        }
+
+        return res;
+    }
 
     /**
      * Return the same structure as {@link #genTransactionC2s}, but for triplets and potentially larger itemsets. <br/>
@@ -353,7 +370,7 @@ public class AprCandidateFisGenerator implements Serializable {
         }
         for (int ii=1; ii<elem.length; ++ii) {
             int rank = elem[ii];
-            ++col[rank];
+            ++col[rank+1];
         }
         return col;
     }
@@ -365,7 +382,7 @@ public class AprCandidateFisGenerator implements Serializable {
         if (col1.length == 0) {
             return Arrays.copyOf(col2, col2.length);
         }
-        for (int ii=0; ii<col2.length; ++ii) {
+        for (int ii=1; ii<col2.length; ++ii) {
             col1[ii] += col2[ii];
         }
         return col1;
@@ -455,7 +472,7 @@ public class AprCandidateFisGenerator implements Serializable {
         int item1 = col[0];
         for (int ii = 1; ii < col.length; ++ii) {
             if (col[ii] >= minSuppCount) {
-                res.add(new int[]{item1, ii, col[ii]});
+                res.add(new int[]{item1, ii-1, col[ii]});
             }
         }
         return res;
