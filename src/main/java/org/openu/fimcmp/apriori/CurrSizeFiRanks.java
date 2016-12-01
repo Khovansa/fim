@@ -84,7 +84,7 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         }
 
         final int totalFks = fkRanks.rankToPair.length;
-        long[][] r1ToFkBitSet = new long[totalItems][BitArrays.requiredSize(totalFks-1, 0)];
+        long[][] r1ToFkBitSet = new long[totalItems][BitArrays.requiredSize(totalFks, 0)];
 
         for (int item1 : firstElems) {
             for (int kFiRank = 0; kFiRank < fkRanks.rankToPair.length; ++kFiRank) {

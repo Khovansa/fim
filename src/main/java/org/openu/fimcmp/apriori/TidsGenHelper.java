@@ -28,6 +28,16 @@ public class TidsGenHelper implements Serializable {
         return rankToIsStoreTids.length;
     }
 
+    /**
+     * Sets 1's for ranks that the pair (current TID, rank) should be stored and processed. <br/>
+     * The idea is to minimize the number of produced pairs (TID, rank). <br/>
+     * The pair should be processed if either <ol>
+     * <li>The rank is not very frequent and is contained in the current transaction, OR</li>
+     * <li>The rank is very frequent and is not contained in the current transaction</li>
+     * </ol>
+     *  Rank is 'not very frequent' means that the rank is contained in less than half of transactions. <br/>
+     * @param ranksBitSet   bitset of k-ranks contained in the current transaction
+     */
     void setToResRanksToBeStoredBitSet(long[] res, int resStartInd, long[] ranksBitSet) {
         Assert.isTrue(rankToIsStoreTidsBitSet.length == ranksBitSet.length);
         System.arraycopy(rankToIsStoreTidsBitSet, 0, res, resStartInd, rankToIsStoreTidsBitSet.length);
@@ -45,8 +55,10 @@ public class TidsGenHelper implements Serializable {
         return rankToSupport;
     }
 
-    //Whether to store TIDs that contain the itemset or to store TIDs that don't contain the itemset.
-    //The decision is made per k-itemset, i.e. per k-itemset rank:
+    /**
+     * Whether to store TIDs that contain the itemset or to store TIDs that don't contain the itemset. <br/>
+     * The decision is made per k-itemset, i.e. per k-itemset rank. <br/>
+     */
     private static boolean[] computeRankToIsStoreContainingTids(int[] rankToSupport, int totalTids) {
         final int totalRanks = rankToSupport.length;
         boolean[] rankToIsStoreContainingTids = new boolean[totalRanks];
@@ -64,7 +76,7 @@ public class TidsGenHelper implements Serializable {
 
     private static long[] getRankToIsStoreTidsBitSet(boolean[] rankToIsStoreTids) {
         final int totalRanks = rankToIsStoreTids.length;
-        long[] res = new long[BitArrays.requiredSize(totalRanks - 1, 0)];
+        long[] res = new long[BitArrays.requiredSize(totalRanks, 0)];
         for (int rank = 0; rank< totalRanks; ++rank) {
             if (rankToIsStoreTids[rank]) {
                 BitArrays.set(res, 0, rank);
@@ -72,7 +84,7 @@ public class TidsGenHelper implements Serializable {
         }
 
         //setting the tail as 1's since notXor(1, 0) = 0 - that's what is required:
-        int totalBits = res.length * BitArrays.BITS_PER_WORD;
+        int totalBits = BitArrays.totalBitsIn(res);
         for (int nonExistingTailRank=totalRanks; nonExistingTailRank < totalBits; ++nonExistingTailRank) {
             BitArrays.set(res, 0, nonExistingTailRank);
         }

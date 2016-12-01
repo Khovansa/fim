@@ -4,7 +4,10 @@ import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Generate candidate itemsets of size i+1 from frequent itemsets of size i. <br/>
@@ -13,7 +16,7 @@ import java.util.*;
 public class AprCandidateFisGenerator implements Serializable {
     private static final int[][] EMPTY_COLS = {};
 
-    int[][] genTransactionC2s_Direct(int[] sortedTr) {
+    int[][] genCandsOfSize2(int[] sortedTr) {
         final int trSize = sortedTr.length;
         if (trSize <= 1) {
             return EMPTY_COLS;
@@ -25,13 +28,13 @@ public class AprCandidateFisGenerator implements Serializable {
             int[] resCol = res[ii] = new int[secondElemsCnt + 1];
             resCol[0] = sortedTr[ii]; //the first element of the pair
             //Adding the second elements of the pairs (whose first element is sortedTr[ii]):
-            System.arraycopy(sortedTr, ii+1, resCol, 1, secondElemsCnt);
+            System.arraycopy(sortedTr, ii + 1, resCol, 1, secondElemsCnt);
         }
 
         return res;
     }
 
-    int[][] genNextSizeCands_ByItems_BitSet_Direct(
+    int[][] genCandsOfNextSize(
             int currItemsetSize, Tuple2<int[], long[]> itemsAndCurrItemsets,
             NextSizeItemsetGenHelper genHelper) {
         int[] sortedTr = itemsAndCurrItemsets._1;
@@ -49,13 +52,13 @@ public class AprCandidateFisGenerator implements Serializable {
         int[][] res = new int[resColumnsSize][];
         for (int ii = 0; ii < resColumnsSize; ++ii) {
             int item = sortedTr[ii];
-            res[ii] = genNextSizeCandsForItem_Direct(item, currItemsets, genHelper);
+            res[ii] = genCandsOfNextSizeForItem(item, currItemsets, genHelper);
         }
 
         return res;
     }
 
-    private int[] genNextSizeCandsForItem_Direct(
+    private int[] genCandsOfNextSizeForItem(
             int item, int[] currItemsetRanks, NextSizeItemsetGenHelper genHelper) {
 
         int totalRanksK = genHelper.getTotalCurrSizeRanks();
@@ -73,72 +76,98 @@ public class AprCandidateFisGenerator implements Serializable {
         return Arrays.copyOf(res, resInd);
     }
 
-    Tuple2<int[], long[]> toSortedRanks1And2_BitSet_Tmp(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
-        long[] ranks2 = computeSortedRanks2_BitSet_Tmp(sortedTr, f2RanksHelper);
+    Tuple2<int[], long[]> toSortedRanks1And2(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
+        long[] ranks2 = computeSortedRanks2(sortedTr, f2RanksHelper);
         return new Tuple2<>(sortedTr, ranks2);
     }
 
-    Tuple2<int[], long[]> toSortedRanks1AndK_BitSet(
+    Tuple2<int[], long[]> toSortedRanks1AndK(
             int[] sortedTr, long[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
-        long[] ranksK = computeSortedRanksK_BitSet(sortedTr, sortedRanksKm1, fkRanksHelper);
+        long[] ranksK = computeSortedRanksK(sortedTr, sortedRanksKm1, fkRanksHelper);
         return new Tuple2<>(sortedTr, ranksK);
     }
 
-    long[] getRankToTidNew2D_AllAtOnce_BitSet2(long[] kRanksBs, long tid, TidsGenHelper tidsGenHelper) {
+    /**
+     * @return res[0]=tid, the rest is a bitset of k-ranks with 1's for cases
+     * when a pair (TID, rankK) should be stored and processed. <br/>
+     *
+     * See {@link TidsGenHelper#setToResRanksToBeStoredBitSet} for details.
+     */
+    long[] getTidAndRanksToBeStored(long[] kRanksBs, long tid, TidsGenHelper tidsGenHelper) {
         long[] res = new long[kRanksBs.length + 1];
         res[0] = tid;
         tidsGenHelper.setToResRanksToBeStoredBitSet(res, 1, kRanksBs);
         return res;
     }
 
-    int[] mergeElem_Direct(int totalCands, int[] col, int[] elem) {
+    /**
+     * Add 1 to each element in 'col' contained in 'elem'.
+     *
+     * @param col  col[0]=elem1, the rest is: col[elem2_rank + 1] = count
+     * @param elem elem[0]=elem1, the rest is a list of elem2 ranks
+     */
+    int[] mergeCountingElem(int totalCands, int[] col, int[] elem) {
         if (elem.length <= 1) {
             return col;
         }
+
         if (col.length == 0) {
             col = new int[totalCands + 1];
             col[0] = elem[0];
         }
-        for (int ii=1; ii<elem.length; ++ii) {
+
+        for (int ii = 1; ii < elem.length; ++ii) {
             int rank = elem[ii];
-            ++col[rank+1];
+            ++col[rank + 1];
         }
+
         return col;
     }
 
-    int[] mergeColumns_Direct(int[] col1, int[] col2) {
+    /**
+     * Sum the counters of each element. <br/>
+     * See {@link #mergeCountingElem} for the structure of each column
+     */
+    int[] mergeCountingColumns(int[] col1, int[] col2) {
         if (col2.length == 0) {
             return col1;
         }
         if (col1.length == 0) {
             return Arrays.copyOf(col2, col2.length);
         }
-        for (int ii=1; ii<col2.length; ++ii) {
+        for (int ii = 1; ii < col2.length; ++ii) {
             col1[ii] += col2[ii];
         }
         return col1;
     }
 
-    List<int[]> fkColToPairs_Direct(int[] col, long minSuppCount) {
+    /**
+     * Convert the column to pairs and filter out infrequent ones.
+     *
+     * @param col see {@link #mergeCountingElem} for the structure
+     */
+    List<int[]> fkColToPairs(int[] col, long minSuppCount) {
         if (col.length <= 1) {
             return Collections.emptyList();
         }
 
-        int resLen = (col.length - 1);
-        List<int[]> res = new ArrayList<>(resLen);
-        int item1 = col[0];
+        List<int[]> res = new ArrayList<>(col.length - 1);
+        int elem1 = col[0];
         for (int ii = 1; ii < col.length; ++ii) {
-            if (col[ii] >= minSuppCount) {
-                res.add(new int[]{item1, ii-1, col[ii]});
+            final int count = col[ii];
+            if (count >= minSuppCount) {
+                int elem2 = ii - 1;
+                res.add(new int[]{elem1, elem2, count});
             }
         }
+
         return res;
     }
 
 
-    private long[] computeSortedRanks2_BitSet_Tmp(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
+    private long[] computeSortedRanks2(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
         final int START_IND = 0;
-        long[] resRanks2 = new long[BitArrays.requiredSize(f2RanksHelper.getTotalCurrSizeRanks()-1, START_IND)];
+        long[] resRanks2 = new long[BitArrays.requiredSize(f2RanksHelper.getTotalCurrSizeRanks(), START_IND)];
         final int arrSize = sortedTr.length;
         for (int ii = 0; ii < arrSize; ++ii) {
             int elem1 = sortedTr[ii];
@@ -154,19 +183,21 @@ public class AprCandidateFisGenerator implements Serializable {
         return resRanks2;
     }
 
-    private long[] computeSortedRanksK_BitSet(int[] sortedTr, long[] sortedRanksKm1Bs, CurrSizeFiRanks fkRanksHelper) {
+    private long[] computeSortedRanksK(int[] sortedTr, long[] sortedRanksKm1Bs, CurrSizeFiRanks fkRanksHelper) {
         final int START_IND = 0;
-        long[] resRanksK = new long[BitArrays.requiredSize(fkRanksHelper.getTotalCurrSizeRanks()-1, START_IND)];
+        long[] resRanksK = new long[BitArrays.requiredSize(fkRanksHelper.getTotalCurrSizeRanks(), START_IND)];
 
-        int[] wordNums = new int[BitArrays.BITS_PER_WORD];  //tmp buffer to hold the current word's numbers
-        for (int wordInd=START_IND; wordInd<sortedRanksKm1Bs.length; ++wordInd) {
+        //iterating over sortedRanksKm1Bs:
+        int[] wordNums = BitArrays.newBufForWordNumbers();  //tmp buffer to hold the current word's numbers
+        for (int wordInd = START_IND; wordInd < sortedRanksKm1Bs.length; ++wordInd) {
             long word = sortedRanksKm1Bs[wordInd];
             if (word == 0) {
                 continue;
             }
             int resInd = BitArrays.getWordBitsAsNumbersToArr(wordNums, word, START_IND, wordInd);
-            for (int numInd=0; numInd<resInd; ++numInd) {
+            for (int numInd = 0; numInd < resInd; ++numInd) {
                 int rankKm1 = wordNums[numInd];
+                //iterating over sortedTr:
                 for (int elem1 : sortedTr) {
                     int rankK = fkRanksHelper.getCurrSizeFiRankByPair(elem1, rankKm1);
                     if (rankK >= 0) {

@@ -15,7 +15,7 @@ public class BitArraysTest {
     @Test
     public void test() {
         int[] indexes = {0, 1, 7, 63, 64, 65, 128, 192, 200, 213, 214, 1034, 1234};
-        long[] words = new long[BitArrays.requiredSize(indexes[indexes.length - 1], START_IND)];
+        long[] words = new long[BitArrays.requiredSize(1 + indexes[indexes.length - 1], START_IND)];
         for (int bitIndex : indexes) {
             BitArrays.set(words, START_IND, bitIndex);
         }
@@ -41,7 +41,7 @@ public class BitArraysTest {
     }
 
     private void checkWordBitsToNums(long[] words, int wordInd, List<Integer> expRes) {
-        int[] res = new int[BitArrays.BITS_PER_WORD];
+        int[] res = BitArrays.newBufForWordNumbers();
         int nextInd = BitArrays.getWordBitsAsNumbersToArr(res, words[wordInd], START_IND, wordInd);
         assertThat(nextInd, is(expRes.size()));
 
