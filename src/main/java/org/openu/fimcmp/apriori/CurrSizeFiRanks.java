@@ -2,7 +2,6 @@ package org.openu.fimcmp.apriori;
 
 import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
-import org.openu.fimcmp.util.BoundedIntPairSet;
 
 import java.io.Serializable;
 import java.util.*;
@@ -38,9 +37,9 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         //enumerate the k-FIs, i.e. give them integer ranks:
         PairRanks fkRanks = PairRanks.construct(sortedFk, totalFreqItems, totalFkm1);
         //construct a bit set (item, k-FI as rank) -> whether has chance to be frequent:
-        IntPairsAndBitSets nextSizeCands = constructNextSizeCands(totalFreqItems, sortedFk, fkRanks, f2Ranks);
+        long[][] r1ToFkBitSet = constructNextSizeCands(totalFreqItems, sortedFk, fkRanks, f2Ranks);
 
-        return new CurrSizeFiRanks(fkRanks, nextSizeCands.r1ToFkBitSet);
+        return new CurrSizeFiRanks(fkRanks, r1ToFkBitSet);
     }
 
     @Override
@@ -77,17 +76,15 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
     /**
      * Assuming the item ranks are [0, totalItems) <br/>
      */
-    private static IntPairsAndBitSets constructNextSizeCands(
+    private static long[][] constructNextSizeCands(
             int totalItems, List<int[]> currSizeFisAsPairs, PairRanks fkRanks, PairRanks f2Ranks) {
-        IntPairsAndBitSets res = new IntPairsAndBitSets();
-        res.intPairs = new BoundedIntPairSet(totalItems, currSizeFisAsPairs.size());
-
         Set<Integer> firstElems = new TreeSet<>();
         for (int[] pair : currSizeFisAsPairs) {
             firstElems.add(pair[0]);
         }
+
         final int totalFks = fkRanks.rankToPair.length;
-        res.r1ToFkBitSet = new long[totalItems][BitArrays.requiredSize(totalFks-1, 0)];
+        long[][] r1ToFkBitSet = new long[totalItems][BitArrays.requiredSize(totalFks-1, 0)];
 
         for (int item1 : firstElems) {
             for (int kFiRank = 0; kFiRank < fkRanks.rankToPair.length; ++kFiRank) {
@@ -96,21 +93,15 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
                 int km1Rank = kFiAsPair[1];
                 if (item1 < item2 && //only considering cases of item1 < item2
                         couldBeFrequent(item1, item2, km1Rank, fkRanks, f2Ranks)) {
-                    res.intPairs.add(item1, kFiRank);
                     if (item1 < fkRanks.rankToPair[kFiRank][0]) {
                         //Ordering: item < current-itemset[0] < current-itemset[1] < ...:
-                        BitArrays.set(res.r1ToFkBitSet[item1], 0, kFiRank);
+                        BitArrays.set(r1ToFkBitSet[item1], 0, kFiRank);
 
                     }
                 }
             }
         }
-        return res;
-    }
-
-    private static class IntPairsAndBitSets {
-        BoundedIntPairSet intPairs;
-        long[][] r1ToFkBitSet;
+        return r1ToFkBitSet;
     }
 
     private static boolean couldBeFrequent(
