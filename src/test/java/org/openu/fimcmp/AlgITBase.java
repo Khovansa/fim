@@ -37,7 +37,7 @@ public class AlgITBase {
             trs = trs.persist(StorageLevel.MEMORY_ONLY_SER());
         }
         UsefulCounts cnts = getCounts(trs, minSupport);
-        return new PrepStepOutputAsList(trs, cnts.totalTrs, cnts.minSuppCount);
+        return new PrepStepOutputAsList(trs, cnts.totalTrs, cnts.minSuppCount, trs.getNumPartitions());
     }
 
     protected PrepStepOutputAsArr prepareAsArr(String inputFileName, double minSupport, boolean isPersist) {
@@ -49,15 +49,17 @@ public class AlgITBase {
             trs = trs.persist(StorageLevel.MEMORY_ONLY_SER());
         }
         UsefulCounts cnts = getCounts(trs, minSupport);
-        return new PrepStepOutputAsArr(trs, cnts.totalTrs, cnts.minSuppCount);
+        return new PrepStepOutputAsArr(trs, cnts.totalTrs, cnts.minSuppCount, cnts.numParts);
     }
 
     private <T> UsefulCounts getCounts(JavaRDD<T> trs, double minSupport) {
+        final int numParts = trs.getNumPartitions();
         final long totalTrs = trs.count();
         final long minSuppCount = BasicOps.minSuppCount(totalTrs, minSupport);
         pp("Total records: " + totalTrs);
         pp("Min support: " + minSuppCount);
-        return new UsefulCounts(totalTrs, minSuppCount);
+        pp("Partitions: " + numParts);
+        return new UsefulCounts(totalTrs, minSuppCount, numParts);
     }
 
     protected void pp(Object msg) {
@@ -67,10 +69,12 @@ public class AlgITBase {
     private static class UsefulCounts {
         public final long totalTrs;
         public final long minSuppCount;
+        public final int numParts;
 
-        UsefulCounts(long totalTrs, long minSuppCount) {
+        UsefulCounts(long totalTrs, long minSuppCount, int numParts) {
             this.totalTrs = totalTrs;
             this.minSuppCount = minSuppCount;
+            this.numParts = numParts;
         }
     }
 
@@ -78,8 +82,8 @@ public class AlgITBase {
         public final JavaRDD<ArrayList<String>> trs;
 
         public PrepStepOutputAsList(
-                JavaRDD<ArrayList<String>> trs, long totalTrs, long minSuppCount) {
-            super(totalTrs, minSuppCount);
+                JavaRDD<ArrayList<String>> trs, long totalTrs, long minSuppCount, int numParts) {
+            super(totalTrs, minSuppCount, numParts);
             this.trs = trs;
         }
     }
@@ -88,8 +92,8 @@ public class AlgITBase {
         public final JavaRDD<String[]> trs;
 
         public PrepStepOutputAsArr(
-                JavaRDD<String[]> trs, long totalTrs, long minSuppCount) {
-            super(totalTrs, minSuppCount);
+                JavaRDD<String[]> trs, long totalTrs, long minSuppCount, int numParts) {
+            super(totalTrs, minSuppCount, numParts);
             this.trs = trs;
         }
     }

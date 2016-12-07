@@ -26,6 +26,14 @@ public class AprioriAlgIT extends AlgITBase {
 
     @Test
     public void test() throws Exception {
+        try {
+            runIt();
+        } finally {
+            Thread.sleep(100_000_000);
+        }
+    }
+
+    private void runIt() throws Exception {
         final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false);
 //        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false);
         apr = new AprioriAlg<>(prep.minSuppCount);
