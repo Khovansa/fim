@@ -70,6 +70,26 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .values()
                 .collect();
     }
+    public List<int[]> computeFk_Part_Tmp(
+            int k, JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, NextSizeItemsetGenHelper genHelper) {
+        //TODO: merge the partitions
+        final int totalCands = genHelper.getTotalCurrSizeRanks();
+//        rangePartitioner = new RangePartitioner(50, pairRdd)
+        JavaRDD<int[][]> partRdd = ranks1AndKm1.mapPartitions(
+                trIt -> candidateFisGenerator.countNextSizeCands_Part(trIt, k - 1, genHelper)
+        );
+        int[][] candToCount = partRdd.first();
+
+        final int totalFreqItems = genHelper.getTotalFreqItems();
+        List<int[]> res = new ArrayList<>(totalFreqItems);
+        for (int item=0; item<totalFreqItems; ++item) {
+            int[] resCol = new int[1 + totalCands];
+            resCol[0] = item;
+            System.arraycopy(candToCount[item], 0, resCol, 1, totalCands);
+            res.add(resCol);
+        }
+        return res;
+    }
 
     public JavaRDD<Tuple2<int[], long[]>> toRddOfRanks1And2(
             JavaRDD<int[]> filteredTrs, CurrSizeFiRanks preprocessedF2) {

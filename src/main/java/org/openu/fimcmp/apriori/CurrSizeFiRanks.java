@@ -56,6 +56,11 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         return currSizeRanks.totalRanks();
     }
 
+    @Override
+    public int getTotalFreqItems() {
+        return r1ToFkBitSet.length;
+    }
+
     /**
      * See {@link #construct} for definition of rank1 and rankKm1 (elem1 and elem2)
      */

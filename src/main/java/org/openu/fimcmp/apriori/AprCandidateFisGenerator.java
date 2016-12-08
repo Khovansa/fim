@@ -4,10 +4,7 @@ import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Generate candidate itemsets of size i+1 from frequent itemsets of size i. <br/>
@@ -74,6 +71,40 @@ public class AprCandidateFisGenerator implements Serializable {
         }
 
         return Arrays.copyOf(res, resInd);
+    }
+
+    Iterator<int[][]> countNextSizeCands_Part(
+            Iterator<Tuple2<int[], long[]>> itemsAndCurrItemsetsIt,
+            int currItemsetSize, NextSizeItemsetGenHelper genHelper) {
+        int totalRanksK = genHelper.getTotalCurrSizeRanks();
+        int f1Size = genHelper.getTotalFreqItems();
+        int[][] candToCount = new int[f1Size][totalRanksK]; //initialized to 0's
+        while (itemsAndCurrItemsetsIt.hasNext()) {
+            Tuple2<int[], long[]> itemsAndCurrItemsets = itemsAndCurrItemsetsIt.next();
+            int[] sortedTr = itemsAndCurrItemsets._1;
+            final int trSize = sortedTr.length;
+            if (trSize <= currItemsetSize) {
+                continue;
+            }
+            long[] currItemsetsBitSet = itemsAndCurrItemsets._2;
+            int[] currItemsets = BitArrays.asNumbers(currItemsetsBitSet, 0);
+            if (currItemsets.length == 0) {
+                continue;
+            }
+
+            final int resColumnsSize = trSize - currItemsetSize;
+            for (int ii = 0; ii < resColumnsSize; ++ii) {
+                int item = sortedTr[ii];
+                long[] fkBitSet = genHelper.getFkBitSet(item);
+                int[] itemCol = candToCount[item];
+                for (int itemsetRank : currItemsets) {
+                    if (BitArrays.get(fkBitSet, 0, itemsetRank)) {
+                        ++itemCol[itemsetRank];
+                    }
+                }
+            }
+        }
+        return Collections.singletonList(candToCount).iterator();
     }
 
     Tuple2<int[], long[]> toSortedRanks1And2(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {

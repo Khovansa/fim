@@ -8,4 +8,6 @@ interface NextSizeItemsetGenHelper {
     long[] getFkBitSet(int item);
 
     int getTotalCurrSizeRanks();
+
+    int getTotalFreqItems();
 }
