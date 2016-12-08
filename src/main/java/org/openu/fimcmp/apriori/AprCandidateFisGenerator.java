@@ -87,8 +87,7 @@ public class AprCandidateFisGenerator implements Serializable {
                 continue;
             }
             long[] currItemsetsBitSet = itemsAndCurrItemsets._2;
-            int[] currItemsets = BitArrays.asNumbers(currItemsetsBitSet, 0);
-            if (currItemsets.length == 0) {
+            if (BitArrays.isZerosOnly(currItemsetsBitSet, 0)) {
                 continue;
             }
 
@@ -96,14 +95,15 @@ public class AprCandidateFisGenerator implements Serializable {
             for (int ii = 0; ii < resColumnsSize; ++ii) {
                 int item = sortedTr[ii];
                 long[] fkBitSet = genHelper.getFkBitSet(item);
+                long[] matchingItemsetsKBs = BitArrays.andReturn(fkBitSet, currItemsetsBitSet, 0, fkBitSet.length);
+                int[] matchingItemsetsK = BitArrays.asNumbers(matchingItemsetsKBs, 0);
                 int[] itemCol = candToCount[item];
-                for (int itemsetRank : currItemsets) {
-                    if (BitArrays.get(fkBitSet, 0, itemsetRank)) {
-                        ++itemCol[itemsetRank];
-                    }
+                for (int itemsetRank : matchingItemsetsK) {
+                    ++itemCol[itemsetRank];
                 }
             }
         }
+
         return Collections.singletonList(candToCount).iterator();
     }
 

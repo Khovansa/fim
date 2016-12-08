@@ -1,5 +1,7 @@
 package org.openu.fimcmp.util;
 
+import java.util.Arrays;
+
 /**
  * Common bit-manipulation methods on long[]. <br/>
  * Designed to be as fast as possible, assumes all arguments are correct. <br/>
@@ -53,6 +55,22 @@ public class BitArrays {
             }
         }
         return -1;
+    }
+
+    public static boolean isZerosOnly(long[] words, int startInd) {
+        for (int wordInd=startInd; wordInd<words.length; ++wordInd) {
+            long word = words[wordInd];
+            if (word != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static long[] andReturn(long[] words1, long[] words2, int startInd, int endInd) {
+        long[] words1AndRes = Arrays.copyOf(words1, words1.length);
+        and(words1AndRes, words2, startInd, endInd);
+        return words1AndRes;
     }
 
     public static void and(long[] words1AndRes, long[] words2, int startInd, int endInd) {
