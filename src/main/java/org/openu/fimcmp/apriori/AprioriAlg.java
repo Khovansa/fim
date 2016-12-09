@@ -54,6 +54,14 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .collect();
     }
 
+    public List<int[]> computeF2_Part(JavaRDD<int[]> filteredTrs, int totalFreqItems) {
+        int[][] candToCount = filteredTrs
+                .mapPartitions(trIt -> candidateFisGenerator.countCands2_Part(trIt, totalFreqItems))
+                .fold(new int[0][], candidateFisGenerator::mergeCounts_Part);
+
+        return countArrToCols(candToCount, totalFreqItems);
+    }
+
     public List<int[]> computeFk(
             int k, JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, NextSizeItemsetGenHelper genHelper) {
         final int totalCands = genHelper.getTotalCurrSizeRanks();

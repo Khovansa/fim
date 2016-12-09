@@ -31,6 +31,28 @@ public class AprCandidateFisGenerator implements Serializable {
         return res;
     }
 
+    Iterator<int[][]> countCands2_Part(Iterator<int[]> sortedTrIt, int totalFreqItems) {
+        int[][] candToCount = new int[totalFreqItems][totalFreqItems];
+        while(sortedTrIt.hasNext()) {
+            int[] sortedTr = sortedTrIt.next();
+            final int trSize = sortedTr.length;
+            if (trSize <= 1) {
+                continue;
+            }
+
+            for (int ii = 0; ii < trSize - 1; ++ii) {
+                int item1 = sortedTr[ii];
+                int[] col = candToCount[item1];
+                for (int jj=ii+1; jj<trSize; ++jj) {
+                    int item2 = sortedTr[jj];
+                    ++col[item2];
+                }
+            }
+        }
+
+        return Collections.singletonList(candToCount).iterator();
+    }
+
     int[][] genCandsOfNextSize(
             int currItemsetSize, Tuple2<int[], long[]> itemsAndCurrItemsets,
             NextSizeItemsetGenHelper genHelper) {

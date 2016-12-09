@@ -50,7 +50,8 @@ public class AprioriAlgIT extends AlgITBase {
 //        filteredTrs = filteredTrs.persist(StorageLevel.MEMORY_AND_DISK_SER());
         pp("filtered and saved");
 
-        List<int[]> f2AsArrays = apr.computeF2(filteredTrs, totalFreqItems);
+//        List<int[]> f2AsArrays = apr.computeF2(filteredTrs, totalFreqItems);
+        List<int[]> f2AsArrays = apr.computeF2_Part(filteredTrs, totalFreqItems);
         pp("F2 as arrays size: "+f2AsArrays.size());
         List<int[]> f2 = apr.fkAsArraysToRankPairs(f2AsArrays, prep.minSuppCount);
         pp("F2 size: "+f2.size());
