@@ -5,7 +5,7 @@ package org.openu.fimcmp.apriori;
  */
 interface NextSizeItemsetGenHelper {
 
-    long[] getFkBitSet(int item);
+    long[] getCurrRanksForNextSizeCandsBitSet(int item);
 
     int getTotalCurrSizeRanks();
 

@@ -74,7 +74,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
             int k, JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, NextSizeItemsetGenHelper genHelper) {
 //        rangePartitioner = new RangePartitioner(50, pairRdd)
         int[][] candToCount = ranks1AndKm1
-                .mapPartitions(trIt -> candidateFisGenerator.countNextSizeCands_Part(trIt, k - 1, genHelper))
+                .mapPartitions(trIt -> candidateFisGenerator.countCandsK_Part(trIt, k - 1, genHelper))
                 .fold(new int[0][], candidateFisGenerator::mergeCounts_Part);
 
         final int totalFreqItems = genHelper.getTotalFreqItems();

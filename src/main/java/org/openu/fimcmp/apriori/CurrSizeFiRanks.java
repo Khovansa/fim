@@ -11,7 +11,7 @@ import java.util.*;
  */
 class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
     private final PairRanks currSizeRanks;
-    private final long[][] r1ToFkBitSet;
+    private final long[][] nextSizeCandsR1ToRk;
 
     static PairRanks constructF2Ranks(List<int[]> f2, int totalFreqItems) {
         List<int[]> sortedF2 = getSortedByDecreasingFreq(f2);
@@ -37,14 +37,14 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         //enumerate the k-FIs, i.e. give them integer ranks:
         PairRanks fkRanks = PairRanks.construct(sortedFk, totalFreqItems, totalFkm1);
         //construct a bit set (item, k-FI as rank) -> whether has chance to be frequent:
-        long[][] r1ToFkBitSet = constructNextSizeCands(totalFreqItems, sortedFk, fkRanks, f2Ranks);
+        long[][] nextSizeCandsR1ToRk = constructNextSizeCands(totalFreqItems, sortedFk, fkRanks, f2Ranks);
 
-        return new CurrSizeFiRanks(fkRanks, r1ToFkBitSet);
+        return new CurrSizeFiRanks(fkRanks, nextSizeCandsR1ToRk);
     }
 
     @Override
-    public long[] getFkBitSet(int item) {
-        return r1ToFkBitSet[item];
+    public long[] getCurrRanksForNextSizeCandsBitSet(int item) {
+        return nextSizeCandsR1ToRk[item];
     }
 
     int[] getCurrSizeFiAsPairByRank(int rank) {
@@ -58,7 +58,7 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
 
     @Override
     public int getTotalFreqItems() {
-        return r1ToFkBitSet.length;
+        return nextSizeCandsR1ToRk.length;
     }
 
     /**
@@ -114,8 +114,8 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         return f2Ranks.existsPair(item1, item2) && fkRanks.existsPair(item1, km1FiRank);
     }
 
-    private CurrSizeFiRanks(PairRanks currSizeRanks, long[][] r1ToFkBitSet) {
+    private CurrSizeFiRanks(PairRanks currSizeRanks, long[][] nextSizeCandsR1ToRk) {
         this.currSizeRanks = currSizeRanks;
-        this.r1ToFkBitSet = r1ToFkBitSet;
+        this.nextSizeCandsR1ToRk = nextSizeCandsR1ToRk;
     }
 }

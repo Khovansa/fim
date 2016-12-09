@@ -59,7 +59,7 @@ public class AprCandidateFisGenerator implements Serializable {
             int item, int[] currItemsetRanks, NextSizeItemsetGenHelper genHelper) {
 
         int totalRanksK = genHelper.getTotalCurrSizeRanks();
-        long[] fkBitSet = genHelper.getFkBitSet(item);
+        long[] fkBitSet = genHelper.getCurrRanksForNextSizeCandsBitSet(item);
 
         int[] res = new int[totalRanksK + 1];
         int resInd = 0;
@@ -73,33 +73,32 @@ public class AprCandidateFisGenerator implements Serializable {
         return Arrays.copyOf(res, resInd);
     }
 
-    Iterator<int[][]> countNextSizeCands_Part(
-            Iterator<Tuple2<int[], long[]>> itemsAndCurrItemsetsIt,
-            int currItemsetSize, NextSizeItemsetGenHelper genHelper) {
-        int totalRanksK = genHelper.getTotalCurrSizeRanks();
-        int f1Size = genHelper.getTotalFreqItems();
-        int[][] candToCount = new int[f1Size][totalRanksK]; //initialized to 0's
-        while (itemsAndCurrItemsetsIt.hasNext()) {
-            Tuple2<int[], long[]> itemsAndCurrItemsets = itemsAndCurrItemsetsIt.next();
-            int[] sortedTr = itemsAndCurrItemsets._1;
-            final int trSize = sortedTr.length;
-            if (trSize <= currItemsetSize) {
+    Iterator<int[][]> countCandsK_Part(
+            Iterator<Tuple2<int[], long[]>> f1AndFkm1BitSetIt,
+            int km1, NextSizeItemsetGenHelper genHelper) {
+        final int f1Size = genHelper.getTotalFreqItems();
+        final int fKm1Size = genHelper.getTotalCurrSizeRanks();
+        int[][] candToCount = new int[f1Size][fKm1Size]; //initialized to 0's
+        while (f1AndFkm1BitSetIt.hasNext()) {
+            Tuple2<int[], long[]> f1AndFkm1BitSet = f1AndFkm1BitSetIt.next();
+            int[] f1 = f1AndFkm1BitSet._1;
+            if (f1.length <= km1) {
                 continue;
             }
-            long[] currItemsetsBitSet = itemsAndCurrItemsets._2;
-            if (BitArrays.isZerosOnly(currItemsetsBitSet, 0)) {
+            long[] fKm1BitSet = f1AndFkm1BitSet._2;
+            if (BitArrays.isZerosOnly(fKm1BitSet, 0)) {
                 continue;
             }
 
-            final int resColumnsSize = trSize - currItemsetSize;
+            final int resColumnsSize = f1.length - km1;
             for (int ii = 0; ii < resColumnsSize; ++ii) {
-                int item = sortedTr[ii];
-                long[] fkBitSet = genHelper.getFkBitSet(item);
-                long[] matchingItemsetsKBs = BitArrays.andReturn(fkBitSet, currItemsetsBitSet, 0, fkBitSet.length);
-                int[] matchingItemsetsK = BitArrays.asNumbers(matchingItemsetsKBs, 0);
+                int item = f1[ii];
+                long[] hasChanceForNextRkm1Bs = genHelper.getCurrRanksForNextSizeCandsBitSet(item);
+                long[] rKm1ForCandKsBitSet = BitArrays.andReturn(fKm1BitSet, hasChanceForNextRkm1Bs, 0, fKm1BitSet.length);
+                int[] rKm1ForCandKs = BitArrays.asNumbers(rKm1ForCandKsBitSet, 0);
                 int[] itemCol = candToCount[item];
-                for (int itemsetRank : matchingItemsetsK) {
-                    ++itemCol[itemsetRank];
+                for (int rKm1 : rKm1ForCandKs) {
+                    ++itemCol[rKm1];
                 }
             }
         }
