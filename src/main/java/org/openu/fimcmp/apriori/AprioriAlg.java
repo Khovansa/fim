@@ -70,22 +70,24 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .values()
                 .collect();
     }
-    public List<int[]> computeFk_Part_Tmp(
+    public List<int[]> computeFk_Part(
             int k, JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, NextSizeItemsetGenHelper genHelper) {
-        //TODO: merge the partitions
-        final int totalCands = genHelper.getTotalCurrSizeRanks();
 //        rangePartitioner = new RangePartitioner(50, pairRdd)
-        JavaRDD<int[][]> partRdd = ranks1AndKm1.mapPartitions(
-                trIt -> candidateFisGenerator.countNextSizeCands_Part(trIt, k - 1, genHelper)
-        );
-        int[][] candToCount = partRdd.first();
+        int[][] candToCount = ranks1AndKm1
+                .mapPartitions(trIt -> candidateFisGenerator.countNextSizeCands_Part(trIt, k - 1, genHelper))
+                .fold(new int[0][], candidateFisGenerator::mergeCounts_Part);
 
         final int totalFreqItems = genHelper.getTotalFreqItems();
+        return countArrToCols(candToCount, totalFreqItems);
+    }
+
+    private List<int[]> countArrToCols(int[][] candToCount, int totalFreqItems) {
         List<int[]> res = new ArrayList<>(totalFreqItems);
         for (int item=0; item<totalFreqItems; ++item) {
-            int[] resCol = new int[1 + totalCands];
+            int[] srcCol = candToCount[item];
+            int[] resCol = new int[1 + srcCol.length];
             resCol[0] = item;
-            System.arraycopy(candToCount[item], 0, resCol, 1, totalCands);
+            System.arraycopy(srcCol, 0, resCol, 1, srcCol.length);
             res.add(resCol);
         }
         return res;

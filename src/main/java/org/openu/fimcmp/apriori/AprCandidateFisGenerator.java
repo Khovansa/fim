@@ -107,6 +107,32 @@ public class AprCandidateFisGenerator implements Serializable {
         return Collections.singletonList(candToCount).iterator();
     }
 
+    int[][] mergeCounts_Part(int[][] cnt1, int[][] cnt2) {
+        if (cnt2.length == 0) {
+            return cnt1;
+        }
+        if (cnt1.length == 0) {
+            return arrCopy2D(cnt2);
+        }
+
+        for (int ii=0; ii<cnt1.length; ++ii) {
+            int[] col1 = cnt1[ii];
+            int[] col2 = cnt2[ii];
+            for (int jj=0; jj<col1.length; ++jj) {
+                col1[jj] += col2[jj];
+            }
+        }
+        return cnt1;
+    }
+
+    private int[][] arrCopy2D(int[][] src) {
+        int[][] res = new int[src.length][];
+        for (int ii=0; ii<res.length; ++ii) {
+            res[ii] = Arrays.copyOf(src[ii], src[ii].length);
+        }
+        return res;
+    }
+
     Tuple2<int[], long[]> toSortedRanks1And2(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
         long[] ranks2 = computeSortedRanks2(sortedTr, f2RanksHelper);
         return new Tuple2<>(sortedTr, ranks2);
