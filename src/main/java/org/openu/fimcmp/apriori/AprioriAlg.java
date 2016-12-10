@@ -1,6 +1,7 @@
 package org.openu.fimcmp.apriori;
 
 import org.apache.spark.HashPartitioner;
+import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaRDD;
 import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemset;
@@ -8,7 +9,9 @@ import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +32,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
      */
     public List<T> computeF1(JavaRDD<T[]> data) {
         int numParts = data.getNumPartitions();
-        HashPartitioner partitioner = new HashPartitioner(numParts);
+        Partitioner partitioner = new HashPartitioner(numParts);
         List<Tuple2<T, Long>> res = data.flatMap(IteratorOverArray::new)
                 .mapToPair(v -> new Tuple2<>(v, 1L))
                 .reduceByKey(partitioner, (x, y) -> x + y)
@@ -61,7 +64,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
 
     private List<int[]> countArrToCols(int[][] candToCount, int totalFreqItems) {
         List<int[]> res = new ArrayList<>(totalFreqItems);
-        for (int item=0; item<totalFreqItems; ++item) {
+        for (int item = 0; item < totalFreqItems; ++item) {
             int[] srcCol = candToCount[item];
             int[] resCol = new int[1 + srcCol.length];
             resCol[0] = item;
@@ -81,9 +84,20 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK(row._1, row._2, preprocessedFk));
     }
 
+    //TODO: repartition the TID sets based on rankK's
+    //Copying FPGrowth:
+    //after mapPartition():
+    // rdd.flatMapToPair(rankToTidSet -> Iterator<Tuple2(partNumber, tidSet)>)
+    // - the iterator is similar to IteratorOverArray,
+    //   but at the end maps currRank to new Tuple2(p.part(currRank), arr[currRank])
+    // The partitioner should map rankK to partition number based on the common prefix,
+    // i.e. need to pre-compute a map: rankK -> prefixRankKm1
+    //then aggregateByKey(new long[0][], TidMergeSet.mergePartitions, partitioner.numPartitions())
+    //It will return a PairRdd<key, val>.
+    //Eclat should be applied to the 'val' - completely independently
+    //Then can just collect the results
     public long[][] computeCurrRankToTidBitSet_Part(
             JavaRDD<long[]> kRanksBsRdd, long totalTids, TidsGenHelper tidsGenHelper) {
-
         return kRanksBsRdd
                 .zipWithIndex()
                 .mapPartitions(kRanksBsAndTidIt -> TidMergeSet.processPartition(kRanksBsAndTidIt, tidsGenHelper, totalTids))

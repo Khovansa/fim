@@ -69,10 +69,10 @@ public class TidMergeSet implements Serializable {
         }
 
         if (hasElems) {
-            int startInd = indexOfTid(minTid);
-            int endIndExc = 1 + indexOfTid(maxTid);
+            int searchFromInd = indexOfTid(minTid);
+            int searchToIndExc = 1 + indexOfTid(maxTid);
             for (long[] tidSet : rankKToTidSet) {
-                setMetadata(tidSet, startInd, endIndExc);
+                setMetadata(tidSet, searchFromInd, searchToIndExc);
             }
         }
 
@@ -94,16 +94,6 @@ public class TidMergeSet implements Serializable {
         return part1;
     }
 
-
-    private static void setMetadata(long[] tidSet, int startInd, int endIndExc) {
-        if (tidSet == null) {
-            return;
-        }
-
-        tidSet[MIN_ELEM_IND] = BitArrays.min(tidSet, startInd, endIndExc);
-        tidSet[MAX_ELEM_IND] = BitArrays.max(tidSet, startInd, endIndExc);
-        tidSet[SIZE_IND] = BitArrays.cardinality(tidSet, startInd, endIndExc);
-    }
 
     /**
      * Assuming the two sets' ranges do not intersect
@@ -141,6 +131,16 @@ public class TidMergeSet implements Serializable {
         }
 
         return s1AndRes;
+    }
+
+    private static void setMetadata(long[] tidSet, int searchFromInd, int searchToIndExc) {
+        if (tidSet == null) {
+            return;
+        }
+
+        tidSet[MIN_ELEM_IND] = BitArrays.min(tidSet, BITSET_START_IND, searchFromInd, searchToIndExc);
+        tidSet[MAX_ELEM_IND] = BitArrays.max(tidSet, BITSET_START_IND, searchFromInd, searchToIndExc);
+        tidSet[SIZE_IND] = BitArrays.cardinality(tidSet, searchFromInd, searchToIndExc);
     }
 
     private static int indexOfTid(long tid) {

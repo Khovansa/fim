@@ -41,10 +41,15 @@ public class AlgITBase {
     }
 
     protected PrepStepOutputAsArr prepareAsArr(String inputFileName, double minSupport, boolean isPersist) {
+        return prepareAsArr(inputFileName, minSupport, isPersist, 1);
+    }
+
+    protected PrepStepOutputAsArr prepareAsArr(
+            String inputFileName, double minSupport, boolean isPersist, int numPart) {
         String inputFile = TestDataLocation.fileStr(inputFileName);
 
         sw.start();
-        JavaRDD<String[]> trs = basicOps.readLinesAsSortedItemsArr(inputFile, sc);
+        JavaRDD<String[]> trs = basicOps.readLinesAsSortedItemsArr(inputFile, numPart, sc);
         if (isPersist) {
             trs = trs.persist(StorageLevel.MEMORY_ONLY_SER());
         }

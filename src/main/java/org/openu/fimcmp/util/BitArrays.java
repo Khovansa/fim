@@ -27,10 +27,10 @@ public class BitArrays {
         return ((words[wordIndex] & (1L << bitIndex)) != 0);
     }
 
-    public static int cardinality(long[] words, int startInd, int endIndExc) {
-        int actEndIndExc = Math.min(endIndExc, words.length);
+    public static int cardinality(long[] words, int searchFromInd, int searchToIndExc) {
+        int actToIndExc = Math.min(searchToIndExc, words.length);
         int sum = 0;
-        for (int i = startInd; i < actEndIndExc; i++) {
+        for (int i = searchFromInd; i < actToIndExc; i++) {
             sum += Long.bitCount(words[i]);
         }
         return sum;
@@ -41,15 +41,15 @@ public class BitArrays {
     }
 
     public static int min(long[] words, int startInd) {
-        return min(words, startInd, words.length);
+        return min(words, startInd, startInd, words.length);
     }
 
-    public static int min(long[] words, int startInd, int endIndExc) {
-        int actEndIndExc = Math.min(endIndExc, words.length);
-        for (int wordInd=startInd; wordInd<actEndIndExc; ++wordInd) {
+    public static int min(long[] words, int bitSetStartInd, int searchFromInd, int searchToIndExc) {
+        int actToIndExc = Math.min(searchToIndExc, words.length);
+        for (int wordInd=searchFromInd; wordInd<actToIndExc; ++wordInd) {
             long word = words[wordInd];
             if (word != 0) {
-                int base = (wordInd - startInd) * BITS_PER_WORD;
+                int base = (wordInd - bitSetStartInd) * BITS_PER_WORD;
                 return base + Long.numberOfTrailingZeros(word);
             }
         }
@@ -57,12 +57,12 @@ public class BitArrays {
 
     }
 
-    public static int max(long[] words, int startInd, int endIndExc) {
-        int actEndIndExc = Math.min(endIndExc, words.length);
-        for (int wordInd=actEndIndExc-1; wordInd>=startInd; --wordInd) {
+    public static int max(long[] words, int bitSetStartInd, int searchFromInd, int searchToIndExc) {
+        int actToIndExc = Math.min(searchToIndExc, words.length);
+        for (int wordInd=actToIndExc-1; wordInd>=searchFromInd; --wordInd) {
             long word = words[wordInd];
             if (word != 0) {
-                int base = (wordInd - startInd) * BITS_PER_WORD;
+                int base = (wordInd - bitSetStartInd) * BITS_PER_WORD;
                 return base + BITS_PER_WORD - 1 - Long.numberOfLeadingZeros(word);
             }
         }
@@ -70,7 +70,7 @@ public class BitArrays {
     }
 
     public static int max(long[] words, int startInd) {
-        return max(words, startInd, words.length);
+        return max(words, startInd, startInd, words.length);
     }
 
     public static boolean isZerosOnly(long[] words, int startInd) {

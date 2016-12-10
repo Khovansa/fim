@@ -26,16 +26,13 @@ public class AprioriAlgIT extends AlgITBase {
 
     @Test
     public void test() throws Exception {
-        try {
-            runIt();
-        } finally {
-            Thread.sleep(100_000_000);
-        }
+        runIt();
+        Thread.sleep(100_000_000);
     }
 
     private void runIt() throws Exception {
-        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false);
-//        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false);
+        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false, 1);
+//        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false, 2);
         apr = new AprioriAlg<>(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
         final int totalFreqItems = sortedF1.size();
@@ -95,12 +92,12 @@ public class AprioriAlgIT extends AlgITBase {
         long[][] rankKToTids = apr.computeCurrRankToTidBitSet_Part(kRanksBsRdd, prep.totalTrs, tidsGenHelper);
 
         pp("TIDs:");
-            for (int rankK = 0, cnt=0; rankK < 500 && cnt<20; ++rankK) {
-                if (rankKToTids[rankK] != null) {
-                    ++cnt;
-                    System.out.println(Arrays.toString(TidMergeSet.describeAsList(rankKToTids[rankK])));
-                }
+        for (int rankK = 0, cnt=0; rankK < 500 && cnt<20; ++rankK) {
+            if (rankKToTids[rankK] != null) {
+                ++cnt;
+                System.out.println(Arrays.toString(TidMergeSet.describeAsList(rankKToTids[rankK])));
             }
+        }
 
 //        pp("zzz");
 //        List<int[]> f4AsArrays = apr.computeFk_Part(4, ranks1And3, preprocessedF3);
