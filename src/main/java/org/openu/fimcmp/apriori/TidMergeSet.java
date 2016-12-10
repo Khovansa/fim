@@ -3,9 +3,12 @@ package org.openu.fimcmp.apriori;
 import org.apache.commons.lang.NotImplementedException;
 import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
+import scala.Tuple2;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 
 /**
  * Set of TIDs optimized for merge operations. <br/>
@@ -33,6 +36,37 @@ public class TidMergeSet implements Serializable {
     private static final int MAX_ELEM_IND = 3;
     private static final int FIRST_ELEM_IND = 4;
 
+    /**
+     * Return an iterator over a single long[][] array: rankK -> 'tid-set'. <br/>
+     * The 'tid-set' is a bitset of TIDs prefixed with some metadata.
+     */
+    static Iterator<long[][]> processPartition(
+            Iterator<Tuple2<long[], Long>> kRanksBsAndTidIt, TidsGenHelper tidsGenHelper, long totalTids) {
+        long[][] rankKToTidSet = new long[tidsGenHelper.totalRanks()][];
+        while(kRanksBsAndTidIt.hasNext()) {
+            Tuple2<long[], Long> kRanksBsAndTid = kRanksBsAndTidIt.next();
+            long[] kRanksBs = kRanksBsAndTid._1;
+
+            long[] kRanksToBeStoredBs = new long[kRanksBs.length];
+            tidsGenHelper.setToResRanksToBeStoredBitSet(kRanksToBeStoredBs, 0, kRanksBs);
+            int[] kRanksToBeStored = BitArrays.asNumbers(kRanksToBeStoredBs, 0);
+
+            final long tid = kRanksBsAndTid._2;
+            for (int rankK : kRanksToBeStored) {
+                long[] tidSet = rankKToTidSet[rankK];
+                if (tidSet != null) {
+                    BitArrays.set(tidSet, FIRST_ELEM_IND, (int) tid); //requires to set min, max and size later
+                } else {
+                    rankKToTidSet[rankK] = newSetWithElem(rankK, tid, totalTids);
+                }
+            }
+        }
+
+        for (long[] tidSet : rankKToTidSet) {
+            setMetadata(tidSet);
+        }
+        return Collections.singletonList(rankKToTidSet).iterator();
+    }
 
     static long[][] mergeElem(
             long[][] rankKToTidSet,

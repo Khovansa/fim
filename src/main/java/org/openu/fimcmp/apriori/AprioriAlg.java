@@ -124,6 +124,14 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return rkToTids.values().collect().get(0);
     //                .filter(arr -> (arr != null))
     }
+    public long[][] computeCurrRankToTidBitSet_Part_Tmp(
+            JavaRDD<long[]> kRanksBsRdd, long totalTids, TidsGenHelper tidsGenHelper) {
+
+        return kRanksBsRdd
+                .zipWithIndex()
+                .mapPartitions(kRanksBsAndTidIt -> TidMergeSet.processPartition(kRanksBsAndTidIt, tidsGenHelper, totalTids))
+                .first(); //TODO
+    }
 
     public JavaRDD<long[]> prepareToTidsGen(
             JavaRDD<Tuple2<int[], long[]>> ranks1AndK, TidsGenHelper tidsGenHelper) {

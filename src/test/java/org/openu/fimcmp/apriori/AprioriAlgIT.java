@@ -88,12 +88,15 @@ public class AprioriAlgIT extends AlgITBase {
 //        pp("Avg 3-ranks count: " + 1.0 * sum / lens.size());
 
         TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
-        JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen(ranks1And3, tidsGenHelper);
-//        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
-        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_AND_DISK_SER());
 
+//        JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen(ranks1And3, tidsGenHelper);
+////        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
+//        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_AND_DISK_SER());
+        JavaRDD<long[]> kRanksBsRdd = ranks1And3.map(r1And3 -> r1And3._2);
+        kRanksBsRdd = kRanksBsRdd.persist(StorageLevel.MEMORY_AND_DISK_SER());
         pp("Starting collecting the TIDs");
-        long[][] rankKToTids = apr.computeCurrRankToTidBitSet(tidAndRanksBitset, prep.totalTrs, tidsGenHelper);
+//        long[][] rankKToTids = apr.computeCurrRankToTidBitSet(tidAndRanksBitset, prep.totalTrs, tidsGenHelper);
+        long[][] rankKToTids = apr.computeCurrRankToTidBitSet_Part_Tmp(kRanksBsRdd, prep.totalTrs, tidsGenHelper);
 
         pp("TIDs:");
             for (int rankK = 0, cnt=0; rankK < 500 && cnt<20; ++rankK) {
