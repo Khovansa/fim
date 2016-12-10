@@ -93,7 +93,9 @@ public class AprioriAlgIT extends AlgITBase {
 ////        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
 //        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_AND_DISK_SER());
         JavaRDD<long[]> kRanksBsRdd = ranks1And3.map(r1And3 -> r1And3._2);
+        filteredTrs.unpersist();
         kRanksBsRdd = kRanksBsRdd.persist(StorageLevel.MEMORY_AND_DISK_SER());
+//        ranks1And2.unpersist();
         pp("Starting collecting the TIDs");
 //        long[][] rankKToTids = apr.computeCurrRankToTidBitSet(tidAndRanksBitset, prep.totalTrs, tidsGenHelper);
         long[][] rankKToTids = apr.computeCurrRankToTidBitSet_Part(kRanksBsRdd, prep.totalTrs, tidsGenHelper);
