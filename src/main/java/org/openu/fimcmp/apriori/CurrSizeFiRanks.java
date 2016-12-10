@@ -12,6 +12,7 @@ import java.util.*;
 class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
     private final PairRanks currSizeRanks;
     private final long[][] nextSizeCandsR1ToRk;
+    private final long[][] currSizeFisR1ToRkm1;
 
     static PairRanks constructF2Ranks(List<int[]> f2, int totalFreqItems) {
         List<int[]> sortedF2 = getSortedByDecreasingFreq(f2);
@@ -38,8 +39,10 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         PairRanks fkRanks = PairRanks.construct(sortedFk, totalFreqItems, totalFkm1);
         //construct a bit set (item, k-FI as rank) -> whether has chance to be frequent:
         long[][] nextSizeCandsR1ToRk = constructNextSizeCands(totalFreqItems, sortedFk, fkRanks, f2Ranks);
+        //constructu a bit set per item: bs[r<k-1>]=1 <=> rankK exists as a pair (item, r<k-1>):
+        long[][] currSizeFisR1ToRkm1 = fkRanks.constructElem1ToElem2BitSet();
 
-        return new CurrSizeFiRanks(fkRanks, nextSizeCandsR1ToRk);
+        return new CurrSizeFiRanks(fkRanks, nextSizeCandsR1ToRk, currSizeFisR1ToRkm1);
     }
 
     @Override
@@ -70,6 +73,14 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
 
     TidsGenHelper constructTidGenHelper(List<int[]> fk, int totalTids) {
         return TidsGenHelper.construct(fk, currSizeRanks, totalTids);
+    }
+
+    long[] getPrevRanksForCurrSizeFisAsBitSet(int item) {
+        return currSizeFisR1ToRkm1[item];
+    }
+
+    int[] getPrevSizeRankToCurrSizeRank(int item) {
+        return currSizeRanks.getElem2ToRank(item);
     }
 
     private static List<int[]> getSortedByDecreasingFreq(List<int[]> currSizeFisAsPairs) {
@@ -114,8 +125,9 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         return f2Ranks.existsPair(item1, item2) && fkRanks.existsPair(item1, km1FiRank);
     }
 
-    private CurrSizeFiRanks(PairRanks currSizeRanks, long[][] nextSizeCandsR1ToRk) {
+    private CurrSizeFiRanks(PairRanks currSizeRanks, long[][] nextSizeCandsR1ToRk, long[][] currSizeFisR1ToRkm1) {
         this.currSizeRanks = currSizeRanks;
         this.nextSizeCandsR1ToRk = nextSizeCandsR1ToRk;
+        this.currSizeFisR1ToRkm1 = currSizeFisR1ToRkm1;
     }
 }

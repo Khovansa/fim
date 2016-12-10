@@ -161,7 +161,8 @@ public class AprCandidateFisGenerator implements Serializable {
 
     Tuple2<int[], long[]> toSortedRanks1AndK(
             int[] sortedTr, long[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
-        long[] ranksK = computeSortedRanksK(sortedTr, sortedRanksKm1, fkRanksHelper);
+//        long[] ranksK = computeSortedRanksK(sortedTr, sortedRanksKm1, fkRanksHelper);
+        long[] ranksK = computeSortedRanksK_New(sortedTr, sortedRanksKm1, fkRanksHelper);
         return new Tuple2<>(sortedTr, ranksK);
     }
 
@@ -249,9 +250,10 @@ public class AprCandidateFisGenerator implements Serializable {
         final int arrSize = sortedTr.length;
         for (int ii = 0; ii < arrSize; ++ii) {
             int elem1 = sortedTr[ii];
+            int[] itemToR2 = f2RanksHelper.getPrevSizeRankToCurrSizeRank(elem1);
             for (int jj = ii + 1; jj < arrSize; ++jj) {
                 int elem2 = sortedTr[jj];
-                int rank2 = f2RanksHelper.getCurrSizeFiRankByPair(elem1, elem2);
+                int rank2 = itemToR2[elem2];
                 if (rank2 >= 0) {
                     BitArrays.set(resRanks2, START_IND, rank2);
                 }
@@ -282,6 +284,24 @@ public class AprCandidateFisGenerator implements Serializable {
                         BitArrays.set(resRanksK, START_IND, rankK);
                     }
                 }
+            }
+        }
+
+        return resRanksK;
+    }
+
+    private long[] computeSortedRanksK_New(int[] sortedTr, long[] sortedRanksKm1Bs, CurrSizeFiRanks fkRanksHelper) {
+        final int START_IND = 0;
+        long[] resRanksK = new long[BitArrays.requiredSize(fkRanksHelper.getTotalCurrSizeRanks(), START_IND)];
+
+        for (int r1 : sortedTr) {
+            long[] possibleRkm1sBs = fkRanksHelper.getPrevRanksForCurrSizeFisAsBitSet(r1);
+            long[] actRkm1sBs = BitArrays.andReturn(sortedRanksKm1Bs, possibleRkm1sBs, START_IND, sortedRanksKm1Bs.length);
+            final int[] actRkm1s = BitArrays.asNumbers(actRkm1sBs, START_IND);
+            final int[] rKm1ToRk = fkRanksHelper.getPrevSizeRankToCurrSizeRank(r1);
+            for (int rKm1: actRkm1s) {
+                int rankK = rKm1ToRk[rKm1];
+                BitArrays.set(resRanksK, START_IND, rankK);
             }
         }
 

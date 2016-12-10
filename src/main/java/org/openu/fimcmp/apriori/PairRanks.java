@@ -1,6 +1,7 @@
 package org.openu.fimcmp.apriori;
 
 import org.openu.fimcmp.util.Assert;
+import org.openu.fimcmp.util.BitArrays;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -23,6 +24,28 @@ public class PairRanks implements Serializable {
 
     boolean existsPair(int elem1, int elem2) {
         return pairToRank[elem1][elem2] >= 0;
+    }
+
+    int[] getElem2ToRank(int elem1) {
+        return pairToRank[elem1];
+    }
+
+    long[][] constructElem1ToElem2BitSet() {
+        final int START_IND=0;
+        final int totalElems1 = totalElems1();
+        final int totalElems2 = totalElems2();
+
+        long[][] res = new long[totalElems1][];
+        for (int elem1=0; elem1<totalElems1; ++elem1) {
+            long[] elem2Bs = new long[BitArrays.requiredSize(totalElems2, START_IND)];
+            for (int elem2=0; elem2 < totalElems2; ++elem2) {
+                if (existsPair(elem1, elem2)) {
+                    BitArrays.set(elem2Bs, START_IND, elem2);
+                }
+            }
+            res[elem1] = elem2Bs;
+        }
+        return res;
     }
 
     int totalRanks() {
