@@ -1,7 +1,6 @@
 package org.openu.fimcmp.apriori;
 
 import org.apache.spark.HashPartitioner;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemset;
@@ -41,19 +40,6 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .map(t -> t._1).collect(Collectors.toList());
     }
 
-    public List<int[]> computeF2(JavaRDD<int[]> filteredTrs, int totalFreqItems) {
-        return filteredTrs
-                .flatMap(tr -> new IteratorOverArray<>(candidateFisGenerator.genCandsOfSize2(tr)))
-                .mapToPair(elem -> new Tuple2<>(elem[0], elem))
-                .aggregateByKey(
-                        new int[]{},
-                        (col, elem) -> candidateFisGenerator.mergeCountingElem(totalFreqItems, col, elem),
-                        candidateFisGenerator::mergeCountingColumns)
-                .sortByKey()
-                .values()
-                .collect();
-    }
-
     public List<int[]> computeF2_Part(JavaRDD<int[]> filteredTrs, int totalFreqItems) {
         int[][] candToCount = filteredTrs
                 .mapPartitions(trIt -> candidateFisGenerator.countCands2_Part(trIt, totalFreqItems))
@@ -62,22 +48,6 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return countArrToCols(candToCount, totalFreqItems);
     }
 
-    public List<int[]> computeFk(
-            int k, JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, NextSizeItemsetGenHelper genHelper) {
-        final int totalCands = genHelper.getTotalCurrSizeRanks();
-        return ranks1AndKm1
-                .flatMap(tr -> new IteratorOverArray<>(
-                        candidateFisGenerator.genCandsOfNextSize(k-1, tr, genHelper)))
-                .mapToPair(col -> new Tuple2<>(col[0], col))
-                .aggregateByKey(
-                        new int[]{},
-                        (col, elem) -> candidateFisGenerator.mergeCountingElem(totalCands, col, elem),
-                        candidateFisGenerator::mergeCountingColumns
-                )
-                .sortByKey()
-                .values()
-                .collect();
-    }
     public List<int[]> computeFk_Part(
             int k, JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, NextSizeItemsetGenHelper genHelper) {
 //        rangePartitioner = new RangePartitioner(50, pairRdd)
@@ -111,19 +81,6 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK(row._1, row._2, preprocessedFk));
     }
 
-    public long[][] computeCurrRankToTidBitSet(
-            JavaRDD<long[]> tidAndRanksBitset, long totalTids, TidsGenHelper tidsGenHelper) {
-
-        JavaPairRDD<Integer, long[][]> rkToTids = tidAndRanksBitset.mapToPair(t -> new Tuple2<>(1, t))
-                .aggregateByKey(
-                        new long[][]{},
-                        1,
-                        (res, elem) -> TidMergeSet.mergeElem(res, elem, totalTids, tidsGenHelper),
-                        TidMergeSet::mergeSets
-                );
-        return rkToTids.values().collect().get(0);
-    //                .filter(arr -> (arr != null))
-    }
     public long[][] computeCurrRankToTidBitSet_Part(
             JavaRDD<long[]> kRanksBsRdd, long totalTids, TidsGenHelper tidsGenHelper) {
 
@@ -131,14 +88,6 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .zipWithIndex()
                 .mapPartitions(kRanksBsAndTidIt -> TidMergeSet.processPartition(kRanksBsAndTidIt, tidsGenHelper, totalTids))
                 .fold(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions(p1, p2, tidsGenHelper));
-    }
-
-    public JavaRDD<long[]> prepareToTidsGen(
-            JavaRDD<Tuple2<int[], long[]>> ranks1AndK, TidsGenHelper tidsGenHelper) {
-        return ranks1AndK
-                .zipWithIndex()
-                .map(trAndTid -> candidateFisGenerator
-                        .getTidAndRanksToBeStored(trAndTid._1._2, trAndTid._2, tidsGenHelper));
     }
 
     public List<int[]> fkAsArraysToRankPairs(List<int[]> cols, long minSuppCount) {

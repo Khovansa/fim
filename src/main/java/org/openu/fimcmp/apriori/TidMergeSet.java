@@ -1,6 +1,5 @@
 package org.openu.fimcmp.apriori;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;
@@ -42,6 +41,7 @@ public class TidMergeSet implements Serializable {
      */
     static Iterator<long[][]> processPartition(
             Iterator<Tuple2<long[], Long>> kRanksBsAndTidIt, TidsGenHelper tidsGenHelper, long totalTids) {
+        final int RANKS_BITSET_START_IND = 0;
         long[][] rankKToTidSet = new long[tidsGenHelper.totalRanks()][];
         long minTid = Long.MAX_VALUE;
         long maxTid = Long.MIN_VALUE;
@@ -52,8 +52,8 @@ public class TidMergeSet implements Serializable {
             long[] kRanksBs = kRanksBsAndTid._1;
 
             long[] kRanksToBeStoredBs = new long[kRanksBs.length];
-            tidsGenHelper.setToResRanksToBeStoredBitSet(kRanksToBeStoredBs, 0, kRanksBs);
-            int[] kRanksToBeStored = BitArrays.asNumbers(kRanksToBeStoredBs, 0);
+            tidsGenHelper.setToResRanksToBeStoredBitSet(kRanksToBeStoredBs, RANKS_BITSET_START_IND, kRanksBs);
+            int[] kRanksToBeStored = BitArrays.asNumbers(kRanksToBeStoredBs, RANKS_BITSET_START_IND);
 
             final long tid = kRanksBsAndTid._2;
             minTid = Math.min(minTid, tid);
@@ -94,71 +94,6 @@ public class TidMergeSet implements Serializable {
         return part1;
     }
 
-    static long[][] mergeElem(
-            long[][] rankKToTidSet,
-            long[] elem_tidRkBitSet,
-            long totalTids,
-            TidsGenHelper tidsGenHelper) {
-
-        if (rankKToTidSet.length == 0) {
-            rankKToTidSet = new long[tidsGenHelper.totalRanks()][];
-        }
-
-        final int START_IND = 1;
-        final long tid = elem_tidRkBitSet[0];
-
-        int[] wordNums = BitArrays.newBufForWordNumbers();  //tmp buffer to hold the current word's numbers
-        for (int wordInd=START_IND; wordInd<elem_tidRkBitSet.length; ++wordInd) {
-            long word = elem_tidRkBitSet[wordInd];
-            if (word == 0) {
-                continue;
-            }
-            int resInd = BitArrays.getWordBitsAsNumbersToArr(wordNums, word, START_IND, wordInd);
-            for (int numInd=0; numInd<resInd; ++numInd) {
-                int rankK = wordNums[numInd];
-                long[] tidSet = rankKToTidSet[rankK];
-                rankKToTidSet[rankK] = addTid(tidSet, rankK, tid, totalTids);
-            }
-        }
-        return rankKToTidSet;
-    }
-
-    static long[][] mergeSets(long[][] s1, long[][] s2) {
-        throw new NotImplementedException();
-    }
-
-
-    /**
-     * <pre>
-     * Cases:
-     * - {}: initial empty set, need to be replaced at least by {rank, ...} - created by Spark
-     * - {rank}: 'normal' empty set that includes rank - created by us
-     * - {rank, -1}: single element (itemset rank);
-     *   the case when the itemset is present in a transaction, but we only aggregate those that are not present
-     * - {rank, TID}: single element (itemset rank) - normal case when we want to aggregate the TID for this itemset
-     * - {rank, size, first_elem_ind, last_elem_ind, bitset, ...} - the normal set
-     * </pre>
-     */
-    private static long[] addTid(long[] tidSet, int rank, long tid, long totalTids) {
-        if (tidSet != null && tidSet.length > 1) {
-            BitArrays.set(tidSet, BITSET_START_IND, (int) tid); //requires to set min, max and size later
-            return tidSet;
-        } else {
-            return newSetWithElem(rank, tid, totalTids);
-        }
-    }
-
-    static long[] withMetadata(long[] tidSet) {
-        long[] res = Arrays.copyOf(tidSet, tidSet.length);
-        setMetadata(res);
-        return res;
-    }
-
-    private static void setMetadata(long[] res) {
-        res[MIN_ELEM_IND] = BitArrays.min(res, BITSET_START_IND);
-        res[MAX_ELEM_IND] = BitArrays.max(res, BITSET_START_IND);
-        res[SIZE_IND] = BitArrays.cardinality(res, BITSET_START_IND);
-    }
 
     private static void setMetadata(long[] tidSet, int startInd, int endIndExc) {
         if (tidSet == null) {
@@ -173,7 +108,7 @@ public class TidMergeSet implements Serializable {
     /**
      * Assuming the two sets' ranges do not intersect
      */
-    static long[] mergeTidSets(long[] s1AndRes, long[] s2) {
+    private static long[] mergeTidSets(long[] s1AndRes, long[] s2) {
         if (s2 == null || s2.length <= 1) {
             return s1AndRes;
         }
@@ -210,14 +145,6 @@ public class TidMergeSet implements Serializable {
 
     private static int indexOfTid(long tid) {
         return BitArrays.wordIndex((int)tid, BITSET_START_IND);
-    }
-
-    static int count(long[] tidSet) {
-        if (tidSet.length <= 1) {
-            return 0;
-        } else {
-            return BitArrays.cardinality(tidSet, BITSET_START_IND);
-        }
     }
 
     static long[] describeAsList(long[] tidSet) {

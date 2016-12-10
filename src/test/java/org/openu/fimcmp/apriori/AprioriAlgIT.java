@@ -50,7 +50,6 @@ public class AprioriAlgIT extends AlgITBase {
 //        filteredTrs = filteredTrs.persist(StorageLevel.MEMORY_AND_DISK_SER());
         pp("filtered and saved");
 
-//        List<int[]> f2AsArrays = apr.computeF2(filteredTrs, totalFreqItems);
         List<int[]> f2AsArrays = apr.computeF2_Part(filteredTrs, totalFreqItems);
         pp("F2 as arrays size: "+f2AsArrays.size());
         List<int[]> f2 = apr.fkAsArraysToRankPairs(f2AsArrays, prep.minSuppCount);
@@ -65,7 +64,6 @@ public class AprioriAlgIT extends AlgITBase {
         ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
 //        ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_AND_DISK_SER());
         pp("zzz");
-//        List<int[]> f3AsArrays = apr.computeFk(3, ranks1And2, preprocessedF2);
         List<int[]> f3AsArrays = apr.computeFk_Part(3, ranks1And2, preprocessedF2);
         pp("F3 as arrays size: "+f3AsArrays.size());
         List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays, prep.minSuppCount);
@@ -89,27 +87,23 @@ public class AprioriAlgIT extends AlgITBase {
 
         TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
 
-//        JavaRDD<long[]> tidAndRanksBitset = apr.prepareToTidsGen(ranks1And3, tidsGenHelper);
-////        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_ONLY_SER());
-//        tidAndRanksBitset = tidAndRanksBitset.persist(StorageLevel.MEMORY_AND_DISK_SER());
         JavaRDD<long[]> kRanksBsRdd = ranks1And3.map(r1And3 -> r1And3._2);
         filteredTrs.unpersist();
         kRanksBsRdd = kRanksBsRdd.persist(StorageLevel.MEMORY_AND_DISK_SER());
 //        ranks1And2.unpersist();
         pp("Starting collecting the TIDs");
-//        long[][] rankKToTids = apr.computeCurrRankToTidBitSet(tidAndRanksBitset, prep.totalTrs, tidsGenHelper);
         long[][] rankKToTids = apr.computeCurrRankToTidBitSet_Part(kRanksBsRdd, prep.totalTrs, tidsGenHelper);
 
         pp("TIDs:");
             for (int rankK = 0, cnt=0; rankK < 500 && cnt<20; ++rankK) {
                 if (rankKToTids[rankK] != null) {
                     ++cnt;
-                    System.out.println(Arrays.toString(TidMergeSet.describeAsList(TidMergeSet.withMetadata(rankKToTids[rankK]))));
+                    System.out.println(Arrays.toString(TidMergeSet.describeAsList(rankKToTids[rankK])));
                 }
             }
 
 //        pp("zzz");
-//        List<int[]> f4AsArrays = apr.computeFk(4, ranks1And3, preprocessedF3);
+//        List<int[]> f4AsArrays = apr.computeFk_Part(4, ranks1And3, preprocessedF3);
 //        pp("F4 as arrays size: "+f4AsArrays.size());
 //        List<int[]> f4 = apr.fkAsArraysToRankPairs(f4AsArrays);
 //        pp("F4 size: "+f4.size());
