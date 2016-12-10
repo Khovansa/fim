@@ -100,7 +100,7 @@ public class AprCandidateFisGenerator implements Serializable {
 
     Tuple2<int[], long[]> toSortedRanks1AndK(
             int[] sortedTr, long[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
-        long[] ranksK = computeSortedRanksK_New(sortedTr, sortedRanksKm1, fkRanksHelper);
+        long[] ranksK = computeSortedRanksK(sortedTr, sortedRanksKm1, fkRanksHelper);
         return new Tuple2<>(sortedTr, ranksK);
     }
 
@@ -147,7 +147,7 @@ public class AprCandidateFisGenerator implements Serializable {
         return resRanks2;
     }
 
-    private long[] computeSortedRanksK_New(int[] sortedTr, long[] sortedRanksKm1Bs, CurrSizeFiRanks fkRanksHelper) {
+    private long[] computeSortedRanksK(int[] sortedTr, long[] sortedRanksKm1Bs, CurrSizeFiRanks fkRanksHelper) {
         final int START_IND = 0;
         long[] resRanksK = new long[BitArrays.requiredSize(fkRanksHelper.getTotalCurrSizeRanks(), START_IND)];
 
