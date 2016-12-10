@@ -27,16 +27,26 @@ public class BitArrays {
         return ((words[wordIndex] & (1L << bitIndex)) != 0);
     }
 
-    public static int cardinality(long[] words, int bitSetStartInd) {
+    public static int cardinality(long[] words, int startInd, int endIndExc) {
+        int actEndIndExc = Math.min(endIndExc, words.length);
         int sum = 0;
-        for (int i = bitSetStartInd; i < words.length; i++) {
+        for (int i = startInd; i < actEndIndExc; i++) {
             sum += Long.bitCount(words[i]);
         }
         return sum;
     }
 
+    public static int cardinality(long[] words, int bitSetStartInd) {
+        return cardinality(words, bitSetStartInd, words.length);
+    }
+
     public static int min(long[] words, int startInd) {
-        for (int wordInd=startInd; wordInd<words.length; ++wordInd) {
+        return min(words, startInd, words.length);
+    }
+
+    public static int min(long[] words, int startInd, int endIndExc) {
+        int actEndIndExc = Math.min(endIndExc, words.length);
+        for (int wordInd=startInd; wordInd<actEndIndExc; ++wordInd) {
             long word = words[wordInd];
             if (word != 0) {
                 int base = (wordInd - startInd) * BITS_PER_WORD;
@@ -44,10 +54,12 @@ public class BitArrays {
             }
         }
         return -1;
+
     }
 
-    public static int max(long[] words, int startInd) {
-        for (int wordInd=words.length-1; wordInd>=startInd; --wordInd) {
+    public static int max(long[] words, int startInd, int endIndExc) {
+        int actEndIndExc = Math.min(endIndExc, words.length);
+        for (int wordInd=actEndIndExc-1; wordInd>=startInd; --wordInd) {
             long word = words[wordInd];
             if (word != 0) {
                 int base = (wordInd - startInd) * BITS_PER_WORD;
@@ -55,6 +67,10 @@ public class BitArrays {
             }
         }
         return -1;
+    }
+
+    public static int max(long[] words, int startInd) {
+        return max(words, startInd, words.length);
     }
 
     public static boolean isZerosOnly(long[] words, int startInd) {

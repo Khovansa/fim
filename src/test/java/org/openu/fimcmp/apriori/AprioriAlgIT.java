@@ -96,7 +96,7 @@ public class AprioriAlgIT extends AlgITBase {
         kRanksBsRdd = kRanksBsRdd.persist(StorageLevel.MEMORY_AND_DISK_SER());
         pp("Starting collecting the TIDs");
 //        long[][] rankKToTids = apr.computeCurrRankToTidBitSet(tidAndRanksBitset, prep.totalTrs, tidsGenHelper);
-        long[][] rankKToTids = apr.computeCurrRankToTidBitSet_Part_Tmp(kRanksBsRdd, prep.totalTrs, tidsGenHelper);
+        long[][] rankKToTids = apr.computeCurrRankToTidBitSet_Part(kRanksBsRdd, prep.totalTrs, tidsGenHelper);
 
         pp("TIDs:");
             for (int rankK = 0, cnt=0; rankK < 500 && cnt<20; ++rankK) {
