@@ -2,14 +2,17 @@ package org.openu.fimcmp.apriori;
 
 import org.apache.spark.HashPartitioner;
 import org.apache.spark.Partitioner;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
+import scala.Tuple3;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -103,6 +106,40 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .mapPartitions(kRanksBsAndTidIt -> TidMergeSet.processPartition(kRanksBsAndTidIt, tidsGenHelper, totalTids))
                 .fold(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions(p1, p2, tidsGenHelper));
     }
+
+    public long[][] computeCurrRankToTidBitSet_Part_ShortTidSet(
+            JavaRDD<long[]> kRanksBsRdd, TidsGenHelper tidsGenHelper) {
+        JavaPairRDD<long[], Long> kRanksBsWithTidRdd = kRanksBsRdd.zipWithIndex();
+        List<Tuple3<Integer, Long, Long>> partIndMinAndMaxTidList =
+                kRanksBsWithTidRdd.mapPartitionsWithIndex(TidMergeSet::findMinAndMaxTids_ShortTidSet, true).collect();
+        Map<Integer, Tuple2<Long, Long>> partIndToMinAndMaxTid = tripletListToMap(partIndMinAndMaxTidList);
+
+        JavaRDD<long[][]> rankToTidBsRdd = kRanksBsWithTidRdd
+                .mapPartitionsWithIndex((partInd, kRanksBsAndTidIt) -> TidMergeSet.processPartition_ShortTidSet(
+                        kRanksBsAndTidIt, tidsGenHelper, partIndToMinAndMaxTid.get(partInd)), true);
+
+        return rankToTidBsRdd
+                .fold(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions_ShortTidSet(p1, p2, tidsGenHelper));
+    }
+
+    private <T1, T2, T3> Map<T1, Tuple2<T2, T3>> tripletListToMap(List<Tuple3<T1, T2, T3>> tripletList) {
+        Map<T1, Tuple2<T2, T3>> res = new HashMap<>(tripletList.size() * 2);
+        for (Tuple3<T1, T2, T3> triplet : tripletList) {
+            res.put(triplet._1(), new Tuple2<>(triplet._2(), triplet._3()));
+        }
+        return res;
+    }
+//    public long[][] computeCurrRankToTidBitSet_Part_New(
+//            JavaRDD<long[]> kRanksBsRdd, long totalTids, TidsGenHelper tidsGenHelper, PairRanks rkToRkm1AndR1) {
+//        int numParts = kRanksBsRdd.getNumPartitions();
+//        return kRanksBsRdd
+//                .zipWithIndex()
+//                .mapPartitions(
+//                        kRanksBsAndTidIt -> TidMergeSet.processPartition(kRanksBsAndTidIt, tidsGenHelper, totalTids))
+//                .flatMapToPair(rkToTidSet -> new PairElem1IteratorOverRankToTidSet(rkToTidSet, rkToRkm1AndR1))
+//                .foldByKey(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions(p1, p2, tidsGenHelper))
+//                .fold(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions(p1, p2, tidsGenHelper));
+//    }
 
     public List<int[]> fkAsArraysToRankPairs(List<int[]> cols, long minSuppCount) {
         List<int[]> res = new ArrayList<>(cols.size() * cols.size());

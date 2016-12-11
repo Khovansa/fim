@@ -41,7 +41,6 @@ public class AprioriAlgIT extends AlgITBase {
         Map<String, Integer> itemToRank = BasicOps.itemToRank(sortedF1);
         //from now on, the items are [0, sortedF1.size), 0 denotes the most frequent item
 
-        //TODO: keep the partition of the transaction!
         JavaRDD<int[]> filteredTrs = prep.trs.map(t -> BasicOps.getMappedFilteredAndSortedTrs(t, itemToRank));
         filteredTrs = filteredTrs.persist(StorageLevel.MEMORY_ONLY_SER());
 //        filteredTrs = filteredTrs.persist(StorageLevel.MEMORY_AND_DISK_SER());
@@ -75,14 +74,6 @@ public class AprioriAlgIT extends AlgITBase {
         JavaRDD<Tuple2<int[], long[]>> ranks1And3 = apr.toRddOfRanks1AndK(ranks1And2, preprocessedF3);
 //        ranks1And3 = ranks1And3.persist(StorageLevel.MEMORY_AND_DISK_SER());
 
-//        List<Integer> lens = ranks1And3.map(t -> t._2.length).collect();
-//        List<Integer> lens = ranks1And3.map(t -> BitArrays.cardinality(t._2, 0)).collect();
-//        long sum = 0;
-//        for (Integer len : lens) {
-//            sum += len;
-//        }
-//        pp("Avg 3-ranks count: " + 1.0 * sum / lens.size());
-
         TidsGenHelper tidsGenHelper = preprocessedF3.constructTidGenHelper(f3, (int)prep.totalTrs);
 
         JavaRDD<long[]> kRanksBsRdd = ranks1And3.map(r1And3 -> r1And3._2);
@@ -90,7 +81,8 @@ public class AprioriAlgIT extends AlgITBase {
         kRanksBsRdd = kRanksBsRdd.persist(StorageLevel.MEMORY_AND_DISK_SER());
 //        ranks1And2.unpersist();
         pp("Starting collecting the TIDs");
-        long[][] rankKToTids = apr.computeCurrRankToTidBitSet_Part(kRanksBsRdd, prep.totalTrs, tidsGenHelper);
+//        long[][] rankKToTids = apr.computeCurrRankToTidBitSet_Part(kRanksBsRdd, prep.totalTrs, tidsGenHelper);
+        long[][] rankKToTids = apr.computeCurrRankToTidBitSet_Part_ShortTidSet(kRanksBsRdd, tidsGenHelper);
 
         pp("TIDs:");
         for (int rankK = 0, cnt=0; rankK < 500 && cnt<20; ++rankK) {
