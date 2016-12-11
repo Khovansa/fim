@@ -34,6 +34,18 @@ public class PairRanks implements Serializable {
         return pairToRank[elem1];
     }
 
+    int getElem1ByRank(int rank) {
+        return rankToPair[rank][0];
+    }
+
+    int getElem2ByRank(int rank) {
+        return rankToPair[rank][1];
+    }
+
+    int getRankByPair(int elem1, int elem2) {
+        return pairToRank[elem1][elem2];
+    }
+
     long[][] constructElem1ToElem2BitSet() {
         final int START_IND=0;
         final int totalElems1 = totalElems1();

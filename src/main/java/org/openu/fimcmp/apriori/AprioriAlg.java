@@ -88,7 +88,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     //Copying FPGrowth:
     //after mapPartition():
     // rdd.flatMapToPair(rankToTidSet -> Iterator<Tuple2(prefRankKm1, tidSet)>)
-    // - the iterator is similar to IteratorOverArray,
+    // - the iterator is similar to IteratorOverArray, PairElem1IteratorOverRankToTidSet
     //   but at the end maps currRank to new Tuple2(prefRankKm1, arr[currRank])
     // The partitioner should map rankK to partition number based on the common prefix,
     // i.e. need to pre-compute a map: rankK -> prefixRankKm1
