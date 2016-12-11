@@ -18,6 +18,10 @@ public class PairRanks implements Serializable {
 
     static PairRanks construct(List<int[]> sortedPairs, int totalElems1, int totalElems2) {
         int[][] rankToPair = constructPairRankToPair(sortedPairs);
+        return constructByRankToPair(rankToPair, totalElems1, totalElems2);
+    }
+
+    static PairRanks constructByRankToPair(int[][] rankToPair, int totalElems1, int totalElems2) {
         int[][] pairToRank = constructPairToRank(rankToPair, totalElems1, totalElems2);
         return new PairRanks(rankToPair, pairToRank);
     }
@@ -77,6 +81,7 @@ public class PairRanks implements Serializable {
         Assert.isTrue(res >= 0);
         return res;
     }
+
     private static int[][] constructPairRankToPair(List<int[]> sortedPairs) {
         final int arrSize = sortedPairs.size();
         int[][] res = new int[arrSize][];

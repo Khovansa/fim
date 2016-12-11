@@ -59,6 +59,10 @@ class CurrSizeFiRanks implements NextSizeItemsetGenHelper, Serializable {
         return currSizeRanks.totalRanks();
     }
 
+    int getTotalPrevSizeRanks() {
+        return currSizeRanks.totalElems2();
+    }
+
     @Override
     public int getTotalFreqItems() {
         return nextSizeCandsR1ToRk.length;

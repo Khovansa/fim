@@ -31,7 +31,7 @@ public class AprioriAlgIT extends AlgITBase {
     }
 
     private void runIt() throws Exception {
-        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false, 1);
+        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false, 2);
 //        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false, 2);
         apr = new AprioriAlg<>(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
@@ -51,7 +51,8 @@ public class AprioriAlgIT extends AlgITBase {
         pp("F2 as arrays size: "+f2AsArrays.size());
         List<int[]> f2 = apr.fkAsArraysToRankPairs(f2AsArrays, prep.minSuppCount);
         pp("F2 size: "+f2.size());
-        List<FreqItemset<String>> f2Res = apr.fkAsArraysToResItemsets(prep.minSuppCount, f2AsArrays, itemToRank);
+        List<FreqItemset<String>> f2Res =
+                apr.fkAsArraysToResItemsets(prep.minSuppCount, f2AsArrays, itemToRank, new FiRanksToFromItems());
         f2Res = f2Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
         pp("F2: "+StringUtils.join(f2Res.subList(0, Math.min(3, f2Res.size())), "\n"));
 
@@ -66,7 +67,7 @@ public class AprioriAlgIT extends AlgITBase {
         List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays, prep.minSuppCount);
         pp("F3 size: "+f3.size());
         List<FreqItemset<String>> f3Res = apr.fkAsArraysToResItemsets(
-                prep.minSuppCount, f3AsArrays, itemToRank, preprocessedF2);
+                prep.minSuppCount, f3AsArrays, itemToRank, new FiRanksToFromItems(preprocessedF2));
         f3Res = f3Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
         pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(10, f3Res.size())), "\n"));
 
@@ -104,7 +105,8 @@ public class AprioriAlgIT extends AlgITBase {
 //        pp("F4 as arrays size: "+f4AsArrays.size());
 //        List<int[]> f4 = apr.fkAsArraysToRankPairs(f4AsArrays);
 //        pp("F4 size: "+f4.size());
-//        List<FreqItemset<String>> f4Res = apr.fkAsArraysToResItemsets(f4AsArrays, itemToRank, preprocessedF3, preprocessedF2);
+//        List<FreqItemset<String>> f4Res =
+//          apr.fkAsArraysToResItemsets(f4AsArrays, itemToRank, new new FiRanksToFromItems(preprocessedF3, preprocessedF2));
 //        f4Res = f4Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
 //        pp("F4: " + StringUtils.join(f4Res.subList(0, Math.min(3, f4Res.size())), "\n"));
     }

@@ -87,9 +87,9 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     //TODO: repartition the TID sets based on rankK's
     //Copying FPGrowth:
     //after mapPartition():
-    // rdd.flatMapToPair(rankToTidSet -> Iterator<Tuple2(partNumber, tidSet)>)
+    // rdd.flatMapToPair(rankToTidSet -> Iterator<Tuple2(prefRankKm1, tidSet)>)
     // - the iterator is similar to IteratorOverArray,
-    //   but at the end maps currRank to new Tuple2(p.part(currRank), arr[currRank])
+    //   but at the end maps currRank to new Tuple2(prefRankKm1, arr[currRank])
     // The partitioner should map rankK to partition number based on the common prefix,
     // i.e. need to pre-compute a map: rankK -> prefixRankKm1
     //then aggregateByKey(new long[0][], TidMergeSet.mergePartitions, partitioner.numPartitions())
@@ -113,27 +113,24 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     }
 
     public List<FreqItemset<String>> fkAsArraysToResItemsets(
-            long minSuppCount, List<int[]> cols, Map<String, Integer> itemToRank, CurrSizeFiRanks... fkToF2RanksArr) {
+            long minSuppCount, List<int[]> cols, Map<String, Integer> itemToRank, FiRanksToFromItems fiRanksToFromItems) {
         String[] rankToItem = BasicOps.getRankToItem(itemToRank);
 
         List<FreqItemset<String>> res = new ArrayList<>((int) Math.pow(cols.size(), 3));
+        final int kk = fiRanksToFromItems.getMaxK() + 1; //no fiRanks object for the maximal rank (k)
         for (int[] col : cols) {
             List<int[]> itemAndPairRanks = candidateFisGenerator.fkColToPairs(col, minSuppCount);
             for (int[] itemAndPairRank : itemAndPairRanks) {
-                ArrayList<String> resItemset = new ArrayList<>();
+                ArrayList<String> resItemset = new ArrayList<>(kk);
                 final int freq = itemAndPairRank[2];
                 resItemset.add(rankToItem[itemAndPairRank[0]]);
 
                 //currRank is a rank of (k-1)-FI, which in case of k=2 means an item rank
-                int currRank = itemAndPairRank[1];
-                for (CurrSizeFiRanks fiRanks : fkToF2RanksArr) {
-                    int[] pair = fiRanks.getCurrSizeFiAsPairByRank(currRank);
-                    resItemset.add(rankToItem[pair[0]]); //the first element of a pair is always an item
-                    currRank = pair[1]; //(i-1)-FI rank
+                int[] prevSizeItemset = fiRanksToFromItems.getItemsetByMaxRank(itemAndPairRank[1]);
+                for (int item : prevSizeItemset) {
+                    resItemset.add(rankToItem[item]);
                 }
-                resItemset.add(rankToItem[currRank]);
 
-                resItemset.trimToSize();
                 res.add(new FreqItemset<>(resItemset, freq));
             }
         }

@@ -39,7 +39,7 @@ public class SparkContextFactory {
                 new ArrayList<>().iterator().getClass(),
                 AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class, PairRanks.class,
                 TidsGenHelper.class, boolean[].class,
-                TidMergeSet.class,
+                TidMergeSet.class, FiRanksToFromItems.class
         });
 
         JavaSparkContext sc = new JavaSparkContext(conf);
