@@ -21,10 +21,10 @@ public class FiRanksToFromItems {
         this.maxK = 1 + fiRanksKto2.size(); //rank mappers start from 2, but k starts from 1
     }
 
-    FiRanksToFromItems toNextSize(CurrSizeFiRanks nextSizeFiRanks, FiRanksToFromItems prev) {
-        List<CurrSizeFiRanks> newFiRanksList = new ArrayList<>(1 + prev.fiRanksKto2.size());
+    FiRanksToFromItems toNextSize(CurrSizeFiRanks nextSizeFiRanks) {
+        List<CurrSizeFiRanks> newFiRanksList = new ArrayList<>(1 + fiRanksKto2.size());
         newFiRanksList.add(nextSizeFiRanks);
-        newFiRanksList.addAll(prev.fiRanksKto2);
+        newFiRanksList.addAll(fiRanksKto2);
         return new FiRanksToFromItems(newFiRanksList);
     }
 
@@ -77,7 +77,11 @@ public class FiRanksToFromItems {
         return currRank;
     }
 
-    PairRanks constructRkToRkm1AndR1(int k) {
+    PairRanks constructRkToRkm1AndR1ForMaxK() {
+        return constructRkToRkm1AndR1(maxK);
+    }
+
+    private PairRanks constructRkToRkm1AndR1(int k) {
         Assert.isTrue(k <= maxK && k > 1);
 
         final CurrSizeFiRanks fiRanksK = fiRanksKto2.get(maxK - k);

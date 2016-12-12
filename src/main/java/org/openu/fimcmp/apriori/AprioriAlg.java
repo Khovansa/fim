@@ -87,39 +87,51 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK(row._1, row._2, preprocessedFk));
     }
 
-    //TODO: repartition the TID sets based on rankK's
-    //Copying FPGrowth:
-    //after mapPartition():
-    // rdd.flatMapToPair(rankToTidSet -> Iterator<Tuple2(prefRankKm1, tidSet)>)
-    // - the iterator is similar to IteratorOverArray, PairElem1IteratorOverRankToTidSet
-    //   but at the end maps currRank to new Tuple2(prefRankKm1, arr[currRank])
-    // The partitioner should map rankK to partition number based on the common prefix,
-    // i.e. need to pre-compute a map: rankK -> prefixRankKm1
-    //then aggregateByKey(new long[0][], TidMergeSet.mergePartitions, partitioner.numPartitions())
-    //It will return a PairRdd<key, val>.
-    //Eclat should be applied to the 'val' - completely independently
-    //Then can just collect the results
-    public long[][] computeCurrRankToTidBitSet_Part(
+    public JavaRDD<long[][]> computeCurrRankToTidBitSet_Part(
             JavaRDD<long[]> kRanksBsRdd, long totalTids, TidsGenHelper tidsGenHelper) {
         return kRanksBsRdd
                 .zipWithIndex()
-                .mapPartitions(kRanksBsAndTidIt -> TidMergeSet.processPartition(kRanksBsAndTidIt, tidsGenHelper, totalTids))
-                .fold(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions(p1, p2, tidsGenHelper));
+                .mapPartitions(kRanksBsAndTidIt -> TidMergeSet.processPartition(kRanksBsAndTidIt, tidsGenHelper, totalTids));
     }
 
-    public long[][] computeCurrRankToTidBitSet_Part_ShortTidSet(
+    public JavaRDD<long[][]> computeCurrRankToTidBitSet_Part_ShortTidSet(
             JavaRDD<long[]> kRanksBsRdd, TidsGenHelper tidsGenHelper) {
         JavaPairRDD<long[], Long> kRanksBsWithTidRdd = kRanksBsRdd.zipWithIndex();
         List<Tuple3<Integer, Long, Long>> partIndMinAndMaxTidList =
                 kRanksBsWithTidRdd.mapPartitionsWithIndex(TidMergeSet::findMinAndMaxTids_ShortTidSet, true).collect();
         Map<Integer, Tuple2<Long, Long>> partIndToMinAndMaxTid = tripletListToMap(partIndMinAndMaxTidList);
 
-        JavaRDD<long[][]> rankToTidBsRdd = kRanksBsWithTidRdd
+        return kRanksBsWithTidRdd
                 .mapPartitionsWithIndex((partInd, kRanksBsAndTidIt) -> TidMergeSet.processPartition_ShortTidSet(
                         kRanksBsAndTidIt, tidsGenHelper, partIndToMinAndMaxTid.get(partInd)), true);
+    }
 
+    public long[][] mergePartitions(JavaRDD<long[][]> rankToTidBsRdd, TidsGenHelper tidsGenHelper) {
+        return rankToTidBsRdd
+                .fold(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions(p1, p2, tidsGenHelper));
+    }
+    public long[][] mergePartitions_ShortTidSet(JavaRDD<long[][]> rankToTidBsRdd, TidsGenHelper tidsGenHelper) {
         return rankToTidBsRdd
                 .fold(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions_ShortTidSet(p1, p2, tidsGenHelper));
+    }
+
+    public JavaPairRDD<Integer, List<long[]>> groupTidSetsByRankKm1(
+            JavaRDD<long[][]> rankToTidBsRdd, PairRanks rkToRkm1AndR1) {
+        final int numParts = rankToTidBsRdd.getNumPartitions();
+
+        return rankToTidBsRdd
+                .flatMapToPair(kRankToTidSet -> new PairElem1IteratorOverRankToTidSet(kRankToTidSet, rkToRkm1AndR1))
+                .aggregateByKey(new ArrayList<>(300), numParts, AprioriAlg::add, AprioriAlg::addAll);
+    }
+
+    private static List<long[]> add(List<long[]> acc, long[] elem) {
+        acc.add(elem);
+        return acc;
+    }
+
+    private static List<long[]> addAll(List<long[]> acc, List<long[]> acc2) {
+        acc.addAll(acc2);
+        return acc;
     }
 
     private <T1, T2, T3> Map<T1, Tuple2<T2, T3>> tripletListToMap(List<Tuple3<T1, T2, T3>> tripletList) {

@@ -1,6 +1,7 @@
 package org.openu.fimcmp.apriori;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
@@ -31,7 +32,7 @@ public class AprioriAlgIT extends AlgITBase {
     }
 
     private void runIt() throws Exception {
-        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false, 2);
+        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.9, false, 2);
 //        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false, 2);
         apr = new AprioriAlg<>(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
@@ -50,8 +51,9 @@ public class AprioriAlgIT extends AlgITBase {
         pp("F2 as arrays size: "+f2AsArrays.size());
         List<int[]> f2 = apr.fkAsArraysToRankPairs(f2AsArrays, prep.minSuppCount);
         pp("F2 size: "+f2.size());
+        FiRanksToFromItems fiRanksToFromItemsR1 = new FiRanksToFromItems();
         List<FreqItemset<String>> f2Res =
-                apr.fkAsArraysToResItemsets(prep.minSuppCount, f2AsArrays, itemToRank, new FiRanksToFromItems());
+                apr.fkAsArraysToResItemsets(prep.minSuppCount, f2AsArrays, itemToRank, fiRanksToFromItemsR1);
         f2Res = f2Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
         pp("F2: "+StringUtils.join(f2Res.subList(0, Math.min(3, f2Res.size())), "\n"));
 
@@ -65,8 +67,9 @@ public class AprioriAlgIT extends AlgITBase {
         pp("F3 as arrays size: "+f3AsArrays.size());
         List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays, prep.minSuppCount);
         pp("F3 size: "+f3.size());
+        FiRanksToFromItems fiRanksToFromItemsR2 = fiRanksToFromItemsR1.toNextSize(preprocessedF2);
         List<FreqItemset<String>> f3Res = apr.fkAsArraysToResItemsets(
-                prep.minSuppCount, f3AsArrays, itemToRank, new FiRanksToFromItems(preprocessedF2));
+                prep.minSuppCount, f3AsArrays, itemToRank, fiRanksToFromItemsR2);
         f3Res = f3Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
         pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(10, f3Res.size())), "\n"));
 
@@ -80,9 +83,14 @@ public class AprioriAlgIT extends AlgITBase {
         filteredTrs.unpersist();
         kRanksBsRdd = kRanksBsRdd.persist(StorageLevel.MEMORY_AND_DISK_SER());
 //        ranks1And2.unpersist();
+        FiRanksToFromItems fiRanksToFromItemsR3 = fiRanksToFromItemsR2.toNextSize(preprocessedF3);
+        PairRanks r3ToR2AndR1 = fiRanksToFromItemsR3.constructRkToRkm1AndR1ForMaxK();
+
         pp("Starting collecting the TIDs");
-//        long[][] rankKToTids = apr.computeCurrRankToTidBitSet_Part(kRanksBsRdd, prep.totalTrs, tidsGenHelper);
-        long[][] rankKToTids = apr.computeCurrRankToTidBitSet_Part_ShortTidSet(kRanksBsRdd, tidsGenHelper);
+//        JavaRDD<long[][]> rankToTidBsRdd = apr.computeCurrRankToTidBitSet_Part(kRanksBsRdd, prep.totalTrs, tidsGenHelper);
+//        long[][] rankKToTids = apr.mergePartitions(rankToTidBsRdd, tidsGenHelper);
+        JavaRDD<long[][]> rankToTidBsRdd = apr.computeCurrRankToTidBitSet_Part_ShortTidSet(kRanksBsRdd, tidsGenHelper);
+        long[][] rankKToTids = apr.mergePartitions_ShortTidSet(rankToTidBsRdd, tidsGenHelper);
 
         pp("TIDs:");
         for (int rankK = 0, cnt=0; rankK < 500 && cnt<20; ++rankK) {
@@ -91,6 +99,10 @@ public class AprioriAlgIT extends AlgITBase {
                 System.out.println(Arrays.toString(TidMergeSet.describeAsList(rankKToTids[rankK])));
             }
         }
+
+        JavaPairRDD<Integer, List<long[]>> prefRdToTidSets = apr.groupTidSetsByRankKm1(rankToTidBsRdd, r3ToR2AndR1);
+        List<Integer> r2s = prefRdToTidSets.keys().collect().subList(0, 20);
+        //TODO - print keys and r3's, but actual values instead of keys
 
 //        pp("zzz");
 //        List<int[]> f4AsArrays = apr.computeFk_Part(4, ranks1And3, preprocessedF3);
