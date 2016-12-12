@@ -3,12 +3,13 @@ package org.openu.fimcmp.apriori;
 import org.apache.commons.lang.ArrayUtils;
 import org.openu.fimcmp.util.Assert;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
  * Map any FI rank to and from the actual itemset (i.e. list of items)
  */
-public class FiRanksToFromItems {
+public class FiRanksToFromItems implements Serializable {
     private final ArrayList<CurrSizeFiRanks> fiRanksKto2;
     private final int maxK;
 
@@ -34,6 +35,30 @@ public class FiRanksToFromItems {
 
     int[] getItemsetByMaxRank(int rankK) {
         return getItemsetByRank(rankK, maxK);
+    }
+
+    List<List<String>> toOrigItemsetsForDebug(List<long[]> tidMergeSets, int k, String[] r1ToItem, int maxItemsets) {
+        maxItemsets = Math.min(maxItemsets, tidMergeSets.size());
+        List<List<String>> res = new ArrayList<>(maxItemsets+1);
+        res.add(Collections.singletonList(String.format("Total=%s", tidMergeSets.size())));
+        for (long[] tidMergeSet : tidMergeSets.subList(0, maxItemsets)) {
+            res.add(getOrigItemsetByRank((int)tidMergeSet[0], k, r1ToItem));
+        }
+        return res;
+    }
+
+    List<String> getOrigItemsetByRank(int rankK, int k, String[] r1ToItem) {
+        List<String> res = new ArrayList<>(maxK);
+        addOrigItemsetByRank(res, rankK, k, r1ToItem);
+        return res;
+    }
+
+    void addOrigItemsetByRank(List<String> res, int rankK, int k, String[] r1ToItem) {
+        int[] itemsetAsR1s = getItemsetByRank(rankK, k);
+
+        for (int r1 : itemsetAsR1s) {
+            res.add(r1ToItem[r1]);
+        }
     }
 
     int[] getItemsetByRank(int rankK, int k) {

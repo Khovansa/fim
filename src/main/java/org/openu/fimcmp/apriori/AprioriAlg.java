@@ -117,13 +117,32 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
 
     public JavaPairRDD<Integer, List<long[]>> groupTidSetsByRankKm1(
             JavaRDD<long[][]> rankToTidBsRdd, PairRanks rkToRkm1AndR1) {
-        final int numParts = rankToTidBsRdd.getNumPartitions();
-
+//        final int numParts = rankToTidBsRdd.getNumPartitions();
+        final int numParts = Math.min(rkToRkm1AndR1.totalElems1(), 8 * rankToTidBsRdd.getNumPartitions());
+        IntToSamePartitioner partitioner = new IntToSamePartitioner(numParts);
+        int totalR1s = rkToRkm1AndR1.totalElems2();
         return rankToTidBsRdd
                 .flatMapToPair(kRankToTidSet -> new PairElem1IteratorOverRankToTidSet(kRankToTidSet, rkToRkm1AndR1))
-                .aggregateByKey(new ArrayList<>(300), numParts, AprioriAlg::add, AprioriAlg::addAll);
+                .aggregateByKey(new ArrayList<>(totalR1s), partitioner, AprioriAlg::add, AprioriAlg::addAll);
     }
 
+    private static class IntToSamePartitioner extends Partitioner implements Serializable {
+        private final int numPartitions;
+
+        private IntToSamePartitioner(int numPartitions) {
+            this.numPartitions = numPartitions;
+        }
+
+        @Override
+        public int numPartitions() {
+            return numPartitions;
+        }
+
+        @Override
+        public int getPartition(Object key) {
+            return (Integer)key % numPartitions;
+        }
+    }
     private static List<long[]> add(List<long[]> acc, long[] elem) {
         acc.add(elem);
         return acc;
@@ -141,17 +160,6 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         }
         return res;
     }
-//    public long[][] computeCurrRankToTidBitSet_Part_New(
-//            JavaRDD<long[]> kRanksBsRdd, long totalTids, TidsGenHelper tidsGenHelper, PairRanks rkToRkm1AndR1) {
-//        int numParts = kRanksBsRdd.getNumPartitions();
-//        return kRanksBsRdd
-//                .zipWithIndex()
-//                .mapPartitions(
-//                        kRanksBsAndTidIt -> TidMergeSet.processPartition(kRanksBsAndTidIt, tidsGenHelper, totalTids))
-//                .flatMapToPair(rkToTidSet -> new PairElem1IteratorOverRankToTidSet(rkToTidSet, rkToRkm1AndR1))
-//                .foldByKey(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions(p1, p2, tidsGenHelper))
-//                .fold(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions(p1, p2, tidsGenHelper));
-//    }
 
     public List<int[]> fkAsArraysToRankPairs(List<int[]> cols, long minSuppCount) {
         List<int[]> res = new ArrayList<>(cols.size() * cols.size());
@@ -170,15 +178,10 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         for (int[] col : cols) {
             List<int[]> itemAndPairRanks = candidateFisGenerator.fkColToPairs(col, minSuppCount);
             for (int[] itemAndPairRank : itemAndPairRanks) {
-                ArrayList<String> resItemset = new ArrayList<>(kk);
                 final int freq = itemAndPairRank[2];
+                ArrayList<String> resItemset = new ArrayList<>(kk);
                 resItemset.add(rankToItem[itemAndPairRank[0]]);
-
-                //currRank is a rank of (k-1)-FI, which in case of k=2 means an item rank
-                int[] prevSizeItemset = fiRanksToFromItems.getItemsetByMaxRank(itemAndPairRank[1]);
-                for (int item : prevSizeItemset) {
-                    resItemset.add(rankToItem[item]);
-                }
+                fiRanksToFromItems.addOrigItemsetByRank(resItemset, itemAndPairRank[1], kk-1, rankToItem);
 
                 res.add(new FreqItemset<>(resItemset, freq));
             }

@@ -101,8 +101,17 @@ public class AprioriAlgIT extends AlgITBase {
         }
 
         JavaPairRDD<Integer, List<long[]>> prefRdToTidSets = apr.groupTidSetsByRankKm1(rankToTidBsRdd, r3ToR2AndR1);
-        List<Integer> r2s = prefRdToTidSets.keys().collect().subList(0, 20);
-        //TODO - print keys and r3's, but actual values instead of keys
+        pp("Num parts: "+prefRdToTidSets.getNumPartitions());
+        String[] r1ToItem = BasicOps.getRankToItem(itemToRank);
+        List<Tuple2<List<String>, List<List<String>>>> r2ToR3sList = prefRdToTidSets.sortByKey()
+                .map(t -> new Tuple2<>(
+                        fiRanksToFromItemsR3.getOrigItemsetByRank(t._1, 2, r1ToItem),
+                        fiRanksToFromItemsR3.toOrigItemsetsForDebug(t._2, 3, r1ToItem, 30)))
+                .collect().subList(0, 20);
+        pp("r2 -> r3s:");
+        for (Tuple2<List<String>, List<List<String>>> r2ToR3s : r2ToR3sList) {
+            System.out.println(String.format("%-20s -> %s", r2ToR3s._1, r2ToR3s._2));
+        }
 
 //        pp("zzz");
 //        List<int[]> f4AsArrays = apr.computeFk_Part(4, ranks1And3, preprocessedF3);
