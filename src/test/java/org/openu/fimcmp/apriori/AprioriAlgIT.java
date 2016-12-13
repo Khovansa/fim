@@ -87,8 +87,6 @@ public class AprioriAlgIT extends AlgITBase {
         PairRanks r3ToR2AndR1 = fiRanksToFromItemsR3.constructRkToRkm1AndR1ForMaxK();
 
         pp("Starting collecting the TIDs");
-//        JavaRDD<long[][]> rankToTidBsRdd = apr.computeCurrRankToTidBitSet_Part(kRanksBsRdd, prep.totalTrs, tidsGenHelper);
-//        long[][] rankKToTids = apr.mergePartitions(rankToTidBsRdd, tidsGenHelper);
         JavaRDD<long[][]> rankToTidBsRdd = apr.computeCurrRankToTidBitSet_Part_ShortTidSet(kRanksBsRdd, tidsGenHelper);
         long[][] rankKToTids = apr.mergePartitions_ShortTidSet(rankToTidBsRdd, tidsGenHelper);
 

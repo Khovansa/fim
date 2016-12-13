@@ -87,13 +87,6 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK(row._1, row._2, preprocessedFk));
     }
 
-    public JavaRDD<long[][]> computeCurrRankToTidBitSet_Part(
-            JavaRDD<long[]> kRanksBsRdd, long totalTids, TidsGenHelper tidsGenHelper) {
-        return kRanksBsRdd
-                .zipWithIndex()
-                .mapPartitions(kRanksBsAndTidIt -> TidMergeSet.processPartition(kRanksBsAndTidIt, tidsGenHelper, totalTids));
-    }
-
     public JavaRDD<long[][]> computeCurrRankToTidBitSet_Part_ShortTidSet(
             JavaRDD<long[]> kRanksBsRdd, TidsGenHelper tidsGenHelper) {
         JavaPairRDD<long[], Long> kRanksBsWithTidRdd = kRanksBsRdd.zipWithIndex();
@@ -106,10 +99,6 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                         kRanksBsAndTidIt, tidsGenHelper, partIndToMinAndMaxTid.get(partInd)), true);
     }
 
-    public long[][] mergePartitions(JavaRDD<long[][]> rankToTidBsRdd, TidsGenHelper tidsGenHelper) {
-        return rankToTidBsRdd
-                .fold(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions(p1, p2, tidsGenHelper));
-    }
     public long[][] mergePartitions_ShortTidSet(JavaRDD<long[][]> rankToTidBsRdd, TidsGenHelper tidsGenHelper) {
         return rankToTidBsRdd
                 .fold(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions_ShortTidSet(p1, p2, tidsGenHelper));

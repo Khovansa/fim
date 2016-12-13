@@ -42,46 +42,6 @@ public class TidMergeSet implements Serializable {
      * Return an iterator over a single long[][] array: rankK -> 'tid-set'. <br/>
      * The 'tid-set' is a bitset of TIDs prefixed with some metadata.
      */
-    static Iterator<long[][]> processPartition(
-            Iterator<Tuple2<long[], Long>> kRanksBsAndTidIt, TidsGenHelper tidsGenHelper, long totalTids) {
-        final int RANKS_BITSET_START_IND = 0;
-        long[][] rankKToTidSet = new long[tidsGenHelper.totalRanks()][];
-        long minTid = Long.MAX_VALUE;
-        long maxTid = Long.MIN_VALUE;
-        boolean hasElems = false;
-        while(kRanksBsAndTidIt.hasNext()) {
-            hasElems = true;
-            Tuple2<long[], Long> kRanksBsAndTid = kRanksBsAndTidIt.next();
-            long[] kRanksBs = kRanksBsAndTid._1;
-
-            long[] kRanksToBeStoredBs = new long[kRanksBs.length];
-            tidsGenHelper.setToResRanksToBeStoredBitSet(kRanksToBeStoredBs, RANKS_BITSET_START_IND, kRanksBs);
-            int[] kRanksToBeStored = BitArrays.asNumbers(kRanksToBeStoredBs, RANKS_BITSET_START_IND);
-
-            final long tid = kRanksBsAndTid._2;
-            minTid = Math.min(minTid, tid);
-            maxTid = Math.max(maxTid, tid);
-            for (int rankK : kRanksToBeStored) {
-                long[] tidSet = rankKToTidSet[rankK];
-                if (tidSet != null) {
-                    BitArrays.set(tidSet, BITSET_START_IND, (int) tid); //requires to set min, max and size later
-                } else {
-                    rankKToTidSet[rankK] = newSetWithElem(rankK, tid, totalTids);
-                }
-            }
-        }
-
-        if (hasElems) {
-            int searchFromInd = indexOfTid(minTid);
-            int searchToIndExc = 1 + indexOfTid(maxTid);
-            for (long[] tidSet : rankKToTidSet) {
-                setMetadata(tidSet, searchFromInd, searchToIndExc);
-            }
-        }
-
-        return Collections.singletonList(rankKToTidSet).iterator();
-    }
-
     static Iterator<long[][]> processPartition_ShortTidSet(
             Iterator<Tuple2<long[], Long>> kRanksBsAndTidIt,
             TidsGenHelper tidsGenHelper,
@@ -138,21 +98,6 @@ public class TidMergeSet implements Serializable {
         return Collections.singletonList(new Tuple3<>(partitionIndex, minTid, maxTid)).iterator();
     }
 
-    static long[][] mergePartitions(long[][] part1, long[][] part2, TidsGenHelper tidsGenHelper) {
-        if (part2.length == 0) {
-            return part1;
-        }
-        final int totalRanks = tidsGenHelper.totalRanks();
-        if (part1.length == 0) {
-            part1 = new long[totalRanks][];
-        }
-
-        for (int rankK = 0; rankK < totalRanks; ++rankK) {
-            part1[rankK] = mergeTidSets(part1[rankK], part2[rankK]);
-        }
-        return part1;
-    }
-
     static long[][] mergePartitions_ShortTidSet(long[][] part1, long[][] part2, TidsGenHelper tidsGenHelper) {
         if (part2.length == 0) {
             return part1;
@@ -172,42 +117,7 @@ public class TidMergeSet implements Serializable {
     /**
      * Assuming the two sets' ranges do not intersect
      */
-    private static long[] mergeTidSets(long[] s1AndRes, long[] s2) {
-        if (s2 == null || s2.length <= 1) {
-            return s1AndRes;
-        }
-        if (s1AndRes == null || s1AndRes.length <= 1) {
-            return copyOf(s2);
-        }
-
-        final boolean s1IsLower = s1AndRes[MIN_ELEM_IND] < s2[MIN_ELEM_IND];
-        long[] lowerSet = s1IsLower ? s1AndRes : s2;
-        long[] higherSet = s1IsLower ? s2 : s1AndRes;
-        Assert.isTrue(lowerSet[MAX_ELEM_IND] < higherSet[MIN_ELEM_IND]);
-
-        s1AndRes[RANK_IND] = lowerSet[RANK_IND];
-        s1AndRes[SIZE_IND] = lowerSet[SIZE_IND] + higherSet[SIZE_IND];
-        s1AndRes[MIN_ELEM_IND] = lowerSet[MIN_ELEM_IND];
-        s1AndRes[MAX_ELEM_IND] = higherSet[MAX_ELEM_IND];
-
-        if (s1IsLower) {
-            //copy the higher set
-            int startInd = indexOfTid(higherSet[MIN_ELEM_IND]);
-            int endIndExc = 1 + indexOfTid(higherSet[MAX_ELEM_IND]);
-            int copyLen = endIndExc - startInd;
-            System.arraycopy(higherSet, startInd, s1AndRes, startInd, copyLen);
-        } else {
-            //copy the lower set
-            int startInd = indexOfTid(lowerSet[MIN_ELEM_IND]);
-            int endIndExc = 1 + indexOfTid(lowerSet[MAX_ELEM_IND]);
-            int copyLen = endIndExc - startInd;
-            System.arraycopy(lowerSet, startInd, s1AndRes, startInd, copyLen);
-        }
-
-        return s1AndRes;
-    }
-
-    static long[] mergeTidSets_ShortTidSet(long[] s1, long[] s2) {
+    private static long[] mergeTidSets_ShortTidSet(long[] s1, long[] s2) {
         if (s2 == null || s2.length <= 1) {
             return s1;
         }
@@ -240,16 +150,6 @@ public class TidMergeSet implements Serializable {
         return res;
     }
 
-    private static void setMetadata(long[] tidSet, int searchFromInd, int searchToIndExc) {
-        if (tidSet == null) {
-            return;
-        }
-
-        tidSet[MIN_ELEM_IND] = BitArrays.min(tidSet, BITSET_START_IND, searchFromInd, searchToIndExc);
-        tidSet[MAX_ELEM_IND] = BitArrays.max(tidSet, BITSET_START_IND, searchFromInd, searchToIndExc);
-        tidSet[SIZE_IND] = BitArrays.cardinality(tidSet, searchFromInd, searchToIndExc);
-    }
-
     private static void setMetadata_ShortTidSet(long[] tidSet) {
         if (tidSet == null) {
             return;
@@ -259,10 +159,6 @@ public class TidMergeSet implements Serializable {
         tidSet[MIN_ELEM_IND] = correction + BitArrays.min(tidSet, BITSET_START_IND);
         tidSet[MAX_ELEM_IND] = correction + BitArrays.max(tidSet, BITSET_START_IND);
         tidSet[SIZE_IND] = BitArrays.cardinality(tidSet, BITSET_START_IND);
-    }
-
-    private static int indexOfTid(long tid) {
-        return BitArrays.wordIndex((int)tid, BITSET_START_IND);
     }
 
     static long[] describeAsList(long[] tidSet) {
