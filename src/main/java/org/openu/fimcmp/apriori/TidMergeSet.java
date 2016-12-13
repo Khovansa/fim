@@ -42,7 +42,7 @@ public class TidMergeSet implements Serializable {
      * Return an iterator over a single long[][] array: rankK -> 'tid-set'. <br/>
      * The 'tid-set' is a bitset of TIDs prefixed with some metadata.
      */
-    static Iterator<long[][]> processPartition_ShortTidSet(
+    static Iterator<long[][]> processPartition(
             Iterator<Tuple2<long[], Long>> kRanksBsAndTidIt,
             TidsGenHelper tidsGenHelper,
             Tuple2<Long, Long> minAndMaxTids) {
@@ -77,14 +77,14 @@ public class TidMergeSet implements Serializable {
 
         if (hasElems) {
             for (long[] tidSet : rankKToTidSet) {
-                setMetadata_ShortTidSet(tidSet);
+                setMetadata(tidSet);
             }
         }
 
         return Collections.singletonList(rankKToTidSet).iterator();
     }
 
-    static Iterator<Tuple3<Integer, Long, Long>> findMinAndMaxTids_ShortTidSet(
+    static Iterator<Tuple3<Integer, Long, Long>> findMinAndMaxTids(
             Integer partitionIndex,
             Iterator<Tuple2<long[], Long>> kRanksBsAndTidIt) {
         long minTid = Long.MAX_VALUE;
@@ -98,7 +98,7 @@ public class TidMergeSet implements Serializable {
         return Collections.singletonList(new Tuple3<>(partitionIndex, minTid, maxTid)).iterator();
     }
 
-    static long[][] mergePartitions_ShortTidSet(long[][] part1, long[][] part2, TidsGenHelper tidsGenHelper) {
+    static long[][] mergePartitions(long[][] part1, long[][] part2, TidsGenHelper tidsGenHelper) {
         if (part2.length == 0) {
             return part1;
         }
@@ -108,7 +108,7 @@ public class TidMergeSet implements Serializable {
         }
 
         for (int rankK = 0; rankK < totalRanks; ++rankK) {
-            part1[rankK] = mergeTidSets_ShortTidSet(part1[rankK], part2[rankK]);
+            part1[rankK] = mergeTidSets(part1[rankK], part2[rankK]);
         }
         return part1;
     }
@@ -117,7 +117,7 @@ public class TidMergeSet implements Serializable {
     /**
      * Assuming the two sets' ranges do not intersect
      */
-    private static long[] mergeTidSets_ShortTidSet(long[] s1, long[] s2) {
+    private static long[] mergeTidSets(long[] s1, long[] s2) {
         if (s2 == null || s2.length <= 1) {
             return s1;
         }
@@ -150,7 +150,7 @@ public class TidMergeSet implements Serializable {
         return res;
     }
 
-    private static void setMetadata_ShortTidSet(long[] tidSet) {
+    private static void setMetadata(long[] tidSet) {
         if (tidSet == null) {
             return;
         }
