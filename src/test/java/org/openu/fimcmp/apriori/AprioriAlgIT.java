@@ -28,11 +28,11 @@ public class AprioriAlgIT extends AlgITBase {
     @Test
     public void test() throws Exception {
         runIt();
-        Thread.sleep(100_000_000);
+//        Thread.sleep(100_000_000);
     }
 
     private void runIt() throws Exception {
-        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.9, false, 2);
+        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false, 2);
 //        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false, 2);
         apr = new AprioriAlg<>(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
@@ -57,23 +57,24 @@ public class AprioriAlgIT extends AlgITBase {
         f2Res = f2Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
         pp("F2: "+StringUtils.join(f2Res.subList(0, Math.min(3, f2Res.size())), "\n"));
 
-        PairRanks f2Ranks = CurrSizeFiRanks.constructF2Ranks(f2, totalFreqItems);
-        CurrSizeFiRanks preprocessedF2 = CurrSizeFiRanks.construct(f2, totalFreqItems, totalFreqItems, f2Ranks);
+        CurrSizeFiRanks preprocessedF2 = CurrSizeFiRanks.construct(f2, totalFreqItems, totalFreqItems);
+        FiRanksToFromItems fiRanksToFromItemsR2 = fiRanksToFromItemsR1.toNextSize(preprocessedF2);
+        NextSizeItemsetGenHelper f3GenHelper = NextSizeItemsetGenHelper.construct(
+                fiRanksToFromItemsR2, totalFreqItems, f2.size());
         JavaRDD<Tuple2<int[], long[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
         ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
 //        ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_AND_DISK_SER());
         pp("zzz");
-        List<int[]> f3AsArrays = apr.computeFk_Part(3, ranks1And2, preprocessedF2);
+        List<int[]> f3AsArrays = apr.computeFk_Part(3, ranks1And2, f3GenHelper);
         pp("F3 as arrays size: "+f3AsArrays.size());
         List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays, prep.minSuppCount);
         pp("F3 size: "+f3.size());
-        FiRanksToFromItems fiRanksToFromItemsR2 = fiRanksToFromItemsR1.toNextSize(preprocessedF2);
         List<FreqItemset<String>> f3Res = apr.fkAsArraysToResItemsets(
                 prep.minSuppCount, f3AsArrays, itemToRank, fiRanksToFromItemsR2);
         f3Res = f3Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
         pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(10, f3Res.size())), "\n"));
 
-        CurrSizeFiRanks preprocessedF3 = CurrSizeFiRanks.construct(f3, totalFreqItems, f2.size(), f2Ranks);
+        CurrSizeFiRanks preprocessedF3 = CurrSizeFiRanks.construct(f3, totalFreqItems, f2.size());
         JavaRDD<Tuple2<int[], long[]>> ranks1And3 = apr.toRddOfRanks1AndK(ranks1And2, preprocessedF3);
 //        ranks1And3 = ranks1And3.persist(StorageLevel.MEMORY_AND_DISK_SER());
 
