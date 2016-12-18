@@ -12,11 +12,6 @@ class CurrSizeFiRanks implements Serializable {
     private final PairRanks currSizeRanks;
     private final long[][] currSizeFisR1ToRkm1;
 
-    static PairRanks constructF2Ranks(List<int[]> f2, int totalFreqItems) {
-        List<int[]> sortedF2 = getSortedByDecreasingFreq(f2);
-        return PairRanks.construct(sortedF2, totalFreqItems, totalFreqItems);
-    }
-
     /**
      * @param fkAsPairs      list of triplets (elem1, elem2, frequency)
      *                       elem1 = frequent item

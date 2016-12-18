@@ -113,6 +113,27 @@ public class BitArrays {
         }
     }
 
+    /**
+     * Negate all the bits of the bit set from 0 to maxBit (including). <br/>
+     * All the bits above the 'maxBit' will remain untouched. <br/>
+     */
+    public static void not(long[] wordsAndRes, int startInd, int maxBit) {
+        final int maxWord = Math.min(wordIndex(maxBit, startInd), wordsAndRes.length - 1);
+        for (int ii = startInd; ii < maxWord; ++ii) {
+            wordsAndRes[ii] = ~(wordsAndRes[ii]);
+        }
+
+        //Only negate the bits up to and including 'maxBit'
+        //Note that the 'tail' sits on the left from the bits to be negated
+        if (startInd <= maxWord) {
+            int tailSize = (maxWord + 1 - startInd) * BITS_PER_WORD - maxBit - 1;
+            int bitsToNegate = BITS_PER_WORD - tailSize;
+            long negatedBitsOnly = (~(wordsAndRes[maxWord])) << tailSize >>> tailSize;
+            long tailBitsOnly = (wordsAndRes[maxWord] >>> bitsToNegate) << bitsToNegate;
+            wordsAndRes[maxWord] = negatedBitsOnly | tailBitsOnly;
+        }
+    }
+
     public static void or(long[] words1AndRes, long[] words2, int startInd, int endInd) {
         int actEndInd = Math.min(words1AndRes.length, words2.length);
         int orEndInd = Math.min(actEndInd, endInd);
@@ -169,8 +190,8 @@ public class BitArrays {
         return 1 + wordIndex(maxBitIndex, bitSetStartInd);
     }
 
-    public static int totalBitsIn(long[] words) {
-        return words.length * BITS_PER_WORD;
+    public static int totalBitsIn(long[] words, int bitSetStartInd) {
+        return Math.max(0, (words.length - bitSetStartInd)) * BITS_PER_WORD;
     }
 
     public static int wordIndex(int bitIndex, int bitSetStartInd) {

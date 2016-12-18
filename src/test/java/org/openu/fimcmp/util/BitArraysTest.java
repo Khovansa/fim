@@ -40,6 +40,51 @@ public class BitArraysTest {
         checkWordBitsToNums(words, START_IND + 1, asList(indexes).subList(4, 6));
     }
 
+    @Test
+    public void not_should_keep_unused_bits_untouched() {
+        final int[] indexes = {0, 1, 7, 63, 64, 65, 128, 192, 200, 213, 214, 1034, 1234};
+        final int lastNum = indexes[indexes.length - 1];
+        long[] words = new long[BitArrays.requiredSize(1 + lastNum, START_IND)];
+        for (int bitIndex : indexes) {
+            BitArrays.set(words, START_IND, bitIndex);
+        }
+
+        int totalBits = BitArrays.totalBitsIn(words, START_IND);
+        assertThat(totalBits, is((words.length - START_IND) * 64));
+
+        long[] wordsNegatedTillLastNum = Arrays.copyOf(words, words.length);
+        BitArrays.not(wordsNegatedTillLastNum, START_IND, lastNum);
+        for (int ii = 0; ii < totalBits ; ++ii) {
+            boolean isOrigNumber = Arrays.binarySearch(indexes, ii) >= 0;
+            boolean shouldBeSet = (isOrigNumber == (ii > lastNum));
+            assertThat("At number " + ii, BitArrays.get(wordsNegatedTillLastNum, START_IND, ii), is(shouldBeSet));
+        }
+
+        long[] wordsNegatedTill128 = Arrays.copyOf(words, words.length);
+        BitArrays.not(wordsNegatedTill128, START_IND, 128);
+        for (int ii = 0; ii < totalBits ; ++ii) {
+            boolean isOrigNumber = Arrays.binarySearch(indexes, ii) >= 0;
+            boolean shouldBeSet = (isOrigNumber == (ii > 128));
+            assertThat("At number " + ii, BitArrays.get(wordsNegatedTill128, START_IND, ii), is(shouldBeSet));
+        }
+
+        long[] wordsNegatedTillLastMinus1 = Arrays.copyOf(words, words.length);
+        BitArrays.not(wordsNegatedTillLastMinus1, START_IND, lastNum - 1);
+        for (int ii = 0; ii < totalBits ; ++ii) {
+            boolean isOrigNumber = Arrays.binarySearch(indexes, ii) >= 0;
+            boolean shouldBeSet = (isOrigNumber == (ii > lastNum - 1));
+            assertThat("At number " + ii, BitArrays.get(wordsNegatedTillLastMinus1, START_IND, ii), is(shouldBeSet));
+        }
+
+        long[] wordsNegatedTillLastPlus1 = Arrays.copyOf(words, words.length);
+        BitArrays.not(wordsNegatedTillLastPlus1, START_IND, lastNum + 1);
+        for (int ii = 0; ii < totalBits ; ++ii) {
+            boolean isOrigNumber = Arrays.binarySearch(indexes, ii) >= 0;
+            boolean shouldBeSet = (isOrigNumber == (ii > lastNum + 1));
+            assertThat("At number " + ii, BitArrays.get(wordsNegatedTillLastPlus1, START_IND, ii), is(shouldBeSet));
+        }
+    }
+
     private void checkWordBitsToNums(long[] words, int wordInd, List<Integer> expRes) {
         int[] res = BitArrays.newBufForWordNumbers();
         int nextInd = BitArrays.getWordBitsAsNumbersToArr(res, words[wordInd], START_IND, wordInd);

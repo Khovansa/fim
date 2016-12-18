@@ -1,5 +1,7 @@
 package org.openu.fimcmp.apriori;
 
+import org.openu.fimcmp.ItemsetAndTids;
+import org.openu.fimcmp.ItemsetAndTidsCollection;
 import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;
@@ -117,31 +119,39 @@ public class TidMergeSet implements Serializable {
      *                'Short' means that they cover only a range of TIDs.
      * @return for each rankK, a TID set that covers all TIDs, in a format {rankK, TID-set as a bit array}
      */
-    //TODO: 1) 'and' to have all 'covered' TIDs 2) translate to the itemsets as r1s
-    static List<long[]> mergeTidSetsWithSameRankDropMetadata(List<long[]> tidSets, int totalTids) {
-        final int RES_BITSET_START_IND = 1;
-        Map<Integer, List<long[]>> kRankToTidSets = new TreeMap<>();
-        for (long[] tidSet : tidSets) {
-            int rankK = (int)tidSet[RANK_IND];
-            List<long[]> tidSetsList = kRankToTidSets.get(rankK);
-            if (tidSetsList == null) {
-                tidSetsList = new ArrayList<>(100);
-                kRankToTidSets.put(rankK, tidSetsList);
-            }
-            tidSetsList.add(tidSet);
-        }
+    public static ItemsetAndTidsCollection mergeTidSetsWithSameRankDropMetadata(
+            List<long[]> tidSets, TidsGenHelper tidsGenHelper, FiRanksToFromItems fiRanksToFromItems) {
+        final int RES_BITSET_START_IND = 0;
 
-        Map<Integer, long[]> resRankToTidSet = new TreeMap<>();
+        final Map<Integer, List<long[]>> kRankToTidSets = computeRankToTidSets(tidSets);
+        final int totalTids = tidsGenHelper.totalTids();
+        ArrayList<ItemsetAndTids> resList = new ArrayList<>(kRankToTidSets.size());
         for (Map.Entry<Integer, List<long[]>> entry : kRankToTidSets.entrySet()) {
             List<long[]> tidSetsList = entry.getValue();
             long[] resTidSet = new long[BitArrays.requiredSize(totalTids, RES_BITSET_START_IND)];
-            resTidSet[0] = tidSetsList.get(0)[RANK_IND];
             mergeShortSetsToLongWithoutMetadata(tidSetsList, resTidSet, RES_BITSET_START_IND);
             int rankK = entry.getKey();
-            resRankToTidSet.put(rankK, resTidSet);
+            if (!tidsGenHelper.isStoreContainingTid(rankK)) {
+                BitArrays.not(resTidSet, RES_BITSET_START_IND, totalTids - 1);
+            }
+
+            int supportCnt = tidsGenHelper.getSupportCount(rankK);
+            int[] itemset = fiRanksToFromItems.getItemsetByRankMaxK(rankK);
+            ItemsetAndTids res = new ItemsetAndTids(itemset, resTidSet, supportCnt);
+            resList.add(res);
         }
 
-        return new ArrayList<>(resRankToTidSet.values());
+        int itemsetSize = fiRanksToFromItems.getMaxK();
+        return new ItemsetAndTidsCollection(resList, totalTids, itemsetSize, 0);
+    }
+
+    private static Map<Integer, List<long[]>> computeRankToTidSets(List<long[]> tidSets) {
+        Map<Integer, List<long[]>> kRankToTidSets = new TreeMap<>();
+        for (long[] tidSet : tidSets) {
+            int rankK = (int)tidSet[RANK_IND];
+            putToMapOfLists(kRankToTidSets, rankK, tidSet, 100);
+        }
+        return kRankToTidSets;
     }
 
     private static void mergeShortSetsToLongWithoutMetadata(
@@ -214,10 +224,6 @@ public class TidMergeSet implements Serializable {
     }
 
 
-    private static long[] copyOf(long[] s2) {
-        return Arrays.copyOf(s2, s2.length);
-    }
-
     private static long[] newSetWithElem(int rank, long tid, long totalTids) {
         long[] res = new long[BitArrays.requiredSize((int) totalTids, BITSET_START_IND)];
         res[RANK_IND] = rank;
@@ -226,5 +232,18 @@ public class TidMergeSet implements Serializable {
         res[MIN_ELEM_IND] = res[MAX_ELEM_IND] = tidAsInt;
         BitArrays.set(res, BITSET_START_IND, tidAsInt);
         return res;
+    }
+
+    private static long[] copyOf(long[] s2) {
+        return Arrays.copyOf(s2, s2.length);
+    }
+
+    private static <K, V> void putToMapOfLists(Map<K, List<V>> keyToValList, K key, V val, int valsInitCapacity) {
+        List<V> tidSetsList = keyToValList.get(key);
+        if (tidSetsList == null) {
+            tidSetsList = new ArrayList<>(valsInitCapacity);
+            keyToValList.put(key, tidSetsList);
+        }
+        tidSetsList.add(val);
     }
 }

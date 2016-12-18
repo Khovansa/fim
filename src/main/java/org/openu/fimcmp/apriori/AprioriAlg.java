@@ -132,6 +132,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
             return (Integer)key % numPartitions;
         }
     }
+
     private static List<long[]> add(List<long[]> acc, long[] elem) {
         acc.add(elem);
         return acc;

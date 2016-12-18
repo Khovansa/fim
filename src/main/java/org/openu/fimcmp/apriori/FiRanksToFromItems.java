@@ -114,6 +114,10 @@ public class FiRanksToFromItems implements Serializable {
         }
     }
 
+    int[] getItemsetByRankMaxK(int rankK) {
+        return getItemsetByRank(rankK, maxK);
+    }
+
     private int[] getItemsetByRank(int rankK, int k) {
         Assert.isTrue(k <= maxK && k >= 1);
 

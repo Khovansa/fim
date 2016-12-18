@@ -19,18 +19,30 @@ public class PairElem1IteratorOverRankToTidSet implements Iterator<Tuple2<Intege
     public PairElem1IteratorOverRankToTidSet(long[][] arr, PairRanks rankToPair) {
         this.arr = arr;
         this.rankToPair = rankToPair;
+        skipNulls();
     }
 
     @Override
     public boolean hasNext() {
-        return currRankK < arr.length - 1;
+        return currRankK + 1 < arr.length;
     }
 
+    /**
+     * @return tuple (elem1, TidMergeSet), where (elem1, elem2) is a pair mapped by 'currRankK'.
+     */
     @Override
     public Tuple2<Integer, long[]> next() {
         ++currRankK;
         int elem1 = rankToPair.getElem1ByRank(currRankK);
         Assert.isTrue(elem1 >= 0);
-        return new Tuple2<>(elem1, arr[currRankK]);
+        Tuple2<Integer, long[]> res = new Tuple2<>(elem1, arr[currRankK]);
+        skipNulls();
+        return res;
+    }
+
+    private void skipNulls() {
+        while (currRankK+1 < arr.length && arr[currRankK + 1] == null) {
+            ++currRankK;
+        }
     }
 }
