@@ -7,6 +7,7 @@ import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
 import org.junit.Test;
 import org.openu.fimcmp.*;
+import org.openu.fimcmp.eclat.EclatAlg;
 import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;
 
@@ -18,6 +19,8 @@ import java.util.stream.Collectors;
 public class AprioriAlgIT extends AlgITBase {
     @SuppressWarnings("FieldCanBeLocal")
     private AprioriAlg<String> apr;
+    @SuppressWarnings("FieldCanBeLocal")
+    private EclatAlg eclat;
 
     @Before
     public void setUp() throws Exception {
@@ -31,9 +34,10 @@ public class AprioriAlgIT extends AlgITBase {
     }
 
     private void runIt() throws Exception {
-        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false, 2);
-//        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false, 2);
+//        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false, 2);
+        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false, 2);
         apr = new AprioriAlg<>(prep.minSuppCount);
+        eclat = new EclatAlg(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
         final int totalFreqItems = sortedF1.size();
         pp("F1 size = " + totalFreqItems);
@@ -48,11 +52,11 @@ public class AprioriAlgIT extends AlgITBase {
 
         List<int[]> f2AsArrays = apr.computeF2_Part(filteredTrs, totalFreqItems);
         pp("F2 as arrays size: " + f2AsArrays.size());
-        List<int[]> f2 = apr.fkAsArraysToRankPairs(f2AsArrays, prep.minSuppCount);
+        List<int[]> f2 = apr.fkAsArraysToRankPairs(f2AsArrays);
         pp("F2 size: " + f2.size());
         FiRanksToFromItems fiRanksToFromItemsR1 = new FiRanksToFromItems();
         List<FreqItemset<String>> f2Res =
-                apr.fkAsArraysToResItemsets(prep.minSuppCount, f2AsArrays, itemToRank, fiRanksToFromItemsR1);
+                apr.fkAsArraysToResItemsets(f2AsArrays, itemToRank, fiRanksToFromItemsR1);
         f2Res = f2Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
         pp("F2: " + StringUtils.join(f2Res.subList(0, Math.min(3, f2Res.size())), "\n"));
 
@@ -66,10 +70,9 @@ public class AprioriAlgIT extends AlgITBase {
         pp("zzz");
         List<int[]> f3AsArrays = apr.computeFk_Part(3, ranks1And2, f3GenHelper);
         pp("F3 as arrays size: " + f3AsArrays.size());
-        List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays, prep.minSuppCount);
+        List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays);
         pp("F3 size: " + f3.size());
-        List<FreqItemset<String>> f3Res = apr.fkAsArraysToResItemsets(
-                prep.minSuppCount, f3AsArrays, itemToRank, fiRanksToFromItemsR2);
+        List<FreqItemset<String>> f3Res = apr.fkAsArraysToResItemsets(f3AsArrays, itemToRank, fiRanksToFromItemsR2);
         f3Res = f3Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
         pp("F3: " + StringUtils.join(f3Res.subList(0, Math.min(10, f3Res.size())), "\n"));
 
@@ -102,10 +105,12 @@ public class AprioriAlgIT extends AlgITBase {
         }
 
         JavaPairRDD<Integer, List<long[]>> prefRkToTidSets = apr.groupTidSetsByRankKm1(rankToTidBsRdd, r3ToR2AndR1);
-        JavaPairRDD<Integer, ItemsetAndTidsCollection> prefRkToEclatInput =
-                prefRkToTidSets.mapValues(tidSets ->
+        JavaPairRDD<Integer, ItemsetAndTidsCollection> prefRkToEclatInput = prefRkToTidSets
+                .mapValues(tidSets ->
                         TidMergeSet.mergeTidSetsWithSameRankDropMetadata(tidSets, tidsGenHelper, fiRanksToFromItemsR3));
+        JavaRDD<List<Tuple2<int[], Integer>>> resRdd = eclat.computeFreqItemsets(prefRkToEclatInput);
         pp("Num parts: " + prefRkToTidSets.getNumPartitions());
+        pp("Num parts (res): " + resRdd.getNumPartitions());
         ItemsetAndTidsCollection eclatInput1 = prefRkToEclatInput.sortByKey().first()._2;
         pp("Itemset size: " + eclatInput1.getItemsetSize());
         pp("Total tids: " + eclatInput1.getTotalTids());

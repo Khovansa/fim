@@ -151,7 +151,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return res;
     }
 
-    public List<int[]> fkAsArraysToRankPairs(List<int[]> cols, long minSuppCount) {
+    public List<int[]> fkAsArraysToRankPairs(List<int[]> cols) {
         List<int[]> res = new ArrayList<>(cols.size() * cols.size());
         for (int[] col : cols) {
             res.addAll(candidateFisGenerator.fkColToPairs(col, minSuppCount));
@@ -160,7 +160,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     }
 
     public List<FreqItemset<String>> fkAsArraysToResItemsets(
-            long minSuppCount, List<int[]> cols, Map<String, Integer> itemToRank, FiRanksToFromItems fiRanksToFromItems) {
+            List<int[]> cols, Map<String, Integer> itemToRank, FiRanksToFromItems fiRanksToFromItems) {
         String[] rankToItem = BasicOps.getRankToItem(itemToRank);
 
         List<FreqItemset<String>> res = new ArrayList<>((int) Math.pow(cols.size(), 3));

@@ -3,6 +3,7 @@ package org.openu.fimcmp;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.apriori.*;
+import org.openu.fimcmp.eclat.EclatAlg;
 import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
 
@@ -42,6 +43,8 @@ public class SparkContextFactory {
                 TidMergeSet.class, FiRanksToFromItems.class, PairElem1IteratorOverRankToTidSet.class,
                 NextSizeItemsetGenHelper.class,
                 ItemsetAndTidsCollection.class, ItemsetAndTids.class, ItemsetAndTids[].class,
+
+                EclatAlg.class
 
         });
 
