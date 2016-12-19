@@ -21,6 +21,10 @@ public class ItemsetAndTids {
         return itemset;
     }
 
+    public int getItem(int ind) {
+        return itemset[ind];
+    }
+
     public List<String> toOrigItemsetForDebug(String[] r1ToItem) {
         List<String> res = new ArrayList<>(itemset.length);
         for (int r1 : itemset) {

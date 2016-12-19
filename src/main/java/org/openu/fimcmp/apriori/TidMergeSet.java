@@ -142,7 +142,7 @@ public class TidMergeSet implements Serializable {
         }
 
         int itemsetSize = fiRanksToFromItems.getMaxK();
-        return new ItemsetAndTidsCollection(resList, totalTids, itemsetSize, 0);
+        return new ItemsetAndTidsCollection(resList, 0, itemsetSize, totalTids);
     }
 
     private static Map<Integer, List<long[]>> computeRankToTidSets(List<long[]> tidSets) {

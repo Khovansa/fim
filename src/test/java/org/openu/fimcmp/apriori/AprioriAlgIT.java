@@ -108,7 +108,7 @@ public class AprioriAlgIT extends AlgITBase {
         JavaPairRDD<Integer, ItemsetAndTidsCollection> prefRkToEclatInput = prefRkToTidSets
                 .mapValues(tidSets ->
                         TidMergeSet.mergeTidSetsWithSameRankDropMetadata(tidSets, tidsGenHelper, fiRanksToFromItemsR3));
-        JavaRDD<List<Tuple2<int[], Integer>>> resRdd = eclat.computeFreqItemsets(prefRkToEclatInput);
+        JavaRDD<List<Tuple2<int[], Integer>>> resRdd = eclat.computeFreqItemsetsRdd(prefRkToEclatInput);
         pp("Num parts: " + prefRkToTidSets.getNumPartitions());
         pp("Num parts (res): " + resRdd.getNumPartitions());
         ItemsetAndTidsCollection eclatInput1 = prefRkToEclatInput.sortByKey().first()._2;
