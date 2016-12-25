@@ -116,7 +116,7 @@ public class AprioriAlgIT extends AlgITBase {
         pp("Total tids: " + eclatInput1.getTotalTids());
         pp("Elems size: " + eclatInput1.getItemsetAndTidsList().size());
         ItemsetAndTids firstEclatElem = eclatInput1.getItemsetAndTidsList().get(0);
-        pp("Support cnt #1: " + firstEclatElem.getSupportCnt());
+        pp("Support cnt #1: " + firstEclatElem.getSupportCntIfExists());
         pp("Support cnt #1 (cardinality): " + BitArrays.cardinality(firstEclatElem.getTidBitSet(), 0));
         String[] r1ToItem = BasicOps.getRankToItem(itemToRank);
         pp("Itemset #1: " + firstEclatElem.toOrigItemsetForDebug(r1ToItem));

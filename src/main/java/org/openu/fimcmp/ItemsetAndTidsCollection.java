@@ -33,10 +33,14 @@ public class ItemsetAndTidsCollection {
         return itemsetAndTidsList.isEmpty();
     }
 
+    public int size() {
+        return itemsetAndTidsList.size();
+    }
+
     public List<Tuple2<int[], Integer>> toResult() {
         List<Tuple2<int[], Integer>> res = new ArrayList<>(itemsetAndTidsList.size());
         for (ItemsetAndTids itemsetAndTids : itemsetAndTidsList) {
-            res.add(new Tuple2<>(itemsetAndTids.getItemset(), itemsetAndTids.getSupportCnt()));
+            res.add(new Tuple2<>(itemsetAndTids.getItemset(), itemsetAndTids.getSupportCntIfExists()));
         }
         return res;
     }

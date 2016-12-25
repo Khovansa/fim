@@ -140,10 +140,6 @@ public class BitArrays {
         for (int ii = startInd; ii<orEndInd; ++ii) {
             words1AndRes[ii] |= words2[ii];
         }
-
-        for (int ii=orEndInd+1; ii<actEndInd; ++ii) {
-            words1AndRes[ii] = 1;
-        }
     }
 
     public static int[] asNumbers(long[] words, int bitSetStartInd) {
