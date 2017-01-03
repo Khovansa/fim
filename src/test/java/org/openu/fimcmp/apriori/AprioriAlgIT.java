@@ -35,7 +35,7 @@ public class AprioriAlgIT extends AlgITBase {
 
     private void runIt() throws Exception {
 //        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false, 2);
-        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.1, false, 2);
+        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.2, false, 2);
         apr = new AprioriAlg<>(prep.minSuppCount);
         eclat = new EclatAlg(prep.minSuppCount);
         List<String> sortedF1 = apr.computeF1(prep.trs);
@@ -104,26 +104,44 @@ public class AprioriAlgIT extends AlgITBase {
             }
         }
 
-        JavaPairRDD<Integer, List<long[]>> prefRkToTidSets = apr.groupTidSetsByRankKm1(rankToTidBsRdd, r3ToR2AndR1);
-        JavaPairRDD<Integer, ItemsetAndTidsCollection> prefRkToEclatInput = prefRkToTidSets
+        JavaPairRDD<Integer, List<long[]>> r2ToTidSets = apr.groupTidSetsByRankKm1(rankToTidBsRdd, r3ToR2AndR1);
+        JavaPairRDD<Integer, ItemsetAndTidsCollection> r2ToEclatInput = r2ToTidSets
                 .mapValues(tidSets ->
                         TidMergeSet.mergeTidSetsWithSameRankDropMetadata(tidSets, tidsGenHelper, fiRanksToFromItemsR3));
-        JavaRDD<List<Tuple2<int[], Integer>>> resRdd = eclat.computeFreqItemsetsRdd(prefRkToEclatInput);
-        pp("Num parts: " + prefRkToTidSets.getNumPartitions());
+        ItemsetAndTidsCollection eclatInput1 = r2ToEclatInput.sortByKey().first()._2;
+        eclat.rankToItem = BasicOps.getRankToItem(itemToRank);
+        List<Tuple2<int[], Integer>> resEclat1 = eclat.computeFreqItemsetsSingle(eclatInput1);
+        printEclatRes2(resEclat1, itemToRank);
+//        if (true) {
+//            return;
+//        }
+
+        JavaRDD<List<Tuple2<int[], Integer>>> resRdd = eclat.computeFreqItemsetsRdd(r2ToEclatInput);
+        pp("Num parts: " + r2ToTidSets.getNumPartitions());
         pp("Num parts (res): " + resRdd.getNumPartitions());
-        ItemsetAndTidsCollection eclatInput1 = prefRkToEclatInput.sortByKey().first()._2;
         pp("Itemset size: " + eclatInput1.getItemsetSize());
         pp("Total tids: " + eclatInput1.getTotalTids());
         pp("Elems size: " + eclatInput1.getItemsetAndTidsList().size());
         ItemsetAndTids firstEclatElem = eclatInput1.getItemsetAndTidsList().get(0);
-        pp("Support cnt #1: " + firstEclatElem.getSupportCntIfExists());
+        pp("Support cnt #1: " + firstEclatElem.getSupportCount());
         pp("Support cnt #1 (cardinality): " + BitArrays.cardinality(firstEclatElem.getTidBitSet(), 0));
         String[] r1ToItem = BasicOps.getRankToItem(itemToRank);
+        pp("34: " + itemToRank.get("34"));
+        pp("59: " + itemToRank.get("59"));
+        pp("85: " + itemToRank.get("85"));
+        pp("86: " + itemToRank.get("86"));
+
         pp("Itemset #1: " + firstEclatElem.toOrigItemsetForDebug(r1ToItem));
 //        pp("TIDs of itemset #1: " + Arrays.toString(BitArrays.asNumbers(firstEclatElem.getTidBitSet(), 0)));
+        JavaPairRDD<Integer, int[]> resRdd2 = resRdd.flatMap(List::iterator)
+                .mapToPair(p -> new Tuple2<>(p._2, p._1));
+//        List<Tuple2<Integer, int[]>> eclatRes = resRdd2.sortByKey(false).collect();
+        pp("RES SIZE: " + resRdd.count());
+        List<Tuple2<Integer, int[]>> eclatRes = resRdd2.sortByKey(false).collect();
+        printEclatRes1(eclatRes, itemToRank);
 
         pp("r2 -> r3s:");
-        List<Tuple2<List<String>, List<List<String>>>> r2ToR3sList = prefRkToTidSets.sortByKey()
+        List<Tuple2<List<String>, List<List<String>>>> r2ToR3sList = r2ToTidSets.sortByKey()
                 .map(t -> new Tuple2<>(
                         fiRanksToFromItemsR3.getOrigItemsetByRank(t._1, 2, r1ToItem),
                         fiRanksToFromItemsR3.toOrigItemsetsForDebug(t._2, 3, r1ToItem, 30)))
@@ -141,5 +159,21 @@ public class AprioriAlgIT extends AlgITBase {
 //          apr.fkAsArraysToResItemsets(f4AsArrays, itemToRank, new new FiRanksToFromItems(preprocessedF3, preprocessedF2));
 //        f4Res = f4Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
 //        pp("F4: " + StringUtils.join(f4Res.subList(0, Math.min(3, f4Res.size())), "\n"));
+    }
+
+    private void printEclatRes1(List<Tuple2<Integer, int[]>> eclatRes, Map<String, Integer> itemToRank) {
+        pp("Eclat res: " + eclatRes.size());
+        String[] rankToItem = BasicOps.getRankToItem(itemToRank);
+        for (Tuple2<Integer, int[]> fiAndSupport : eclatRes.subList(0, 200)) {
+            System.out.println(FreqItemset.constructStr(fiAndSupport._2, fiAndSupport._1, rankToItem));
+        }
+    }
+
+    private void printEclatRes2(List<Tuple2<int[], Integer>> eclatRes, Map<String, Integer> itemToRank) {
+        pp("Eclat res: " + eclatRes.size());
+        String[] rankToItem = BasicOps.getRankToItem(itemToRank);
+        for (Tuple2<int[], Integer> fiAndSupport : eclatRes.subList(0, 20)) {
+            System.out.println(FreqItemset.constructStr(fiAndSupport._1, fiAndSupport._2, rankToItem));
+        }
     }
 }

@@ -57,6 +57,7 @@ public class TidsGenHelper implements Serializable {
     int getSupportCount(int rank) {
         return rankToSupportCnt[rank];
     }
+
     private static int[] computeRankToSupport(List<int[]> fk, PairRanks rankPairsK) {
         final int totalRanks = rankPairsK.totalRanks();
         int[] rankToSupport = new int[totalRanks]; //initialized with 0's

@@ -38,6 +38,14 @@ public class BitArraysTest {
 
         checkWordBitsToNums(words, START_IND, asList(indexes).subList(0, 4));
         checkWordBitsToNums(words, START_IND + 1, asList(indexes).subList(4, 6));
+
+        assertThat(BitArrays.roundedToWordStart(0), is(0));
+        assertThat(BitArrays.roundedToWordStart(1), is(0));
+        assertThat(BitArrays.roundedToWordStart(63), is(0));
+        assertThat(BitArrays.roundedToWordStart(64), is(64));
+        assertThat(BitArrays.roundedToWordStart(65), is(64));
+        assertThat(BitArrays.roundedToWordStart(127), is(64));
+        assertThat(BitArrays.roundedToWordStart(128), is(128));
     }
 
     @Test

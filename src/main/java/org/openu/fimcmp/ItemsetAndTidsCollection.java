@@ -13,16 +13,14 @@ public class ItemsetAndTidsCollection {
     private final ArrayList<ItemsetAndTids> itemsetAndTidsList;
     private final int totalTids;
     private final int itemsetSize;
-    private final int supportCorrection;
 
     public ItemsetAndTidsCollection(
-            ArrayList<ItemsetAndTids> itemsetAndTidsList, int supportCorrection, int itemsetSize, int totalTids) {
+            ArrayList<ItemsetAndTids> itemsetAndTidsList, int itemsetSize, int totalTids) {
         Assert.isTrue(itemsetAndTidsList != null);
 
         this.itemsetAndTidsList = itemsetAndTidsList;
         this.totalTids = totalTids;
         this.itemsetSize = itemsetSize;
-        this.supportCorrection = supportCorrection;
     }
 
     public ArrayList<ItemsetAndTids> getItemsetAndTidsList() {
@@ -40,7 +38,8 @@ public class ItemsetAndTidsCollection {
     public List<Tuple2<int[], Integer>> toResult() {
         List<Tuple2<int[], Integer>> res = new ArrayList<>(itemsetAndTidsList.size());
         for (ItemsetAndTids itemsetAndTids : itemsetAndTidsList) {
-            res.add(new Tuple2<>(itemsetAndTids.getItemset(), itemsetAndTids.getSupportCntIfExists()));
+            int supportCnt = itemsetAndTids.getSupportCount();
+            res.add(new Tuple2<>(itemsetAndTids.getItemset(), supportCnt));
         }
         return res;
     }
@@ -53,7 +52,12 @@ public class ItemsetAndTidsCollection {
         return itemsetSize;
     }
 
-    public int getSupportCorrection() {
-        return supportCorrection;
+    public boolean hasItemsetStartingWith(int[] debugPref1) {
+        for (ItemsetAndTids iat : itemsetAndTidsList) {
+            if (iat.startsWith(debugPref1)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

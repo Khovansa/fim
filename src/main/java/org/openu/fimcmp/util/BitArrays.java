@@ -101,6 +101,20 @@ public class BitArrays {
         }
     }
 
+    public static long[] diffReturn(long[] words1, long[] words2, int startInd, int endInd) {
+        long[] words1AndRes = Arrays.copyOf(words1, words1.length);
+        diff(words1AndRes, words2, startInd, endInd);
+        return words1AndRes;
+    }
+
+    public static void diff(long[] words1AndRes, long[] words2, int startInd, int endInd) {
+        int actEndInd = Math.min(words1AndRes.length, words2.length);
+        int andEndInd = Math.min(actEndInd, endInd);
+        for (int ii = startInd; ii<andEndInd; ++ii) {
+            words1AndRes[ii] &= ~(words2[ii]);
+        }
+    }
+
     public static void notXor(long[] words1AndRes, int startInd1, long[] words2, int startInd2) {
         int actLen = Math.min(words1AndRes.length-startInd1, words2.length-startInd2);
 
@@ -194,6 +208,9 @@ public class BitArrays {
         return bitSetStartInd + (bitIndex >> ADDRESS_BITS_PER_WORD);
     }
 
+    public static int roundedToWordStart(int bitIndex) {
+        return (bitIndex >> ADDRESS_BITS_PER_WORD) << ADDRESS_BITS_PER_WORD;
+    }
     private static long asBit(int bitIndex) {
         return 1L << bitIndex;
     }

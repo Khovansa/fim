@@ -6,7 +6,9 @@ import org.apache.spark.mllib.fpm.FPGrowthModel;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -20,9 +22,10 @@ public class FpGrowthStdIT extends AlgITBase {
 
     @Test
     public void test() {
-        final double minSupp = 0.8;
+        final double minSupp = 0.2;
 //        final PrepStepOutputAsList prep = prepareAsList("my.small.txt", minSupp);
-        final PrepStepOutputAsList prep = prepareAsList("pumsb.dat", minSupp, false);
+//        final PrepStepOutputAsList prep = prepareAsList("pumsb.dat", minSupp, false);
+        final PrepStepOutputAsList prep = prepareAsList("my.small.txt", minSupp, false);
 
         FPGrowth fpg = new FPGrowth()
                 .setMinSupport(minSupp)
@@ -36,8 +39,12 @@ public class FpGrowthStdIT extends AlgITBase {
                 .sorted((fi1, fi2) -> Long.compare(fi2.freq(), fi1.freq()))
                 .collect(Collectors.toList());
         pp("F4 size: "+f3s.size());
-        for (FPGrowth.FreqItemset<String> itemset : f3s.subList(0, Math.min(100, f3s.size()))) {
-            System.out.println("[" + itemset.javaItems() + "], " + itemset.freq());
+        for (FPGrowth.FreqItemset<String> itemset : f3s.subList(0, Math.min(1000, f3s.size()))) {
+            Object[] items = (Object[])itemset.items();
+            List<Object> ts = Arrays.asList(items);
+            if (ts.contains("86") && ts.contains("59")) {
+                System.out.println("[" + new TreeSet<>(itemset.javaItems()) + "], " + itemset.freq());
+            }
         }
     }
 }

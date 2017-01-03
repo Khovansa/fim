@@ -104,10 +104,15 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .fold(new long[0][], (p1, p2) -> TidMergeSet.mergePartitions(p1, p2, tidsGenHelper));
     }
 
+    /**
+     * @return RDD of pairs (rank{k-1}, list of its matching TidMergeSet objects)
+     */
     public JavaPairRDD<Integer, List<long[]>> groupTidSetsByRankKm1(
             JavaRDD<long[][]> rankToTidBsRdd, PairRanks rkToRkm1AndR1) {
 //        final int numParts = rankToTidBsRdd.getNumPartitions();
-        final int numParts = Math.min(rkToRkm1AndR1.totalElems1(), 8 * rankToTidBsRdd.getNumPartitions());
+        //TODO: GGG!!!
+//        final int numParts = Math.min(rkToRkm1AndR1.totalElems1(), 8 * rankToTidBsRdd.getNumPartitions());
+        final int numParts = 1;
         IntToSamePartitioner partitioner = new IntToSamePartitioner(numParts);
         int totalR1s = rkToRkm1AndR1.totalElems2();
         return rankToTidBsRdd

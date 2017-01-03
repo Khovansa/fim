@@ -62,7 +62,8 @@ public class TidMergeSet implements Serializable {
             tidsGenHelper.setToResRanksToBeStoredBitSet(kRanksToBeStoredBs, RANKS_BITSET_START_IND, kRanksBs);
             int[] kRanksToBeStored = BitArrays.asNumbers(kRanksToBeStoredBs, RANKS_BITSET_START_IND);
 
-            final long tidToStore = kRanksBsAndTid._2 - minTidInPartition; //storing a smaller number than TID
+            //storing a smaller number than TID:
+            final long tidToStore = kRanksBsAndTid._2 - getTidCorrection(minTidInPartition);
             for (int rankK : kRanksToBeStored) {
                 long[] tidSet = rankKToTidSet[rankK];
                 if (tidSet != null) {
@@ -136,13 +137,15 @@ public class TidMergeSet implements Serializable {
             }
 
             int supportCnt = tidsGenHelper.getSupportCount(rankK);
+            //TODO
+            Assert.isTrue(supportCnt == BitArrays.cardinality(resTidSet, RES_BITSET_START_IND));
             int[] itemset = fiRanksToFromItems.getItemsetByRankMaxK(rankK);
             ItemsetAndTids res = new ItemsetAndTids(itemset, resTidSet, supportCnt);
             resList.add(res);
         }
 
         int itemsetSize = fiRanksToFromItems.getMaxK();
-        return new ItemsetAndTidsCollection(resList, 0, itemsetSize, totalTids);
+        return new ItemsetAndTidsCollection(resList, itemsetSize, totalTids);
     }
 
     private static Map<Integer, List<long[]>> computeRankToTidSets(List<long[]> tidSets) {
@@ -154,13 +157,46 @@ public class TidMergeSet implements Serializable {
         return kRankToTidSets;
     }
 
+    /**
+     * Assumption: the short sets come from different partitions, so their TID sets are not just mutually exclusive,
+     * but also form mutually exclusive ranges. <br/>
+     * <p/>
+     * E.g. the first sets can only have TIDs from 0 to 67 and the second one can only have TIDs from 68 to 132. <br/>
+     * Yet to keep the TID sets short, the TIDs are stored with their 'base' part subtracted. <br/>
+     * TIDs bit set in the range [0, 67] will have the correction of 0. <br/>
+     * But TIDs bit set [68, 133] will have the correction of 64 and the bit set will store the numbers in the range
+     * [4, 69]. <br/>
+     */
     private static void mergeShortSetsToLongWithoutMetadata(
             List<long[]> tidSetsList, long[] resTidSet, int resBitsetStartInd) {
         for (long[] shortTidSet : tidSetsList) {
-            int copyLen = shortTidSet.length - BITSET_START_IND;
-            int resStartInd = BitArrays.wordIndex((int)shortTidSet[MIN_TID_IN_PARTITION_IND], resBitsetStartInd);
-            System.arraycopy(shortTidSet, BITSET_START_IND, resTidSet, resStartInd, copyLen);
+            if (shortTidSet[SIZE_IND] > 0) {
+                int copyLen = shortTidSet.length - BITSET_START_IND;
+
+                int tidCorrection = getTidCorrection(shortTidSet[MIN_TID_IN_PARTITION_IND]);
+                //that's the whole trick: we correct the TIDs by simply shifting them to the right position
+                int resStartInd = BitArrays.wordIndex(tidCorrection, resBitsetStartInd);
+
+                addTidSetProducedByPartition(resTidSet, resStartInd, shortTidSet, copyLen);
+            }
         }
+    }
+
+    /**
+     * Assuming the 'shortTidSet' contains its own exclusive range of TIDs.
+     */
+    private static void addTidSetProducedByPartition(
+            long[] resTidSet, int resStartInd, long[] shortTidSet, int copyLen) {
+        //the short sets' bitset might still intersect at its ends with others, since one 'long' holds up to 63 TIDs
+        //=> take care of the ends:
+        long firstResElem = resTidSet[resStartInd];
+        final int lastElemInd = resStartInd + copyLen - 1;
+        long lastResElem = resTidSet[lastElemInd];
+
+        System.arraycopy(shortTidSet, BITSET_START_IND, resTidSet, resStartInd, copyLen);
+
+        resTidSet[resStartInd] |= firstResElem;
+        resTidSet[lastElemInd] |= lastResElem;
     }
 
     /**
@@ -193,8 +229,9 @@ public class TidMergeSet implements Serializable {
         System.arraycopy(lowerSet, BITSET_START_IND, res, BITSET_START_IND, lowerSetCopyLen);
 
         int higherSetCopyLen = higherSet.length - BITSET_START_IND;
-        int higherSetDestStartInd = BitArrays.wordIndex((int)higherSet[MIN_TID_IN_PARTITION_IND], BITSET_START_IND);
-        System.arraycopy(higherSet, BITSET_START_IND, res, higherSetDestStartInd, higherSetCopyLen);
+        int tidCorrection = getTidCorrection(higherSet[MIN_TID_IN_PARTITION_IND]);
+        int higherSetDestStartInd = BitArrays.wordIndex(tidCorrection, BITSET_START_IND);
+        addTidSetProducedByPartition(res, higherSetDestStartInd, higherSet, higherSetCopyLen);
 
         return res;
     }
@@ -204,9 +241,9 @@ public class TidMergeSet implements Serializable {
             return;
         }
 
-        long correction = tidSet[MIN_TID_IN_PARTITION_IND];
-        tidSet[MIN_ELEM_IND] = correction + BitArrays.min(tidSet, BITSET_START_IND);
-        tidSet[MAX_ELEM_IND] = correction + BitArrays.max(tidSet, BITSET_START_IND);
+        int tidCorrection = getTidCorrection(tidSet[MIN_TID_IN_PARTITION_IND]);
+        tidSet[MIN_ELEM_IND] = tidCorrection + BitArrays.min(tidSet, BITSET_START_IND);
+        tidSet[MAX_ELEM_IND] = tidCorrection + BitArrays.max(tidSet, BITSET_START_IND);
         tidSet[SIZE_IND] = BitArrays.cardinality(tidSet, BITSET_START_IND);
     }
 
@@ -232,6 +269,18 @@ public class TidMergeSet implements Serializable {
         res[MIN_ELEM_IND] = res[MAX_ELEM_IND] = tidAsInt;
         BitArrays.set(res, BITSET_START_IND, tidAsInt);
         return res;
+    }
+
+    public static long[] newEmptySet(int rank) {
+        long[] res = new long[BITSET_START_IND + 1];
+        res[RANK_IND] = rank;
+        res[SIZE_IND] = 0;
+        res[MIN_ELEM_IND] = res[MAX_ELEM_IND] = -1;
+        return res;
+    }
+
+    private static int getTidCorrection(long minTidInPartition) {
+        return BitArrays.roundedToWordStart((int)minTidInPartition);
     }
 
     private static long[] copyOf(long[] s2) {

@@ -12,19 +12,18 @@ import java.util.Iterator;
  * {@link #remove()} operation is not supported.
  */
 public class PairElem1IteratorOverRankToTidSet implements Iterator<Tuple2<Integer, long[]>> {
-    private final long[][] arr;
+    private final long[][] rankToTidSet;
     private final PairRanks rankToPair;
     private int currRankK = -1;
 
-    public PairElem1IteratorOverRankToTidSet(long[][] arr, PairRanks rankToPair) {
-        this.arr = arr;
+    public PairElem1IteratorOverRankToTidSet(long[][] rankToTidSet, PairRanks rankToPair) {
+        this.rankToTidSet = rankToTidSet;
         this.rankToPair = rankToPair;
-        skipNulls();
     }
 
     @Override
     public boolean hasNext() {
-        return currRankK + 1 < arr.length;
+        return currRankK + 1 < rankToTidSet.length;
     }
 
     /**
@@ -35,14 +34,17 @@ public class PairElem1IteratorOverRankToTidSet implements Iterator<Tuple2<Intege
         ++currRankK;
         int elem1 = rankToPair.getElem1ByRank(currRankK);
         Assert.isTrue(elem1 >= 0);
-        Tuple2<Integer, long[]> res = new Tuple2<>(elem1, arr[currRankK]);
-        skipNulls();
+        long[] tidSet = rankToTidSet[currRankK];
+        if (tidSet == null) {
+            tidSet = TidMergeSet.newEmptySet(currRankK);
+        }
+        Tuple2<Integer, long[]> res = new Tuple2<>(elem1, tidSet);
         return res;
     }
 
-    private void skipNulls() {
-        while (currRankK+1 < arr.length && arr[currRankK + 1] == null) {
-            ++currRankK;
-        }
-    }
+//    private void skipNulls() {
+//        while (currRankK+1 < rankToTidSet.length && rankToTidSet[currRankK + 1] == null) {
+//            ++currRankK;
+//        }
+//    }
 }
