@@ -82,7 +82,7 @@ public class ItemsetAndTids {
     public ItemsetAndTids withNewTids(int newTotalTids) {
         int[] newItemset = Arrays.copyOf(itemset, itemset.length);
         long[] newTids = new long[BitArrays.requiredSize(newTotalTids, TIDS_START_IND)];
-        return new ItemsetAndTids(newItemset, newTids, supportCnt);
+        return new ItemsetAndTids(newItemset, newTids, supportCnt, isTidsDiffSet);
     }
 
     public boolean haveCommonPrefix(int prefSize, ItemsetAndTids is2) {
@@ -139,10 +139,10 @@ public class ItemsetAndTids {
 
         ItemsetAndTids res = new ItemsetAndTids(newItemset, newDiffSet, newSupportCnt, true);
         //debug
-        long[] d1 = (debugActTids != null) ? debugActTids : tidBitSet;
-        long[] d2 = (is2.debugActTids != null) ? is2.debugActTids : is2.tidBitSet;
-        res.debugActTids = BitArrays.andReturn(d1, d2, TIDS_START_IND, totalTids);
-        Assert.isTrue(BitArrays.cardinality(res.debugActTids, 0) == res.supportCnt);
+//        long[] d1 = (debugActTids != null) ? debugActTids : tidBitSet;
+//        long[] d2 = (is2.debugActTids != null) ? is2.debugActTids : is2.tidBitSet;
+//        res.debugActTids = BitArrays.andReturn(d1, d2, TIDS_START_IND, totalTids);
+//        Assert.isTrue(BitArrays.cardinality(res.debugActTids, 0) == res.supportCnt);
 
         return res;
     }

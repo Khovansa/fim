@@ -117,8 +117,7 @@ public class EclatAlg implements Serializable {
      */
     private ItemsetAndTidsCollection squeeze(
             ArrayList<ItemsetAndTids> inTidsList, int itemsetSize, int totalTids) {
-        //TODO: GGG!
-        if (true || inTidsList.size() <= 1) { //no point in squeezing a single bit set since it will not go anywhere
+        if (inTidsList.size() <= 1) { //no point in squeezing a single bit set since it will not go anywhere
             return new ItemsetAndTidsCollection(inTidsList, itemsetSize, totalTids);
         }
 

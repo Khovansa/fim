@@ -112,9 +112,9 @@ public class AprioriAlgIT extends AlgITBase {
         eclat.rankToItem = BasicOps.getRankToItem(itemToRank);
         List<Tuple2<int[], Integer>> resEclat1 = eclat.computeFreqItemsetsSingle(eclatInput1);
         printEclatRes2(resEclat1, itemToRank);
-//        if (true) {
-//            return;
-//        }
+        if (true) {
+            return;
+        }
 
         JavaRDD<List<Tuple2<int[], Integer>>> resRdd = eclat.computeFreqItemsetsRdd(r2ToEclatInput);
         pp("Num parts: " + r2ToTidSets.getNumPartitions());
