@@ -45,7 +45,7 @@ public class FiRanksToFromItems implements Serializable {
 
     List<String> getOrigItemsetByRank(int rankK, int k, String[] r1ToItem) {
         List<String> res = new ArrayList<>(maxK);
-        addOrigItemsetByRank(res, rankK, k, r1ToItem);
+        addToResultOrigItemsetByRank(res, rankK, k, r1ToItem);
         return res;
     }
 
@@ -106,7 +106,7 @@ public class FiRanksToFromItems implements Serializable {
         return couldBeFrequent(prefixItems, prefSize, rankKm1); //<-- recursion
     }
 
-    void addOrigItemsetByRank(List<String> res, int rankK, int k, String[] r1ToItem) {
+    void addToResultOrigItemsetByRank(List<String> res, int rankK, int k, String[] r1ToItem) {
         int[] itemsetAsR1s = getItemsetByRank(rankK, k);
 
         for (int r1 : itemsetAsR1s) {
@@ -118,7 +118,7 @@ public class FiRanksToFromItems implements Serializable {
         return getItemsetByRank(rankK, maxK);
     }
 
-    private int[] getItemsetByRank(int rankK, int k) {
+    int[] getItemsetByRank(int rankK, int k) {
         Assert.isTrue(k <= maxK && k >= 1);
 
         List<Integer> res = new ArrayList<>(k);
@@ -151,7 +151,6 @@ public class FiRanksToFromItems implements Serializable {
             int[] itemsetK = getItemsetByRank(rankK, k);
             Assert.isTrue(itemsetK.length == k);
             int rKm1 = getRankByItemsetIfExists(itemsetK, itemsetK.length - 1);
-            getRankByItemsetIfExists(itemsetK, itemsetK.length - 1);//TODO
             Assert.isTrue(rKm1 >= 0);
             int r1 = itemsetK[itemsetK.length - 1];
             rkToRkm1AndR1[rankK] = new int[]{rKm1, r1};

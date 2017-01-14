@@ -1,5 +1,6 @@
 package org.openu.fimcmp.eclat;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.openu.fimcmp.ItemsetAndTids;
@@ -11,7 +12,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * The main class that implements the Eclat algorithm.
@@ -19,12 +19,14 @@ import java.util.stream.Collectors;
 public class EclatAlg implements Serializable {
     private static final int TIDS_START_IND = ItemsetAndTids.getTidsStartInd();
     private static final double WORTH_SQUEEZING_RATIO = 0.8;
-    public static final int[] DEBUG_PREF = {0, 1, 7, 8, 10, 11, 12, 13, 14, 16};
     private final long minSuppCount;
-    public String[] rankToItem; //TODO: GGG
+    private final boolean isUseDiffSets;
+    private final boolean isSqueezingEnabled;
 
-    public EclatAlg(long minSuppCount) {
+    public EclatAlg(long minSuppCount, boolean isUseDiffSets, boolean isSqueezingEnabled) {
         this.minSuppCount = minSuppCount;
+        this.isUseDiffSets = isUseDiffSets;
+        this.isSqueezingEnabled = isSqueezingEnabled;
     }
 
     public JavaRDD<List<Tuple2<int[], Integer>>> computeFreqItemsetsRdd(
@@ -49,20 +51,6 @@ public class EclatAlg implements Serializable {
         ItemsetAndTidsCollection nextGen = initFis;
         do {
             nextGen = produceNextGenFis(nextGen);
-//            //TODO:GGG
-//            if (nextGen != null) {
-//                System.out.println(String.format("***: k=%s (total %s):", nextGen.getItemsetSize(), nextGen.size()));
-//                List<ItemsetAndTids> lst = nextGen.getItemsetAndTidsList();
-//                lst = lst.stream().sorted((is1, is2) -> Integer.compare(is2.getSupportCount(), is1.getSupportCount()))
-//                        .collect(Collectors.toList());
-//                for (ItemsetAndTids ias : lst) {
-//                    System.out.println(ias.toString(rankToItem));
-//                }
-//                System.out.println("***\n\n\n");
-//            }
-//            if (nextGen.getItemsetSize() == 5) {
-//                break; //TODO:GGG
-//            }
             res.addAll((nextGen != null) ? nextGen.toResult() : Collections.emptyList());
         } while (nextGen != null && nextGen.size() > 1);
 
@@ -89,10 +77,6 @@ public class EclatAlg implements Serializable {
             ItemsetAndTids is1 = fis.get(ii);
             for (int jj = ii + 1; jj < fis.size(); ++jj) {
                 ItemsetAndTids is2 = fis.get(jj);
-                //TODO:GGG
-                if (is1.getLastItem() >= is2.getLastItem()) {
-                    continue;
-                }
                 if (!is1.haveCommonPrefix(prefSize, is2)) {
                     break;
                 }
@@ -109,7 +93,7 @@ public class EclatAlg implements Serializable {
 
     private ItemsetAndTids computeGoodNextSizeItemsetOrNull(ItemsetAndTids is1, ItemsetAndTids is2, int totalTids) {
 //        return is1.computeNewItemsetByAnd(is2, totalTids);
-        return is1.computeNewFromNextDiffsetWithSamePrefixOrNull(is2, totalTids, minSuppCount);
+        return is1.computeNewFromNextDiffsetWithSamePrefixOrNull(is2, totalTids, minSuppCount, isUseDiffSets);
     }
 
     /**
@@ -117,17 +101,23 @@ public class EclatAlg implements Serializable {
      */
     private ItemsetAndTidsCollection squeeze(
             ArrayList<ItemsetAndTids> inTidsList, int itemsetSize, int totalTids) {
-        if (inTidsList.size() <= 1) { //no point in squeezing a single bit set since it will not go anywhere
+        if (!isSqueezingEnabled || inTidsList.size() <= 1) {
+            //no point in squeezing a single bit set since it will not go anywhere
             return new ItemsetAndTidsCollection(inTidsList, itemsetSize, totalTids);
         }
 
+//        StopWatch sw = new StopWatch();
+//        sw.start();
+//        System.out.println(String.format("%-15s start squeeze check (%s elems): %s (%s)", tt(sw), inTidsList.size(), itemsetSize, totalTids));
         long[] tidsToKeepBitSet = computeTidsPresentInAtLeastOneFi(inTidsList, totalTids);
         final int resTotalTids = BitArrays.cardinality(tidsToKeepBitSet, TIDS_START_IND);
+//        System.out.println(String.format("%-15s done squeeze check: %s (%s)", tt(sw), itemsetSize, totalTids));
 
         if (1.0 * resTotalTids / totalTids > WORTH_SQUEEZING_RATIO) {
             return new ItemsetAndTidsCollection(inTidsList, itemsetSize, totalTids);
         }
 
+//        System.out.println(String.format("%-15s start squeezing: ratio=%s", tt(sw), 1.0 * resTotalTids / totalTids));
         int[] tidsToKeep = BitArrays.asNumbers(tidsToKeepBitSet, TIDS_START_IND);
         ArrayList<ItemsetAndTids> resTidsList = initNewItemsetAndTidList(inTidsList, resTotalTids);
         int resTid = 0;
@@ -136,7 +126,12 @@ public class EclatAlg implements Serializable {
             ++resTid;
         }
 
+//        System.out.println(String.format("%-15s done squeezing", tt(sw)));
         return new ItemsetAndTidsCollection(resTidsList, itemsetSize, resTotalTids);
+    }
+
+    private static String tt(StopWatch sw) {
+        return "[" + sw.toString() + "] ";
     }
 
     private long[] computeTidsPresentInAtLeastOneFi(ArrayList<ItemsetAndTids> iatList, int totalTids) {

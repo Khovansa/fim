@@ -137,8 +137,7 @@ public class TidMergeSet implements Serializable {
             }
 
             int supportCnt = tidsGenHelper.getSupportCount(rankK);
-            //TODO
-            Assert.isTrue(supportCnt == BitArrays.cardinality(resTidSet, RES_BITSET_START_IND));
+//            Assert.isTrue(supportCnt == BitArrays.cardinality(resTidSet, RES_BITSET_START_IND));
             int[] itemset = fiRanksToFromItems.getItemsetByRankMaxK(rankK);
             ItemsetAndTids res = new ItemsetAndTids(itemset, resTidSet, supportCnt);
             resList.add(res);

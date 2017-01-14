@@ -17,14 +17,13 @@ public class BasicOps implements Serializable {
     public BasicOps() {
     }
 
-    public JavaRDD<ArrayList<String>> readLinesAsSortedItemsList(String inputFile, JavaSparkContext sc) {
-        JavaRDD<String> lines = sc.textFile(inputFile);
+    public JavaRDD<ArrayList<String>> readLinesAsSortedItemsList(String inputFile, int numPart, JavaSparkContext sc) {
+        JavaRDD<String> lines = sc.textFile(inputFile, numPart);
         return linesAsSortedItemsList(lines);
     }
 
     public JavaRDD<String[]> readLinesAsSortedItemsArr(String inputFile, int numPart, JavaSparkContext sc) {
         JavaRDD<String> lines = sc.textFile(inputFile, numPart);
-//        JavaRDD<String> lines = sc.textFile(inputFile, 20);
         return linesAsSortedItemsArr(lines);
     }
 

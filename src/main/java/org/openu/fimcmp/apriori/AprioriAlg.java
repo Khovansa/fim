@@ -108,15 +108,19 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
      * @return RDD of pairs (rank{k-1}, list of its matching TidMergeSet objects)
      */
     public JavaPairRDD<Integer, List<long[]>> groupTidSetsByRankKm1(
-            JavaRDD<long[][]> rankToTidBsRdd, PairRanks rkToRkm1AndR1) {
-//        final int numParts = rankToTidBsRdd.getNumPartitions();
-        //TODO: GGG!!!
-//        final int numParts = Math.min(rkToRkm1AndR1.totalElems1(), 8 * rankToTidBsRdd.getNumPartitions());
-        final int numParts = 1;
+            JavaRDD<long[][]> rankToTidBsRdd, PairRanks rkToRkm1AndR1, Integer optionalMaxNumParts) {
+        //rkToRkm1AndR1.totalElems1() is the number of prefixes in BigFIM algorithm,
+        //we want each prefix to be processed in a separate machine.
+        //'rankToTidBsRdd.getNumPartitions()' should be the number of machines, '8' is the expected number of processors
+        int numParts = Math.min(rkToRkm1AndR1.totalElems1(), 8 * rankToTidBsRdd.getNumPartitions());
+        if (optionalMaxNumParts != null) {
+            numParts = Math.min(optionalMaxNumParts, numParts);
+        }
         IntToSamePartitioner partitioner = new IntToSamePartitioner(numParts);
         int totalR1s = rkToRkm1AndR1.totalElems2();
         return rankToTidBsRdd
                 .flatMapToPair(kRankToTidSet -> new PairElem1IteratorOverRankToTidSet(kRankToTidSet, rkToRkm1AndR1))
+                //aggregate by rank{k-1}:
                 .aggregateByKey(new ArrayList<>(totalR1s), partitioner, AprioriAlg::add, AprioriAlg::addAll);
     }
 
@@ -164,11 +168,9 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return res;
     }
 
-    public List<FreqItemset<String>> fkAsArraysToResItemsets(
-            List<int[]> cols, Map<String, Integer> itemToRank, FiRanksToFromItems fiRanksToFromItems) {
-        String[] rankToItem = BasicOps.getRankToItem(itemToRank);
-
-        List<FreqItemset<String>> res = new ArrayList<>((int) Math.pow(cols.size(), 3));
+    public List<FreqItemset> fkAsArraysToResItemsets(
+            List<int[]> cols, String[] rankToItem, FiRanksToFromItems fiRanksToFromItems) {
+        List<FreqItemset> res = new ArrayList<>((int) Math.pow(cols.size(), 3));
         final int kk = fiRanksToFromItems.getMaxK() + 1; //no fiRanks object for the maximal rank (k)
         for (int[] col : cols) {
             List<int[]> itemAndPairRanks = candidateFisGenerator.fkColToPairs(col, minSuppCount);
@@ -176,9 +178,9 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 final int freq = itemAndPairRank[2];
                 ArrayList<String> resItemset = new ArrayList<>(kk);
                 resItemset.add(rankToItem[itemAndPairRank[0]]);
-                fiRanksToFromItems.addOrigItemsetByRank(resItemset, itemAndPairRank[1], kk-1, rankToItem);
+                fiRanksToFromItems.addToResultOrigItemsetByRank(resItemset, itemAndPairRank[1], kk-1, rankToItem);
 
-                res.add(new FreqItemset<>(resItemset, freq));
+                res.add(new FreqItemset(resItemset, freq));
             }
         }
 

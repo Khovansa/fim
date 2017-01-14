@@ -3,13 +3,14 @@ package org.openu.fimcmp;
 import org.openu.fimcmp.util.Assert;
 import scala.Tuple2;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Collection of {@link ItemsetAndTids} objects.
  */
-public class ItemsetAndTidsCollection {
+public class ItemsetAndTidsCollection implements Serializable {
     private final ArrayList<ItemsetAndTids> itemsetAndTidsList;
     private final int totalTids;
     private final int itemsetSize;

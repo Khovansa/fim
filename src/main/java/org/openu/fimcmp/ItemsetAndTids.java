@@ -3,18 +3,18 @@ package org.openu.fimcmp;
 import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
  * Simple structure to hold an itemset as an array frequent items' ranks and the itemset's TIDs as a bit set. <br/>
  */
-public class ItemsetAndTids {
+public class ItemsetAndTids implements Serializable {
     private static final int TIDS_START_IND = 0;
     private final int[] itemset;
     private final long[] tidBitSet;
     private final int supportCnt;
     private final boolean isTidsDiffSet;
-    private long[] debugActTids;
 
     public ItemsetAndTids(int[] itemset, long[] tidBitSet, int supportCnt) {
         this(itemset, tidBitSet, supportCnt, false);
@@ -105,7 +105,7 @@ public class ItemsetAndTids {
      * Need to compute the new itemset PXY, d(PXY), and support(PXY)
      */
     public ItemsetAndTids computeNewFromNextDiffsetWithSamePrefixOrNull(
-            ItemsetAndTids is2, int totalTids, long minSuppCount) {
+            ItemsetAndTids is2, int totalTids, long minSuppCount, boolean isUseDiffSets) {
         final int isLen = itemset.length;
         Assert.isTrue(isLen == is2.itemset.length);
         Assert.isTrue(itemset[isLen-1] < is2.itemset[isLen-1]);
@@ -113,7 +113,10 @@ public class ItemsetAndTids {
 
         long[] newDiffSet;
         int newSupportCnt;
-        if (!isTidsDiffSet) {
+        if (!isUseDiffSets) {
+            newDiffSet = BitArrays.andReturn(tidBitSet, is2.tidBitSet, TIDS_START_IND, totalTids);
+            newSupportCnt = computeSetCardinality(newDiffSet);
+        } else if (!isTidsDiffSet) {
             long[] actNewTids = BitArrays.andReturn(tidBitSet, is2.tidBitSet, TIDS_START_IND, totalTids);
             //d(PXY) = tids(PX) / tids(PY)
             newDiffSet = BitArrays.diffReturn(tidBitSet, actNewTids, TIDS_START_IND, totalTids);
@@ -121,30 +124,26 @@ public class ItemsetAndTids {
             newSupportCnt = computeSetCardinality(actNewTids);
         } else {
             //d(PXY) = d(PY) / d(PX):
-            newDiffSet = BitArrays.diffReturn(is2.tidBitSet, tidBitSet, TIDS_START_IND, totalTids);
+
+            try {
+                newDiffSet = BitArrays.diffReturn(is2.tidBitSet, tidBitSet, TIDS_START_IND, totalTids);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
             //support(PXY) = support(PX) - |d(PXY)|:
             newSupportCnt = Math.max(0, supportCnt - computeSetCardinality(newDiffSet));
         }
+
         if (newSupportCnt < minSuppCount) {
             return null;
         }
 
-//        if (itemset.length==3 && itemset[0]==0 && itemset[1]==1) {
-//            System.out.println("GGG");
-//        }
         //new itemset = PXY
         int[] newItemset = new int[isLen +1];
         System.arraycopy(itemset, 0, newItemset, 0, isLen);
         newItemset[isLen] = is2.itemset[isLen-1];
 
-        ItemsetAndTids res = new ItemsetAndTids(newItemset, newDiffSet, newSupportCnt, true);
-        //debug
-//        long[] d1 = (debugActTids != null) ? debugActTids : tidBitSet;
-//        long[] d2 = (is2.debugActTids != null) ? is2.debugActTids : is2.tidBitSet;
-//        res.debugActTids = BitArrays.andReturn(d1, d2, TIDS_START_IND, totalTids);
-//        Assert.isTrue(BitArrays.cardinality(res.debugActTids, 0) == res.supportCnt);
-
-        return res;
+        return new ItemsetAndTids(newItemset, newDiffSet, newSupportCnt, isUseDiffSets);
     }
 
     @Override

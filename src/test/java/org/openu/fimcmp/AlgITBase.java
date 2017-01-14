@@ -21,23 +21,25 @@ public class AlgITBase {
         return "[" + sw.toString() + "] ";
     }
 
-    @Before
-    public void setUp() throws Exception {
-        sc = SparkContextFactory.createLocalSparkContext();
+    protected void setUpRun(boolean useKryo) throws Exception {
+        sc = SparkContextFactory.createLocalSparkContext(useKryo);
         sw = new StopWatch();
         basicOps = new BasicOps();
     }
 
-    protected PrepStepOutputAsList prepareAsList(String inputFileName, double minSupport, boolean isPersist) {
+    protected PrepStepOutputAsList prepareAsList(
+            String inputFileName, double minSupport, boolean isPersist, int numPart) {
         String inputFile = TestDataLocation.fileStr(inputFileName);
 
-        sw.start();
-        JavaRDD<ArrayList<String>> trs = basicOps.readLinesAsSortedItemsList(inputFile, sc);
+        if (!sw.isStarted()) {
+            sw.start();
+        }
+        JavaRDD<ArrayList<String>> trs = basicOps.readLinesAsSortedItemsList(inputFile, numPart, sc);
         if (isPersist) {
             trs = trs.persist(StorageLevel.MEMORY_ONLY_SER());
         }
         UsefulCounts cnts = getCounts(trs, minSupport);
-        return new PrepStepOutputAsList(trs, cnts.totalTrs, cnts.minSuppCount, trs.getNumPartitions());
+        return new PrepStepOutputAsList(trs, cnts.totalTrs, cnts.minSuppCount, cnts.numParts);
     }
 
     protected PrepStepOutputAsArr prepareAsArr(String inputFileName, double minSupport, boolean isPersist) {

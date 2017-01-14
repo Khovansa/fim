@@ -14,39 +14,43 @@ import java.util.*;
  */
 @SuppressWarnings("WeakerAccess")
 public class SparkContextFactory {
-    public static JavaSparkContext createLocalSparkContext() {
+    public static JavaSparkContext createLocalSparkContext(boolean useKryo) {
         SparkConf conf = new SparkConf().setMaster("local").setAppName("FI Comparison");
 
         conf.set("spark.rdd.compress", "true");
 
-        conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+        if (!useKryo) {
+            conf.set("spark.serializer", "org.apache.spark.serializer.JavaSerializer");
+        } else {
+            conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
 //        conf.set("spark.kryo.registrationRequired", "true");
-        conf.set("spark.kryoserializer.buffer", "100m");
-        conf.set("spark.kryoserializer.buffer.max", "256m");
+            conf.set("spark.kryoserializer.buffer", "100m");
+            conf.set("spark.kryoserializer.buffer.max", "256m");
 //        conf.set("spark.reducer.maxSizeInFlight", "48m"); //500K worked a bit better
-        conf.registerKryoClasses(new Class[]{
-                org.apache.spark.mllib.fpm.FPTree.class, org.apache.spark.mllib.fpm.FPTree.Node.class,
+            conf.registerKryoClasses(new Class[]{
+                    org.apache.spark.mllib.fpm.FPTree.class, org.apache.spark.mllib.fpm.FPTree.Node.class,
                 /*org.apache.spark.mllib.fpm.FPTree.Summary.class, */
-                scala.collection.mutable.ListBuffer.class,
-                org.apache.spark.mllib.fpm.FPGrowth.FreqItemset.class,
-                org.apache.spark.mllib.fpm.FPGrowth.FreqItemset[].class,
-                Object[].class,
+                    scala.collection.mutable.ListBuffer.class,
+                    org.apache.spark.mllib.fpm.FPGrowth.FreqItemset.class,
+                    org.apache.spark.mllib.fpm.FPGrowth.FreqItemset[].class,
+                    Object[].class,
 
-                BasicOps.class,
-                HashSet.class, TreeSet.class, HashMap.class, ArrayList.class,
-                String.class, String[].class, Integer.class, Integer[].class, Integer[][].class, Integer[][][].class,
-                long[].class, int[].class, int[][].class, int[][][].class, BitSet.class,
-                Tuple2.class, Tuple2[].class,
-                new ArrayList<>().iterator().getClass(),
-                AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class, PairRanks.class,
-                TidsGenHelper.class, boolean[].class,
-                TidMergeSet.class, FiRanksToFromItems.class, PairElem1IteratorOverRankToTidSet.class,
-                NextSizeItemsetGenHelper.class,
-                ItemsetAndTidsCollection.class, ItemsetAndTids.class, ItemsetAndTids[].class,
+                    BasicOps.class,
+                    HashSet.class, TreeSet.class, HashMap.class, ArrayList.class,
+                    String.class, String[].class, Integer.class, Integer[].class, Integer[][].class, Integer[][][].class,
+                    long[].class, int[].class, int[][].class, int[][][].class, BitSet.class,
+                    Tuple2.class, Tuple2[].class,
+                    new ArrayList<>().iterator().getClass(),
+                    AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class, PairRanks.class,
+                    TidsGenHelper.class, boolean[].class,
+                    TidMergeSet.class, FiRanksToFromItems.class, PairElem1IteratorOverRankToTidSet.class,
+                    NextSizeItemsetGenHelper.class,
+                    ItemsetAndTidsCollection.class, ItemsetAndTids.class, ItemsetAndTids[].class,
 
-                EclatAlg.class
+                    EclatAlg.class
 
-        });
+            });
+        }
 
         JavaSparkContext sc = new JavaSparkContext(conf);
 
