@@ -31,6 +31,23 @@ public class ItemsetAndTids implements Serializable {
         return itemset;
     }
 
+    public long[] getSupportCntAndItemsetBs(int totalFreqItems) {
+        long[] res = new long[BitArrays.requiredSize(totalFreqItems, 1)];
+        res[0] = supportCnt;
+        for (int item : itemset) {
+            BitArrays.set(res, 1, item);
+        }
+        return res;
+    }
+
+    public static int extractSupportCnt(long[] bs) {
+        return (int)bs[0];
+    }
+
+    public static int[] extractItemset(long[] bs) {
+        return BitArrays.asNumbers(bs, 1);
+    }
+
     public boolean startsWith(int[] pref) {
         if (itemset.length < pref.length) {
             return false;

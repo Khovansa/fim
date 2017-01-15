@@ -36,11 +36,11 @@ public class SparkContextFactory {
                     Object[].class,
 
                     BasicOps.class,
-                    HashSet.class, TreeSet.class, HashMap.class, ArrayList.class,
+                    HashSet.class, TreeSet.class, HashMap.class, ArrayList.class, LinkedList.class,
                     String.class, String[].class, Integer.class, Integer[].class, Integer[][].class, Integer[][][].class,
                     long[].class, int[].class, int[][].class, int[][][].class, BitSet.class,
                     Tuple2.class, Tuple2[].class,
-                    new ArrayList<>().iterator().getClass(),
+                    new ArrayList<>().iterator().getClass(), new LinkedList<>().iterator().getClass(),
                     AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class, PairRanks.class,
                     TidsGenHelper.class, boolean[].class,
                     TidMergeSet.class, FiRanksToFromItems.class, PairElem1IteratorOverRankToTidSet.class,

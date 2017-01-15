@@ -6,12 +6,11 @@ import org.apache.spark.api.java.JavaRDD;
 import org.openu.fimcmp.ItemsetAndTids;
 import org.openu.fimcmp.ItemsetAndTidsCollection;
 import org.openu.fimcmp.util.BitArrays;
+import org.openu.fimcmp.util.CountingFakeList;
 import scala.Tuple2;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * The main class that implements the Eclat algorithm.
@@ -20,19 +19,24 @@ public class EclatAlg implements Serializable {
     private static final int TIDS_START_IND = ItemsetAndTids.getTidsStartInd();
     private static final double WORTH_SQUEEZING_RATIO = 0.8;
     private final long minSuppCount;
+    private final int totalFreqItems;
     private final boolean isUseDiffSets;
     private final boolean isSqueezingEnabled;
+    private final String[] rankToItem;
 
-    public EclatAlg(long minSuppCount, boolean isUseDiffSets, boolean isSqueezingEnabled) {
+    public EclatAlg(long minSuppCount, int totalFreqItems, boolean isUseDiffSets,
+                    boolean isSqueezingEnabled, String[] rankToItem) {
         this.minSuppCount = minSuppCount;
+        this.totalFreqItems = totalFreqItems;
         this.isUseDiffSets = isUseDiffSets;
         this.isSqueezingEnabled = isSqueezingEnabled;
+        this.rankToItem = rankToItem;
     }
 
-    public JavaRDD<List<Tuple2<int[], Integer>>> computeFreqItemsetsRdd(
+    public JavaRDD<List<long[]>> computeFreqItemsetsRdd(
             JavaPairRDD<Integer, ItemsetAndTidsCollection> prefRankAndIsAndTidSetRdd) {
         return
-                prefRankAndIsAndTidSetRdd.mapValues(this::computeFreqItemsetsSingle)
+                prefRankAndIsAndTidSetRdd.mapValues(this::computeFreqItemsetsSingleNew)
                 .sortByKey()
                 .values();
     }
@@ -41,13 +45,12 @@ public class EclatAlg implements Serializable {
      * Returns a list of {FI as an array of r1s, its frequency}
      */
     public List<Tuple2<int[], Integer>> computeFreqItemsetsSingle(ItemsetAndTidsCollection initFis) {
-        ArrayList<ItemsetAndTids> itemsetAndTidsList = initFis.getItemsetAndTidsList();
         if (initFis.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<Tuple2<int[], Integer>> res = new ArrayList<>(10_000);
-        sortByKm1Item(itemsetAndTidsList, initFis.getItemsetSize());
+        initFis.sortByKm1Item();
         ItemsetAndTidsCollection nextGen = initFis;
         do {
             nextGen = produceNextGenFis(nextGen);
@@ -57,9 +60,75 @@ public class EclatAlg implements Serializable {
         return res;
     }
 
-    private void sortByKm1Item(ArrayList<ItemsetAndTids> fis, int itemsetSize) {
-        final int sortItemInd = itemsetSize - 1;
-        fis.sort((o1, o2) -> Integer.compare(o1.getItem(sortItemInd), o2.getItem(sortItemInd)));
+    public List<long[]> computeFreqItemsetsSingleNew(ItemsetAndTidsCollection initFis) {
+        if (initFis.size() <= 1) {
+            return Collections.emptyList();
+        }
+
+        StopWatch sw = new StopWatch();
+        sw.start();
+        initFis.sortByKm1Item();
+        //TODO
+        System.out.println(String.format("%-15s start Eclat: %s elems", tt(sw), initFis.size()));
+        if (initFis.size() > 40) {
+            ArrayList<ItemsetAndTids> isList = initFis.getObjArrayListCopy();
+            for (ItemsetAndTids is : isList) {
+                System.out.println(Arrays.toString(is.getItemset()));
+            }
+        }
+
+        LinkedList<ItemsetAndTidsCollection> queue = new LinkedList<>();
+        queue.addFirst(initFis);
+//        ArrayList<long[]> res = new ArrayList<>(10_000);
+        CountingFakeList<long[]> res = new CountingFakeList<>();
+
+        int peakQueueSize = initFis.size();
+        int peakQueueElems = 1;
+        int iterations = 0;
+        int maxItemsetSize = initFis.getItemsetSize();
+        while (!queue.isEmpty()) {
+            ItemsetAndTidsCollection coll = queue.removeFirst();
+            ItemsetAndTids head = coll.popFirst();
+            ItemsetAndTidsCollection newColl = coll.joinWithHead(head, res, minSuppCount, totalFreqItems, isUseDiffSets);
+            addFirstIfHasPairs(queue, coll);
+            addFirstIfHasPairs(queue, newColl);
+            //TODO:
+            peakQueueSize = Math.max(peakQueueSize, totalElems(queue));
+            peakQueueElems = Math.max(peakQueueElems, queue.size());
+            ++iterations;
+            maxItemsetSize = Math.max(maxItemsetSize, head.getItemset().length);
+            if (iterations % 100_000 == 0) {
+                System.out.println(String.format(
+                        "%-15s at: iterations=%s, res elems=%s, queue size=%s (%s elems), head size=%s, " +
+                                "peak queue size=%s (%s elems), max itemset size=%s, free mem=%s",
+                        tt(sw), iterations, res.size(), totalElems(queue), queue.size(), head.getItemset().length,
+                        peakQueueSize, peakQueueElems, maxItemsetSize, Runtime.getRuntime().freeMemory()));
+//                System.out.println(String.format("coll[%s]: head: %s\nnewColl[%s]: %s",
+//                        coll.size(), head.toString(rankToItem),
+//                        newColl.size(), newColl.getFirstAsStringOrNull(rankToItem)));
+            }
+        }
+
+        System.out.println(String.format(
+                "%-15s complete Eclat: iterations=%s, res elems=%s, peak queue size=%s (%s elems), " +
+                        "max itemset size=%s, free mem=%s",
+                tt(sw), iterations, res.size(), peakQueueSize, peakQueueElems,
+                maxItemsetSize, Runtime.getRuntime().freeMemory()));
+        res.trimToSize();
+        return res;
+    }
+
+    private static int totalElems(List<ItemsetAndTidsCollection> queue) {
+        int res = 0;
+        for (ItemsetAndTidsCollection coll : queue) {
+            res += coll.size();
+        }
+        return res;
+    }
+    private static void addFirstIfHasPairs(LinkedList<ItemsetAndTidsCollection> queue, ItemsetAndTidsCollection coll) {
+        if (coll.size() > 1) {
+            queue.addFirst(coll);
+        }
     }
 
     private ItemsetAndTidsCollection produceNextGenFis(ItemsetAndTidsCollection currGen) {
@@ -67,7 +136,7 @@ public class EclatAlg implements Serializable {
             return null;
         }
 
-        ArrayList<ItemsetAndTids> fis = currGen.getItemsetAndTidsList();
+        ArrayList<ItemsetAndTids> fis = currGen.getObjArrayListCopy();
         final int kk = currGen.getItemsetSize();
         final int prefSize = kk - 1;
 

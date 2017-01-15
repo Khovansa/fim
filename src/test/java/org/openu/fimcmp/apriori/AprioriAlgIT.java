@@ -25,7 +25,7 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
 
     @Before
     public void setUp() throws Exception {
-        setUpRun(true);
+        setUpRun(false);
     }
 
     @Test
@@ -37,9 +37,8 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
     private void runIt() throws Exception {
         final Integer maxEclatNumParts = 1;
         final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false, 1);
-//        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.3, false, 2);
+//        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.3, false, 1);
         apr = new AprioriAlg<>(prep.minSuppCount);
-        eclat = new EclatAlg(prep.minSuppCount, true, false);
 
         List<String> sortedF1 = apr.computeF1(prep.trs);
         final int totalFreqItems = sortedF1.size();
@@ -47,6 +46,7 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
         pp(sortedF1);
         itemToRank = BasicOps.itemToRank(sortedF1);
         rankToItem = BasicOps.getRankToItem(itemToRank);
+        eclat = new EclatAlg(prep.minSuppCount, totalFreqItems, true, false, rankToItem);
         //from now on, the items are [0, sortedF1.size), 0 denotes the most frequent item
 
         JavaRDD<int[]> filteredTrs = prep.trs.map(t -> BasicOps.getMappedFilteredAndSortedTrs(t, itemToRank));
@@ -110,16 +110,21 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
 //        exploreFirstEclatInputElem(r2ToEclatInput);
 
         pp("Starting Eclat computations");
-        JavaRDD<List<Tuple2<int[], Integer>>> resRdd = eclat.computeFreqItemsetsRdd(r2ToEclatInput);
+        JavaRDD<List<long[]>> resRdd = eclat.computeFreqItemsetsRdd(r2ToEclatInput);
         pp("Num parts: " + r2ToTidSets.getNumPartitions());
         pp("Num parts (res): " + resRdd.getNumPartitions());
-        JavaPairRDD<Integer, int[]> resRdd2 = resRdd.flatMap(List::iterator)
-                .mapToPair(p -> new Tuple2<>(p._2, p._1));
+        //TODO: actual results generation is here:
+//        JavaPairRDD<Integer, int[]> resRdd2 = resRdd.flatMap(List::iterator)
+//                .mapToPair(p -> new Tuple2<>(ItemsetAndTids.extractSupportCnt(p), ItemsetAndTids.extractItemset(p)));
+////        List<Tuple2<Integer, int[]>> eclatRes = resRdd2.sortByKey(false).collect();
+//        pp("RES SIZE: " + resRdd.count());
 //        List<Tuple2<Integer, int[]>> eclatRes = resRdd2.sortByKey(false).collect();
-        pp("RES SIZE: " + resRdd.count());
-        List<Tuple2<Integer, int[]>> eclatRes = resRdd2.sortByKey(false).collect();
         final int prevResCnt = totalFreqItems + f2.size() + f3.size();
-        printEclatRes1(eclatRes, itemToRank, prevResCnt);
+//        printEclatRes1(eclatRes, itemToRank, prevResCnt);
+        //--------------
+        //counting only
+        Integer eclatTotalRes = resRdd.map(l -> l.size()).reduce((x, y) -> x + y);
+        pp(String.format("ZZZ: total res count=%s, Eclat only=%s", (eclatTotalRes+prevResCnt), eclatTotalRes));
 
 //        printSomeR2ToR3(fiRanksToFromItemsR3, r2ToTidSets);
 
@@ -150,8 +155,8 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
         ItemsetAndTidsCollection eclatInput1 = r2ToEclatInput.sortByKey().first()._2;
         pp("Itemset size: " + eclatInput1.getItemsetSize());
         pp("Total tids: " + eclatInput1.getTotalTids());
-        pp("Elems size: " + eclatInput1.getItemsetAndTidsList().size());
-        ItemsetAndTids firstInputEclatElem = eclatInput1.getItemsetAndTidsList().get(0);
+        pp("Elems size: " + eclatInput1.getObjArrayListCopy().size());
+        ItemsetAndTids firstInputEclatElem = eclatInput1.getObjArrayListCopy().get(0);
         pp("Support cnt #1: " + firstInputEclatElem.getSupportCount());
         pp("Support cnt #1 (cardinality): " + BitArrays.cardinality(firstInputEclatElem.getTidBitSet(), 0));
 
