@@ -3,6 +3,8 @@ package org.openu.fimcmp;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.apriori.*;
+import org.openu.fimcmp.bigfim.BigFimAlg;
+import org.openu.fimcmp.bigfim.BigFimProperties;
 import org.openu.fimcmp.eclat.EclatAlg;
 import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
@@ -39,15 +41,16 @@ public class SparkContextFactory {
                     HashSet.class, TreeSet.class, HashMap.class, ArrayList.class, LinkedList.class,
                     String.class, String[].class, Integer.class, Integer[].class, Integer[][].class, Integer[][][].class,
                     long[].class, int[].class, int[][].class, int[][][].class, BitSet.class,
-                    Tuple2.class, Tuple2[].class,
+                    Tuple2.class, Tuple2[].class, boolean[].class,
                     new ArrayList<>().iterator().getClass(), new LinkedList<>().iterator().getClass(),
                     AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class, PairRanks.class,
-                    TidsGenHelper.class, boolean[].class,
+                    TidsGenHelper.class, CurrSizeFiRanks.class,
                     TidMergeSet.class, FiRanksToFromItems.class, PairElem1IteratorOverRankToTidSet.class,
                     NextSizeItemsetGenHelper.class,
                     ItemsetAndTidsCollection.class, ItemsetAndTids.class, ItemsetAndTids[].class,
 
-                    EclatAlg.class
+                    EclatAlg.class,
+                    BigFimProperties.class, BigFimAlg.class
 
             });
         }

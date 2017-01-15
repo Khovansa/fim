@@ -51,7 +51,7 @@ public class AlgITBase {
         String inputFile = TestDataLocation.fileStr(inputFileName);
 
         sw.start();
-        JavaRDD<String[]> trs = basicOps.readLinesAsSortedItemsArr(inputFile, numPart, sc);
+        JavaRDD<String[]> trs = BasicOps.readLinesAsSortedItemsArr(inputFile, numPart, sc);
         if (isPersist) {
             trs = trs.persist(StorageLevel.MEMORY_ONLY_SER());
         }

@@ -115,7 +115,7 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
         pp("Num parts (res): " + resRdd.getNumPartitions());
         //TODO: actual results generation is here:
 //        JavaPairRDD<Integer, int[]> resRdd2 = resRdd.flatMap(List::iterator)
-//                .mapToPair(p -> new Tuple2<>(ItemsetAndTids.extractSupportCnt(p), ItemsetAndTids.extractItemset(p)));
+//                .mapToPair(p -> new Tuple2<>(FreqItemsetAsRanksBs.extractSupportCnt(p), FreqItemsetAsRanksBs.extractItemset(p)));
 ////        List<Tuple2<Integer, int[]>> eclatRes = resRdd2.sortByKey(false).collect();
 //        pp("RES SIZE: " + resRdd.count());
 //        List<Tuple2<Integer, int[]>> eclatRes = resRdd2.sortByKey(false).collect();

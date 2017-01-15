@@ -3,6 +3,7 @@ package org.openu.fimcmp.eclat;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.openu.fimcmp.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.ItemsetAndTids;
 import org.openu.fimcmp.ItemsetAndTidsCollection;
 import org.openu.fimcmp.util.CountingFakeList;
@@ -42,7 +43,7 @@ public class EclatAlg implements Serializable {
 
     /**
      * Returns a list of {FI frequency as the first element of the array, FI as a bit set of r1s}. <br/>
-     * Use {@link ItemsetAndTids#extractItemset(long[])} and {@link ItemsetAndTids#extractSupportCnt(long[])}
+     * Use {@link FreqItemsetAsRanksBs#extractItemset(long[])} and {@link FreqItemsetAsRanksBs#extractSupportCnt(long[])}
      * to properly get the FI and its support from the array. <br/>
      */
     @SuppressWarnings("WeakerAccess")

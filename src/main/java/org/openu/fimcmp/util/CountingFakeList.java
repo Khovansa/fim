@@ -133,7 +133,4 @@ public class CountingFakeList<T> implements List<T>, Serializable {
         res.size = (toIndex - fromIndex);
         return res;
     }
-
-    public void trimToSize() {
-    }
 }

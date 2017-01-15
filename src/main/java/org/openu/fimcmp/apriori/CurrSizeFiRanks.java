@@ -8,7 +8,7 @@ import java.util.*;
 /**
  * Auxiliary class to hold the current-size FIs as integer ranks to allow fast next-size itemsets generation.
  */
-class CurrSizeFiRanks implements Serializable {
+public class CurrSizeFiRanks implements Serializable {
     private final PairRanks currSizeRanks;
     private final long[][] currSizeFisR1ToRkm1;
 

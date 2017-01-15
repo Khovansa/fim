@@ -65,7 +65,7 @@ public class ItemsetAndTidsCollection implements Serializable {
                     head.computeNewFromNextDiffsetWithSamePrefixOrNull(is2, totalTids, minSuppCount, isUseDiffSets);
             if (newIs != null) {
                 resList.add(newIs);
-                totalResult.add(newIs.getSupportCntAndItemsetBs(totalFreqItems));
+                totalResult.add(FreqItemsetAsRanksBs.toBitSet(newIs, totalFreqItems));
             }
         }
 
