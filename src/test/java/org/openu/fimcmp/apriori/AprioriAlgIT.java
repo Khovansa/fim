@@ -46,7 +46,7 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
         pp(sortedF1);
         itemToRank = BasicOps.itemToRank(sortedF1);
         rankToItem = BasicOps.getRankToItem(itemToRank);
-        eclat = new EclatAlg(prep.minSuppCount, totalFreqItems, true, false, rankToItem);
+        eclat = new EclatAlg(prep.minSuppCount, totalFreqItems, true, false, true, rankToItem);
         //from now on, the items are [0, sortedF1.size), 0 denotes the most frequent item
 
         JavaRDD<int[]> filteredTrs = prep.trs.map(t -> BasicOps.getMappedFilteredAndSortedTrs(t, itemToRank));
