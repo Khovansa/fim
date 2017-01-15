@@ -13,7 +13,7 @@ public class FiRanksToFromItems implements Serializable {
     private final ArrayList<CurrSizeFiRanks> fiRanksKto2;
     private final int maxK;
 
-    FiRanksToFromItems(CurrSizeFiRanks... fiRanksKto2) {
+    public FiRanksToFromItems(CurrSizeFiRanks... fiRanksKto2) {
         this(Arrays.asList(fiRanksKto2));
     }
 
@@ -22,7 +22,7 @@ public class FiRanksToFromItems implements Serializable {
         this.maxK = 1 + fiRanksKto2.size(); //rank mappers start from 2, but k starts from 1
     }
 
-    FiRanksToFromItems toNextSize(CurrSizeFiRanks nextSizeFiRanks) {
+    public FiRanksToFromItems toNextSize(CurrSizeFiRanks nextSizeFiRanks) {
         List<CurrSizeFiRanks> newFiRanksList = new ArrayList<>(1 + fiRanksKto2.size());
         newFiRanksList.add(nextSizeFiRanks);
         newFiRanksList.addAll(fiRanksKto2);

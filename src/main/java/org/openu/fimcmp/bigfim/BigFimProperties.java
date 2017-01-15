@@ -11,6 +11,8 @@ public class BigFimProperties implements Serializable {
 
     //BigFim
     public int inputNumParts = 2;
+    public boolean isPersistInput = false;
+    public boolean isPrintFks = true;
     public double nextFiIncreasedSeriouslyRatio = 1.5;
     //Eclat
     public boolean isUseDiffSets;

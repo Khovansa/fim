@@ -19,7 +19,7 @@ public class CurrSizeFiRanks implements Serializable {
      * @param totalFreqItems total number of all possible elem1's, i.e. total number of frequent items
      * @param totalFkm1      total number of all possible elem2's, i.e. total number of (k-1)-size FIs
      */
-    static CurrSizeFiRanks construct(List<int[]> fkAsPairs, int totalFreqItems, int totalFkm1) {
+    public static CurrSizeFiRanks construct(List<int[]> fkAsPairs, int totalFreqItems, int totalFkm1) {
         Assert.isTrue(!fkAsPairs.isEmpty());
         Assert.isTrue(totalFreqItems > 0);
         Assert.isTrue(totalFkm1 > 0);

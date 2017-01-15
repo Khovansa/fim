@@ -15,22 +15,10 @@ import java.util.*;
  * The main class that implements the Eclat algorithm.
  */
 public class EclatAlg implements Serializable {
-    private final long minSuppCount;
-    private final int totalFreqItems;
-    private final boolean isUseDiffSets;
-    private final boolean isSqueezingEnabled;
-    private final boolean isCountingOnly;
-    @SuppressWarnings({"FieldCanBeLocal", "unused"})
-    private final String[] rankToItem;
+    private final EclatProperties props;
 
-    public EclatAlg(long minSuppCount, int totalFreqItems, boolean isUseDiffSets,
-                    boolean isSqueezingEnabled, boolean isCountingOnly, String[] rankToItem) {
-        this.minSuppCount = minSuppCount;
-        this.totalFreqItems = totalFreqItems;
-        this.isUseDiffSets = isUseDiffSets;
-        this.isSqueezingEnabled = isSqueezingEnabled;
-        this.isCountingOnly = isCountingOnly;
-        this.rankToItem = rankToItem;
+    public EclatAlg(EclatProperties props) {
+        this.props = props;
     }
 
     public JavaRDD<List<long[]>> computeFreqItemsetsRdd(
@@ -58,12 +46,13 @@ public class EclatAlg implements Serializable {
         statPrinter.onStart(initFis);
         LinkedList<ItemsetAndTidsCollection> queue = new LinkedList<>();
         queue.addFirst(initFis);
-        List<long[]> res = (isCountingOnly) ? new CountingFakeList<>() : new ArrayList<>(10_000);
+        List<long[]> res = (props.isCountingOnly) ? new CountingFakeList<>() : new ArrayList<>(10_000);
 
         while (!queue.isEmpty()) {
-            ItemsetAndTidsCollection coll = queue.removeFirst().squeezeIfNeeded(isSqueezingEnabled);
+            ItemsetAndTidsCollection coll = queue.removeFirst().squeezeIfNeeded(props.isSqueezingEnabled);
             ItemsetAndTids head = coll.popFirst();
-            ItemsetAndTidsCollection newColl = coll.joinWithHead(head, res, minSuppCount, totalFreqItems, isUseDiffSets);
+            ItemsetAndTidsCollection newColl =
+                    coll.joinWithHead(head, res, props.minSuppCount, props.totalFreqItems, props.isUseDiffSets);
             addFirstIfHasPairs(queue, coll);
             addFirstIfHasPairs(queue, newColl);
 

@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openu.fimcmp.*;
 import org.openu.fimcmp.eclat.EclatAlg;
+import org.openu.fimcmp.eclat.EclatProperties;
 import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;
 
@@ -46,7 +47,12 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
         pp(sortedF1);
         itemToRank = BasicOps.itemToRank(sortedF1);
         rankToItem = BasicOps.getRankToItem(itemToRank);
-        eclat = new EclatAlg(prep.minSuppCount, totalFreqItems, true, false, true, rankToItem);
+        EclatProperties eclatProps = new EclatProperties(prep.minSuppCount, totalFreqItems);
+        eclatProps.setUseDiffSets(true);
+        eclatProps.setSqueezingEnabled(false);
+        eclatProps.setCountingOnly(true);
+        eclatProps.setRankToItem(rankToItem);
+        eclat = new EclatAlg(eclatProps);
         //from now on, the items are [0, sortedF1.size), 0 denotes the most frequent item
 
         JavaRDD<int[]> filteredTrs = prep.trs.map(t -> BasicOps.getMappedFilteredAndSortedTrs(t, itemToRank));
@@ -66,12 +72,12 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
 
         CurrSizeFiRanks preprocessedF2 = CurrSizeFiRanks.construct(f2, totalFreqItems, totalFreqItems);
         FiRanksToFromItems fiRanksToFromItemsR2 = fiRanksToFromItemsR1.toNextSize(preprocessedF2);
-        NextSizeItemsetGenHelper f3GenHelper = NextSizeItemsetGenHelper.construct(
-                fiRanksToFromItemsR2, totalFreqItems, f2.size());
         JavaRDD<Tuple2<int[], long[]>> ranks1And2 = apr.toRddOfRanks1And2(filteredTrs, preprocessedF2);
         ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_ONLY_SER());
 //        ranks1And2 = ranks1And2.persist(StorageLevel.MEMORY_AND_DISK_SER());
         pp("zzz");
+        NextSizeItemsetGenHelper f3GenHelper = NextSizeItemsetGenHelper.construct(
+                fiRanksToFromItemsR2, totalFreqItems, f2.size());
         List<int[]> f3AsArrays = apr.computeFk_Part(3, ranks1And2, f3GenHelper);
         pp("F3 as arrays size: " + f3AsArrays.size());
         List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays);
