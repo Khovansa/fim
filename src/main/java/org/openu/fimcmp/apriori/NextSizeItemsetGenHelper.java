@@ -16,7 +16,8 @@ public class NextSizeItemsetGenHelper implements Serializable {
     //nextSizeCandsR1ToRk[item][rankK] = true <-> itemset (item, k-FI from rankK) has chance to be frequent:
     private final long[][] nextSizeCandsR1ToRk;
 
-    static NextSizeItemsetGenHelper construct(FiRanksToFromItems mappersTillK, int totalFreqItems, int totalCurrSizeRanks) {
+    public static NextSizeItemsetGenHelper construct(
+            FiRanksToFromItems mappersTillK, int totalFreqItems, int totalCurrSizeRanks) {
         long[][] nextSizeCandsR1ToRk = constructNextSizeCands(mappersTillK, totalFreqItems, totalCurrSizeRanks);
         return new NextSizeItemsetGenHelper(totalFreqItems, totalCurrSizeRanks, nextSizeCandsR1ToRk);
     }

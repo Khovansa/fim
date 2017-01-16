@@ -45,6 +45,14 @@ public class BasicOps implements Serializable {
         return res;
     }
 
+    public static <T> List<T> toItems(List<Tuple2<T, Integer>> itemWithSuppList) {
+        List<T> res = new ArrayList<T>(itemWithSuppList.size());
+        for (Tuple2<T, Integer> itemWithSupp : itemWithSuppList) {
+            res.add(itemWithSupp._1);
+        }
+        return res;
+    }
+
     public static <T> int[] getMappedFilteredAndSortedTrs(T[] tr, Map<T, Integer> itemToRank) {
         int resCnt = 0;
         for (T item : tr) {

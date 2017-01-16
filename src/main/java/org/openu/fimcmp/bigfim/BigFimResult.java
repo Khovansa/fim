@@ -7,6 +7,7 @@ import org.openu.fimcmp.FreqItemsetAsRanksBs;
 import scala.Tuple2;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -17,17 +18,17 @@ public class BigFimResult {
     private final Map<String, Integer> itemToRank;
     private final String[] rankToItem;
     private final ArrayList<List<long[]>> aprioriFis;
-    private final JavaRDD<List<long[]>> eclatFis;
+    private final JavaRDD<List<long[]>> optionalEclatFis;
 
     public BigFimResult(
             Map<String, Integer> itemToRank,
             String[] rankToItem,
             ArrayList<List<long[]>> aprioriFis,
-            JavaRDD<List<long[]>> eclatFis) {
+            JavaRDD<List<long[]>> optionalEclatFis) {
         this.itemToRank = itemToRank;
         this.rankToItem = rankToItem;
         this.aprioriFis = aprioriFis;
-        this.eclatFis = eclatFis;
+        this.optionalEclatFis = optionalEclatFis;
     }
 
     public int getTotalResultsCount() {
@@ -45,7 +46,7 @@ public class BigFimResult {
     }
 
     public int getEclatResCount() {
-        return eclatFis.map(List::size).reduce((x, y) -> x+y);
+        return (optionalEclatFis != null) ? optionalEclatFis.map(List::size).reduce((x, y) -> x+y) : 0;
     }
 
     public List<FreqItemset> getAprioriFisOfLength(int itemsetLen) {
@@ -61,9 +62,12 @@ public class BigFimResult {
     }
 
     public List<FreqItemset> getEclatFis(int maxResCnt, boolean isSort) {
-        maxResCnt = Math.min(maxResCnt, getEclatResCount());
+        if (optionalEclatFis == null) {
+            return Collections.emptyList();
+        }
 
-        JavaPairRDD<Integer, long[]> supportAndRanksRdd = eclatFis
+        maxResCnt = Math.min(maxResCnt, getEclatResCount());
+        JavaPairRDD<Integer, long[]> supportAndRanksRdd = optionalEclatFis
                 .flatMap(List::iterator)
                 .mapToPair(p -> new Tuple2<>(FreqItemsetAsRanksBs.extractSupportCnt(p), p));
         if (isSort) {

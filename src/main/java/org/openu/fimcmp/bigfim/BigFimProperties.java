@@ -7,13 +7,13 @@ import java.io.Serializable;
  */
 public class BigFimProperties implements Serializable {
     public final double minSupp;
-    public final int splitPrefixLen;
+    public final int prefixLenToStartEclat;
 
     //BigFim
     public int inputNumParts = 2;
     public boolean isPersistInput = false;
     public boolean isPrintFks = true;
-    public double nextFiIncreasedSeriouslyRatio = 1.5;
+    public double currToPrevResSignificantIncreaseRatio = 2.0;
     //Eclat
     public boolean isUseDiffSets;
     public boolean isSqueezingEnabled;
@@ -21,9 +21,9 @@ public class BigFimProperties implements Serializable {
     public boolean isStatGatheringEnabled;
     public Integer maxEclatNumParts;
 
-    public BigFimProperties(double minSupp, int splitPrefixLen) {
+    public BigFimProperties(double minSupp, int prefixLenToStartEclat) {
         this.minSupp = minSupp;
-        this.splitPrefixLen = splitPrefixLen;
+        this.prefixLenToStartEclat = prefixLenToStartEclat;
 
         this.isUseDiffSets = true;
         this.isCountingOnly = true;

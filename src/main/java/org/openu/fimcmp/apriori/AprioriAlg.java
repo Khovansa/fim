@@ -4,17 +4,14 @@ import org.apache.spark.HashPartitioner;
 import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemset;
+import org.openu.fimcmp.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
 import scala.Tuple3;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +30,19 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     /**
      * @return frequent items sorted by decreasing frequency
      */
+    public List<Tuple2<T, Integer>> computeF1WithSupport(JavaRDD<T[]> data) {
+        int numParts = data.getNumPartitions();
+        Partitioner partitioner = new HashPartitioner(numParts);
+        List<Tuple2<T, Integer>> res = data.flatMap(IteratorOverArray::new)
+                .mapToPair(v -> new Tuple2<>(v, 1L))
+                .reduceByKey(partitioner, (x, y) -> x + y)
+                .filter(t -> t._2 >= minSuppCount)
+                .map(t -> new Tuple2<>(t._1, (int)(long)t._2))
+                .collect();
+        Collections.sort(res, (t1, t2) -> t2._2.compareTo(t1._2));
+        return res;
+    }
+
     public List<T> computeF1(JavaRDD<T[]> data) {
         int numParts = data.getNumPartitions();
         Partitioner partitioner = new HashPartitioner(numParts);
@@ -170,20 +180,36 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
 
     public List<FreqItemset> fkAsArraysToResItemsets(
             List<int[]> cols, String[] rankToItem, FiRanksToFromItems fiRanksToFromItems) {
-        List<FreqItemset> res = new ArrayList<>((int) Math.pow(cols.size(), 3));
+        List<long[]> resBs = fkAsArraysToItemsetBitsets(cols, fiRanksToFromItems, rankToItem.length);
+
+        List<FreqItemset> res = new ArrayList<>(resBs.size());
+        for (long[] ranksWithSuppBs : resBs) {
+            int[] ranks = FreqItemsetAsRanksBs.extractItemset(ranksWithSuppBs);
+            int freq = FreqItemsetAsRanksBs.extractSupportCnt(ranksWithSuppBs);
+            res.add(FreqItemset.constructFromRanks(ranks, freq, rankToItem));
+        }
+
+        return res;
+    }
+
+    public List<long[]> fkAsArraysToItemsetBitsets(
+            List<int[]> cols, FiRanksToFromItems fiRanksToFromItems, int totalFreqItemsets) {
+        ArrayList<long[]> res = new ArrayList<>((int) Math.pow(cols.size(), 3));
         final int kk = fiRanksToFromItems.getMaxK() + 1; //no fiRanks object for the maximal rank (k)
         for (int[] col : cols) {
             List<int[]> itemAndPairRanks = candidateFisGenerator.fkColToPairs(col, minSuppCount);
             for (int[] itemAndPairRank : itemAndPairRanks) {
                 final int freq = itemAndPairRank[2];
-                ArrayList<String> resItemset = new ArrayList<>(kk);
-                resItemset.add(rankToItem[itemAndPairRank[0]]);
-                fiRanksToFromItems.addToResultOrigItemsetByRank(resItemset, itemAndPairRank[1], kk-1, rankToItem);
+                int[] resItemset = new int[kk];
+                resItemset[0] = itemAndPairRank[0];
+                int[] itemsetAsR1s = fiRanksToFromItems.getItemsetByRank(itemAndPairRank[1], kk - 1);
+                System.arraycopy(itemsetAsR1s, 0, resItemset, 1, itemsetAsR1s.length);
 
-                res.add(new FreqItemset(resItemset, freq));
+                res.add(FreqItemsetAsRanksBs.toBitSet(freq, resItemset, totalFreqItemsets));
             }
         }
 
+        res.trimToSize();
         return res;
     }
 }
