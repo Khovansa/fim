@@ -2,16 +2,17 @@ package org.openu.fimcmp.bigfim;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
 import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.FreqItemsetAsRanksBs;
-import org.openu.fimcmp.apriori.AprioriAlg;
-import org.openu.fimcmp.apriori.CurrSizeFiRanks;
-import org.openu.fimcmp.apriori.FiRanksToFromItems;
-import org.openu.fimcmp.apriori.NextSizeItemsetGenHelper;
+import org.openu.fimcmp.ItemsetAndTidsCollection;
+import org.openu.fimcmp.apriori.*;
+import org.openu.fimcmp.eclat.EclatAlg;
+import org.openu.fimcmp.eclat.EclatProperties;
 import scala.Tuple2;
 
 import java.io.Serializable;
@@ -39,30 +40,66 @@ public class BigFimAlg implements Serializable {
     }
 
     public BigFimResult computeFis(JavaRDD<String[]> trs, StopWatch sw) {
-        //TODO
-        ArrayList<List<long[]>> aprioriFis = new ArrayList<>();
-        ArrayList<JavaRDD> allRanksRdds = new ArrayList<>();
+        Helper helper = new Helper(computeAprioriContext(trs, sw));
 
-        AprContext aprContext = computeAprioriContext(trs, sw);
-        aprioriFis.add(aprContext.freqItemRanksAsItemsetBs());
-
-        JavaRDD<int[]> ranks1Rdd = computeRddRanks1(trs, aprContext);
-        allRanksRdds.add(ranks1Rdd);
-        AprioriStepRes currStep = computeF2(ranks1Rdd, aprContext);
-        aprioriFis.add(currStep.getItemsetBitsets(aprContext));
+        JavaRDD<int[]> ranks1Rdd = helper.computeRddRanks1(trs);
+        AprioriStepRes currStep = helper.computeF2(ranks1Rdd);
 
         JavaRDD<Tuple2<int[], long[]>> ranks1AndK = null;
-        while (isContinueWithApriori(aprioriFis)) {
-            ranks1AndK = computeCurrSizeRdd(currStep, aprContext, ranks1AndK, ranks1Rdd, allRanksRdds, false);
-            allRanksRdds.add(ranks1AndK);
-
-            NextSizeItemsetGenHelper nextSizeGenHelper = currStep.computeNextSizeGenHelper(aprContext.totalFreqItems);
-            currStep = computeFk(ranks1AndK, nextSizeGenHelper, currStep, aprContext);
-            aprioriFis.add(currStep.getItemsetBitsets(aprContext));
+        while (isContinueWithApriori(helper.aprioriFis)) {
+            ranks1AndK = helper.computeCurrSizeRdd(currStep, ranks1AndK, ranks1Rdd, false);
+            currStep = helper.computeFk(ranks1AndK, currStep);
         }
 
-        //TODO: do Eclat if needed
-        return null;
+        JavaRDD<List<long[]>> optionalEclatFis = null;
+        if (ranks1AndK != null && canContinue(helper.aprioriFis)) {
+            ranks1AndK = helper.computeCurrSizeRdd(currStep, ranks1AndK, ranks1Rdd, true);
+            optionalEclatFis = helper.computeWithEclat(currStep, ranks1AndK);
+        }
+
+        return helper.createResult(optionalEclatFis);
+    }
+
+    private JavaRDD<List<long[]>> computeWithSequentialEclat(
+            JavaPairRDD<Integer, ItemsetAndTidsCollection> rKm1ToEclatInput, AprContext cxt) {
+        pp(cxt.sw, "Starting Eclat computations");
+        EclatProperties eclatProps = new EclatProperties(cxt.cnts.minSuppCnt, cxt.totalFreqItems);
+        eclatProps.setUseDiffSets(props.isUseDiffSets);
+        eclatProps.setSqueezingEnabled(props.isSqueezingEnabled);
+        eclatProps.setCountingOnly(props.isCountingOnly);
+        eclatProps.setRankToItem(cxt.rankToItem);
+
+        EclatAlg eclat = new EclatAlg(eclatProps);
+        JavaRDD<List<long[]>> resRdd = eclat.computeFreqItemsetsRdd(rKm1ToEclatInput);
+        pp(cxt.sw, "Num parts for Eclat: " + resRdd.getNumPartitions());
+
+        return resRdd;
+    }
+
+    private JavaPairRDD<Integer, ItemsetAndTidsCollection> computeEclatInput(
+            AprioriStepRes currStep, AprContext cxt,
+            JavaRDD<Tuple2<int[], long[]>> ranks1AndK, ArrayList<JavaRDD> allRanksRdds) {
+        //prepare the input RDD:
+        pp(cxt.sw, "Preparing to generate Eclat input");
+        JavaRDD<long[]> kRanksBsRdd = ranks1AndK.map(r1AndK -> r1AndK._2);
+        unpersistPrevIfNeeded(allRanksRdds);
+        kRanksBsRdd = kRanksBsRdd.persist(StorageLevel.MEMORY_AND_DISK_SER());
+
+        //compute TIDs
+        pp(cxt.sw, "Computing TIDs");
+        TidsGenHelper tidsGenHelper = currStep.constructTidGenHelper(cxt.cnts.totalTrs);
+        PairRanks rkToRkm1AndR1 = currStep.currSizeAllRanks.constructRkToRkm1AndR1ForMaxK();
+        JavaRDD<long[][]> rankToTidBsRdd = cxt.apr.computeCurrRankToTidBitSet_Part(kRanksBsRdd, tidsGenHelper);
+        rankToTidBsRdd = rankToTidBsRdd.persist(StorageLevel.MEMORY_AND_DISK_SER());
+        allRanksRdds.get(allRanksRdds.size() - 2).unpersist(); //the last one computed for Eclat should not be persisted
+        kRanksBsRdd.unpersist();
+
+        //preparing the input
+        pp(cxt.sw, "Preparing Eclat input");
+        JavaPairRDD<Integer, List<long[]>> rkm1ToTidSets =
+                cxt.apr.groupTidSetsByRankKm1(rankToTidBsRdd, rkToRkm1AndR1, props.maxEclatNumParts);
+        return rkm1ToTidSets.mapValues(tidSets ->
+                TidMergeSet.mergeTidSetsWithSameRankDropMetadata(tidSets, tidsGenHelper, currStep.currSizeAllRanks));
     }
 
     private AprContext computeAprioriContext(JavaRDD<String[]> trs, StopWatch sw) {
@@ -87,9 +124,7 @@ public class BigFimAlg implements Serializable {
     }
 
     private boolean isContinueWithApriori(ArrayList<List<long[]>> aprioriFis) {
-        List<long[]> lastRes = aprioriFis.get(aprioriFis.size() - 1);
-        if (lastRes.size() <= 1) {
-            //naturally if we can't continue we should stop
+        if (!canContinue(aprioriFis)) {
             return false;
         }
 
@@ -107,11 +142,17 @@ public class BigFimAlg implements Serializable {
 
         //the general case: check whether Apriori could produce the results fast - this happens in sparse datasets:
         assert aprioriFis.size() >= 2 : "size > currPrefLen >= prefixLenToStartEclat >= 2";
+        List<long[]> lastRes = aprioriFis.get(aprioriFis.size() - 1);
         List<long[]> prevRes = aprioriFis.get(aprioriFis.size() - 2);
         double resIncreaseRatio = (1.0 * lastRes.size()) / prevRes.size();
         boolean isSignificantlyIncreased = (resIncreaseRatio < props.currToPrevResSignificantIncreaseRatio);
         //if the increase is not significant, it is a sparse dataset and we should continue with Apriori:
         return !isSignificantlyIncreased;
+    }
+
+    private boolean canContinue(ArrayList<List<long[]>> aprioriFis) {
+        List<long[]> lastRes = aprioriFis.get(aprioriFis.size() - 1);
+        return lastRes.size() > 1;
     }
 
     private JavaRDD<int[]> computeRddRanks1(JavaRDD<String[]> trs, AprContext cxt) {
@@ -192,6 +233,58 @@ public class BigFimAlg implements Serializable {
         return "[" + sw.toString() + "] ";
     }
 
+    private class Helper {
+        final AprContext cxt;
+        final ArrayList<List<long[]>> aprioriFis;
+        final ArrayList<JavaRDD> allRanksRdds;
+
+        Helper(AprContext cxt) {
+            this.cxt = cxt;
+            aprioriFis = new ArrayList<>();
+            allRanksRdds = new ArrayList<>();
+
+            aprioriFis.add(cxt.freqItemRanksAsItemsetBs());
+        }
+
+        JavaRDD<int[]> computeRddRanks1(JavaRDD<String[]> trs) {
+            JavaRDD<int[]> res = BigFimAlg.this.computeRddRanks1(trs, cxt);
+            allRanksRdds.add(res);
+            return res;
+        }
+
+        AprioriStepRes computeF2(JavaRDD<int[]> ranks1Rdd) {
+            AprioriStepRes currStep = BigFimAlg.this.computeF2(ranks1Rdd, cxt);
+            aprioriFis.add(currStep.getItemsetBitsets(cxt));
+            return currStep;
+        }
+
+        AprioriStepRes computeFk(JavaRDD<Tuple2<int[], long[]>> ranks1AndK, AprioriStepRes currStep) {
+            NextSizeItemsetGenHelper nextSizeGenHelper = currStep.computeNextSizeGenHelper(cxt.totalFreqItems);
+            AprioriStepRes nextStep = BigFimAlg.this.computeFk(ranks1AndK, nextSizeGenHelper, currStep, cxt);
+            aprioriFis.add(currStep.getItemsetBitsets(cxt));
+            return nextStep;
+        }
+
+        JavaRDD<Tuple2<int[], long[]>> computeCurrSizeRdd(
+                AprioriStepRes currStep, JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, JavaRDD<int[]> ranks1Rdd,
+                boolean isForEclat) {
+            JavaRDD<Tuple2<int[], long[]>> ranks1AndK =
+                    BigFimAlg.this.computeCurrSizeRdd(currStep, cxt, ranks1AndKm1, ranks1Rdd, allRanksRdds, isForEclat);
+            allRanksRdds.add(ranks1AndK);
+            return ranks1AndK;
+        }
+
+        JavaRDD<List<long[]>> computeWithEclat(AprioriStepRes currStep, JavaRDD<Tuple2<int[], long[]>> ranks1AndK) {
+            JavaPairRDD<Integer, ItemsetAndTidsCollection> rKm1ToEclatInput =
+                    BigFimAlg.this.computeEclatInput(currStep, cxt, ranks1AndK, allRanksRdds);
+            return BigFimAlg.this.computeWithSequentialEclat(rKm1ToEclatInput, cxt);
+        }
+
+        BigFimResult createResult(JavaRDD<List<long[]>> optionalEclatFis) {
+            return new BigFimResult(cxt.itemToRank, cxt.rankToItem, aprioriFis, optionalEclatFis);
+        }
+    }
+
     private static class AprContext {
         final AprioriAlg<String> apr;
         final List<Tuple2<String, Integer>> sortedF1;
@@ -240,6 +333,10 @@ public class BigFimAlg implements Serializable {
 
         NextSizeItemsetGenHelper computeNextSizeGenHelper(int totalFreqItems) {
             return NextSizeItemsetGenHelper.construct(currSizeAllRanks, totalFreqItems, fk.size());
+        }
+
+        TidsGenHelper constructTidGenHelper(long totalTrs) {
+            return currSizeRanks.constructTidGenHelper(fk, (int)totalTrs);
         }
 
         void print(AprContext cxt, boolean isPrintFks) {

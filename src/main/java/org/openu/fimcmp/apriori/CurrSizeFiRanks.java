@@ -57,7 +57,7 @@ public class CurrSizeFiRanks implements Serializable {
         return currSizeRanks.pairToRank[rank1][rankKm1];
     }
 
-    TidsGenHelper constructTidGenHelper(List<int[]> fk, int totalTids) {
+    public TidsGenHelper constructTidGenHelper(List<int[]> fk, int totalTids) {
         return TidsGenHelper.construct(fk, currSizeRanks, totalTids);
     }
 

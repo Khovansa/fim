@@ -137,7 +137,7 @@ public class FiRanksToFromItems implements Serializable {
         return ArrayUtils.toPrimitive(res.toArray(new Integer[k]));
     }
 
-    PairRanks constructRkToRkm1AndR1ForMaxK() {
+    public PairRanks constructRkToRkm1AndR1ForMaxK() {
         return constructRkToRkm1AndR1(maxK);
     }
 
