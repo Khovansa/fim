@@ -122,4 +122,9 @@ public class BitArraysTest {
     private static List<Integer> asList(int... nums) {
         return Arrays.asList(ArrayUtils.toObject(nums));
     }
+
+    @Test
+    public void tmp2() {
+        System.out.println(Long.parseLong(Integer.toBinaryString(-820428985), 2) - 3474515492L);
+    }
 }
