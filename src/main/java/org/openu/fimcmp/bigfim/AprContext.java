@@ -8,6 +8,7 @@ import org.openu.fimcmp.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.apriori.AprioriAlg;
 import scala.Tuple2;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,12 +38,26 @@ class AprContext {
     }
 
     JavaRDD<int[]> computeRddRanks1(JavaRDD<String[]> trs) {
-        JavaRDD<int[]> res = trs.map(t -> BasicOps.getMappedFilteredAndSortedTrs(t, itemToRank));
+        SerToRanks1 toRanks1 = new SerToRanks1(itemToRank);
+        JavaRDD<int[]> res = trs.map(toRanks1::getMappedFilteredAndSortedTrs);
         res = res.persist(StorageLevel.MEMORY_ONLY_SER());
 
         pp("Filtered and saved RDD ranks 1");
 
         return res;
+    }
+
+    //Auxiliary - required since the 'AprContext' is not serializable:
+    private static class SerToRanks1 implements Serializable {
+        final Map<String, Integer> itemToRank;
+
+        private SerToRanks1(Map<String, Integer> itemToRank) {
+            this.itemToRank = itemToRank;
+        }
+
+        int[] getMappedFilteredAndSortedTrs(String[] tr) {
+            return BasicOps.getMappedFilteredAndSortedTrs(tr, itemToRank);
+        }
     }
 
     List<long[]> freqItemRanksAsItemsetBs() {

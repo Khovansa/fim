@@ -154,6 +154,10 @@ public class ItemsetAndTids implements Serializable {
                 Arrays.toString(BitArrays.asNumbers(tidBitSet, TIDS_START_IND)));
     }
 
+    public String toShortString() {
+        return String.format("%s<%s>", Arrays.toString(itemset), supportCnt);
+    }
+
     public String toString(String[] rankToItem) {
         List<String> itemsetAsStr = new ArrayList<>(itemset.length);
         for (int item : itemset) {

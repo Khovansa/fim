@@ -103,7 +103,7 @@ public class EclatAlg implements Serializable {
             maxItemsetSize = initFis.getItemsetSize();
             iterations = 0;
 
-            pp(String.format("Start Eclat: %s elems", initFis.size()));
+            pp(String.format("Start Eclat: %s elems (%s, ...)", initFis.size(), initFis.getFirstAsStringOrNull()));
 
             if (initFis.size() > 40) {
                 ArrayList<ItemsetAndTids> isList = initFis.getObjArrayListCopy();

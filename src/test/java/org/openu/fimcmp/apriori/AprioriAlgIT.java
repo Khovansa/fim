@@ -108,8 +108,10 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
 
 //        printSomeTids(rankKToTids);
 
+        int eclatNumParts =
+                AprioriAlg.getNumPartsForEclat(rankToTidBsRdd.getNumPartitions(), r3ToR2AndR1, maxEclatNumParts)._1;
         JavaPairRDD<Integer, List<long[]>> r2ToTidSets =
-                apr.groupTidSetsByRankKm1(rankToTidBsRdd, r3ToR2AndR1, maxEclatNumParts);
+                apr.groupTidSetsByRankKm1(rankToTidBsRdd, r3ToR2AndR1, eclatNumParts);
         JavaPairRDD<Integer, ItemsetAndTidsCollection> r2ToEclatInput = r2ToTidSets
                 .mapValues(tidSets ->
                         TidMergeSet.mergeTidSetsWithSameRankDropMetadata(tidSets, tidsGenHelper, fiRanksToFromItemsR3));

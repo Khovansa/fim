@@ -1,5 +1,6 @@
 package org.openu.fimcmp.apriori;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.spark.HashPartitioner;
 import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -33,12 +34,13 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     public List<Tuple2<T, Integer>> computeF1WithSupport(JavaRDD<T[]> data) {
         int numParts = data.getNumPartitions();
         Partitioner partitioner = new HashPartitioner(numParts);
-        List<Tuple2<T, Integer>> res = data.flatMap(IteratorOverArray::new)
-                .mapToPair(v -> new Tuple2<>(v, 1L))
-                .reduceByKey(partitioner, (x, y) -> x + y)
+        List<Tuple2<T, Integer>> res = data.flatMap(IteratorOverArray::new) //RDD<T>
+                .mapToPair(v -> new Tuple2<>(v, 1L))                        //RDD<(T, 1)>
+                .reduceByKey(partitioner, (x, y) -> x + y)                  //RDD<(T, sum)>
                 .filter(t -> t._2 >= minSuppCount)
-                .map(t -> new Tuple2<>(t._1, (int)(long)t._2))
+                .map(t -> new Tuple2<>(t._1, (int) (long) t._2))              //RDD<(T, int sum)>
                 .collect();
+        res = new ArrayList<>(res);
         Collections.sort(res, (t1, t2) -> t2._2.compareTo(t1._2));
         return res;
     }
@@ -115,18 +117,44 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     }
 
     /**
+     * Get the number of partitions to be used by parallel Eclat. <br/>
+     * Ideally, if we use Fk as the base, it should be the number of (k-1)-size prefixes. <br/>
+     * But it can't be too large number, so it is bounded by: <ol>
+     * <li>(number of machines) * (number of processors)</li>
+     * <li>Optional user property (see {@link org.openu.fimcmp.bigfim.BigFimProperties#maxEclatNumParts})</li>
+     * </ol>
+     * The returned number is accompanied by a string explaining how it has been obtained.
+     *
+     * @param inputNumParts       number of input partitions, usually the number of machines
+     * @param rkToRkm1AndR1       rankK -> (rank(k-1), rank1)
+     * @param optionalMaxNumParts optional user property
+     */
+    public static Tuple2<Integer, String> getNumPartsForEclat(
+            int inputNumParts, PairRanks rkToRkm1AndR1, Integer optionalMaxNumParts) {
+        List<String> numStrs = new ArrayList<>();
+        int numRanksKm1 = rkToRkm1AndR1.totalElems1(); //the number of (k-1)-size prefixes
+        numStrs.add("prefixes=" + numRanksKm1);
+
+        int numProcs = Runtime.getRuntime().availableProcessors();
+        int totalNumProcs = inputNumParts * numProcs;
+        numStrs.add(String.format("(%s=%s machines * %s processors)", totalNumProcs, inputNumParts, numProcs));
+        int numParts = Math.min(numRanksKm1, totalNumProcs);
+
+        if (optionalMaxNumParts != null) {
+            numParts = Math.min(numParts, optionalMaxNumParts);
+            numStrs.add("user-prop=" + optionalMaxNumParts);
+        }
+
+        String msg = String.format("%s = min(%s)", numParts, StringUtils.join(numStrs, ", "));
+        return new Tuple2<>(numParts, msg);
+    }
+
+    /**
      * @return RDD of pairs (rank{k-1}, list of its matching TidMergeSet objects)
      */
     public JavaPairRDD<Integer, List<long[]>> groupTidSetsByRankKm1(
-            JavaRDD<long[][]> rankToTidBsRdd, PairRanks rkToRkm1AndR1, Integer optionalMaxNumParts) {
-        //rkToRkm1AndR1.totalElems1() is the number of prefixes in BigFIM algorithm,
-        //we want each prefix to be processed in a separate machine.
-        //'rankToTidBsRdd.getNumPartitions()' should be the number of machines, '8' is the expected number of processors
-        int numParts = Math.min(rkToRkm1AndR1.totalElems1(), 8 * rankToTidBsRdd.getNumPartitions());
-        if (optionalMaxNumParts != null) {
-            numParts = Math.min(optionalMaxNumParts, numParts);
-        }
-        IntToSamePartitioner partitioner = new IntToSamePartitioner(numParts);
+            JavaRDD<long[][]> rankToTidBsRdd, PairRanks rkToRkm1AndR1, int resNumParts) {
+        IntToSamePartitioner partitioner = new IntToSamePartitioner(resNumParts);
         int totalR1s = rkToRkm1AndR1.totalElems2();
         return rankToTidBsRdd
                 .flatMapToPair(kRankToTidSet -> new PairElem1IteratorOverRankToTidSet(kRankToTidSet, rkToRkm1AndR1))
@@ -148,7 +176,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
 
         @Override
         public int getPartition(Object key) {
-            return (Integer)key % numPartitions;
+            return (Integer) key % numPartitions;
         }
     }
 

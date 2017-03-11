@@ -2,7 +2,6 @@ package org.openu.fimcmp;
 
 import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
-import scala.Tuple2;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -35,6 +34,7 @@ public class ItemsetAndTidsCollection implements Serializable {
         return new ArrayList<>(itemsetAndTidsList);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public boolean isEmpty() {
         return itemsetAndTidsList.isEmpty();
     }
@@ -114,6 +114,14 @@ public class ItemsetAndTidsCollection implements Serializable {
     public String getFirstAsStringOrNull(String[] rankToItem) {
         if (!itemsetAndTidsList.isEmpty()) {
             return itemsetAndTidsList.iterator().next().toString(rankToItem);
+        } else {
+            return "";
+        }
+    }
+
+    public String getFirstAsStringOrNull() {
+        if (!itemsetAndTidsList.isEmpty()) {
+            return itemsetAndTidsList.iterator().next().toShortString();
         } else {
             return "";
         }

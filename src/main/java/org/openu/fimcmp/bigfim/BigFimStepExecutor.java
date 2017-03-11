@@ -9,6 +9,7 @@ import org.openu.fimcmp.eclat.EclatAlg;
 import org.openu.fimcmp.eclat.EclatProperties;
 import scala.Tuple2;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +20,7 @@ import java.util.List;
 class BigFimStepExecutor {
     private final BigFimProperties props;
     private final AprContext cxt;
+    //holds F1, F2, F3, ... - each Fi as a list of itemsets, each itemset as a bitset
     private final ArrayList<List<long[]>> aprioriFis;
     private final ArrayList<JavaRDD> allRanksRdds;
 
@@ -36,6 +38,7 @@ class BigFimStepExecutor {
             return false;
         }
 
+        //size() = the itemset length of the last Fi, e.g. size()=2 means the last elem is F2
         final int currPrefLen = aprioriFis.size() - 1;
         if (currPrefLen < props.prefixLenToStartEclat) {
             //if we have not reached the possible 'Eclat switching point', just continue
@@ -53,9 +56,14 @@ class BigFimStepExecutor {
         List<long[]> lastRes = aprioriFis.get(aprioriFis.size() - 1);
         List<long[]> prevRes = aprioriFis.get(aprioriFis.size() - 2);
         double resIncreaseRatio = (1.0 * lastRes.size()) / prevRes.size();
-        boolean isSignificantlyIncreased = (resIncreaseRatio < props.currToPrevResSignificantIncreaseRatio);
+        boolean isSignificantlyIncreased = (resIncreaseRatio > props.currToPrevResSignificantIncreaseRatio);
         //if the increase is not significant, it is a sparse dataset and we should continue with Apriori:
-        return !isSignificantlyIncreased;
+        boolean isContinue = !isSignificantlyIncreased;
+        String msg = String.format("%s/%s %s %s => continue with Apriori = %s",
+                lastRes.size(), prevRes.size(), (isSignificantlyIncreased ? ">" : "<="),
+                props.currToPrevResSignificantIncreaseRatio, isContinue);
+        cxt.pp(msg);
+        return isContinue;
     }
 
     boolean canContinue() {
@@ -119,6 +127,7 @@ class BigFimStepExecutor {
 
     JavaRDD<List<long[]>> computeWithEclat(AprioriStepRes currStep, JavaRDD<Tuple2<int[], long[]>> ranks1AndK) {
         JavaPairRDD<Integer, ItemsetAndTidsCollection> rKm1ToEclatInput = computeEclatInput(currStep, ranks1AndK);
+        cxt.pp("\n\n");
         return computeWithSequentialEclat(rKm1ToEclatInput);
     }
 
@@ -144,11 +153,29 @@ class BigFimStepExecutor {
         kRanksBsRdd.unpersist();
 
         //preparing the input
-        cxt.pp("Preparing Eclat input");
+        Tuple2<Integer, String> eclatNumPartsWithMsg =
+                AprioriAlg.getNumPartsForEclat(rankToTidBsRdd.getNumPartitions(), rkToRkm1AndR1, props.maxEclatNumParts);
+        cxt.pp(String.format("Preparing Eclat input (prefixes=%s, parts=%s)",
+                rkToRkm1AndR1.totalElems1(), eclatNumPartsWithMsg._2));
         JavaPairRDD<Integer, List<long[]>> rkm1ToTidSets =
-                cxt.apr.groupTidSetsByRankKm1(rankToTidBsRdd, rkToRkm1AndR1, props.maxEclatNumParts);
-        return rkm1ToTidSets.mapValues(tidSets ->
-                TidMergeSet.mergeTidSetsWithSameRankDropMetadata(tidSets, tidsGenHelper, currStep.currSizeAllRanks));
+                cxt.apr.groupTidSetsByRankKm1(rankToTidBsRdd, rkToRkm1AndR1, eclatNumPartsWithMsg._1);
+        SerToMergedTidSets toMergedTidSets = new SerToMergedTidSets(tidsGenHelper, currStep.currSizeAllRanks);
+        return rkm1ToTidSets.mapValues(toMergedTidSets::mergeTidSetsWithSameRankDropMetadata);
+    }
+
+    //Auxiliary - required since 'BigFimStepExecutor' is not serializable
+    private static class SerToMergedTidSets implements Serializable {
+        final TidsGenHelper tidsGenHelper;
+        final FiRanksToFromItems currSizeAllRanks;
+
+        SerToMergedTidSets(TidsGenHelper tidsGenHelper, FiRanksToFromItems currSizeAllRanks) {
+            this.tidsGenHelper = tidsGenHelper;
+            this.currSizeAllRanks = currSizeAllRanks;
+        }
+
+        ItemsetAndTidsCollection mergeTidSetsWithSameRankDropMetadata(List<long[]> tidSets) {
+            return TidMergeSet.mergeTidSetsWithSameRankDropMetadata(tidSets, tidsGenHelper, currSizeAllRanks);
+        }
     }
 
     private JavaRDD<List<long[]>> computeWithSequentialEclat(

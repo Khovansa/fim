@@ -1,5 +1,6 @@
 package org.openu.fimcmp.bigfim;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.openu.fimcmp.FreqItemset;
@@ -78,10 +79,11 @@ public class BigFimResult {
         return FreqItemsetAsRanksBs.toFreqItemsets(resAsBs, rankToItem);
     }
 
-    public void printCounts() {
+    public void printCounts(StopWatch sw) {
         int aprioriCnt = getAprioriResCount();
         int eclatCnt = getEclatResCount();
-        print(String.format("Total results: %s (Apriori: %s, Eclat: %s", (aprioriCnt + eclatCnt), aprioriCnt, eclatCnt));
+        BigFimAlg.pp(sw, String.format(
+                "Total results: %s (Apriori: %s, Eclat: %s)", (aprioriCnt + eclatCnt), aprioriCnt, eclatCnt));
     }
 
     public void printFreqItemsets(List<FreqItemset> fis, int maxRes) {

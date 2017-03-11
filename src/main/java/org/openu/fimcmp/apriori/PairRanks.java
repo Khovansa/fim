@@ -68,7 +68,7 @@ public class PairRanks implements Serializable {
         return rankToPair.length;
     }
 
-    int totalElems1() {
+    public int totalElems1() {
         return pairToRank.length;
     }
 

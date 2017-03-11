@@ -49,14 +49,16 @@ class AprioriStepRes {
 
     void print(AprContext cxt, boolean isPrintFks) {
         cxt.pp(String.format("F%s size: %s", kk, fk.size()));
+        final int maxSampleSize = 10;
 
         if (isPrintFks) {
             List<FreqItemset> fkRes = cxt.apr.fkAsArraysToResItemsets(fkAsArrays, cxt.rankToItem, prevSizeAllRanks);
             fkRes = fkRes.stream()
                     .sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq))
                     .collect(Collectors.toList());
-            fkRes = fkRes.subList(0, Math.min(10, fkRes.size()));
-            cxt.pp(String.format("F%s\n: %s", kk, StringUtils.join(fkRes, "\n")));
+            int sampleSize = Math.min(maxSampleSize, fkRes.size());
+            fkRes = fkRes.subList(0, sampleSize);
+            cxt.pp(String.format("F%s (sample size %s):\n%s", kk, sampleSize, StringUtils.join(fkRes, "\n")));
         }
     }
 }
