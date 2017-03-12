@@ -70,6 +70,10 @@ public class AlgITBase {
     }
 
     protected void pp(Object msg) {
+        pp(sw, msg);
+    }
+
+    public static void pp(StopWatch sw, Object msg) {
         System.out.println(String.format("%-15s %s", tt(sw), msg));
     }
 

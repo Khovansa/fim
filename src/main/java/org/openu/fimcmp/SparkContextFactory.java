@@ -55,6 +55,8 @@ public class SparkContextFactory {
             });
         }
 
+        conf.set("spark.driver.memory", "1200m");
+
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         sc.setLogLevel("WARN");

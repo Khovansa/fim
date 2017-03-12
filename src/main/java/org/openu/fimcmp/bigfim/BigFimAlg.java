@@ -5,6 +5,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
 import org.openu.fimcmp.BasicOps;
+import org.openu.fimcmp.SparkContextFactory;
 import org.openu.fimcmp.apriori.*;
 import scala.Tuple2;
 
@@ -17,6 +18,33 @@ import java.util.List;
 public class BigFimAlg implements Serializable {
     private final BigFimProperties props;
 
+    public static void main(String[] args) throws Exception {
+        final double minSupp = 0.8;
+//        final String inputFileName = "my.small.txt";
+        final String inputFileName = "pumsb.dat";
+        final int prefixLenToStartEclat = 3;
+        BigFimProperties props = new BigFimProperties(minSupp, prefixLenToStartEclat);
+        props.maxEclatNumParts = 3;
+        BigFimAlg alg = new BigFimAlg(props);
+
+        StopWatch sw = new StopWatch();
+        sw.start();
+        Thread.sleep(5_000L);
+        pp(sw, "Starting the Spark context");
+        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext(props.isUseKrio());
+        pp(sw, "Completed starting the Spark context");
+        Thread.sleep(5_000L);
+
+        sw.stop();
+        sw.reset();
+        sw.start();
+        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + inputFileName;
+        JavaRDD<String[]> trs = alg.readInput(sc, inputFile);
+
+        BigFimResult res = alg.computeFis(trs, sw);
+        res.printCounts(sw);
+
+    }
     public BigFimAlg(BigFimProperties props) {
         this.props = props;
     }
