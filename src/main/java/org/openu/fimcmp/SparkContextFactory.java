@@ -17,7 +17,9 @@ import java.util.*;
 @SuppressWarnings("WeakerAccess")
 public class SparkContextFactory {
     public static JavaSparkContext createLocalSparkContext(boolean useKryo) {
-        SparkConf conf = new SparkConf().setMaster("local").setAppName("FI Comparison");
+        SparkConf conf = new SparkConf().setAppName("FI Comparison");
+//        conf.setMaster("local");
+        conf.setMaster("spark://192.168.1.68:7077");
 
         conf.set("spark.rdd.compress", "true");
 

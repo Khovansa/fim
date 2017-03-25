@@ -25,21 +25,21 @@ public class BigFimAlg implements Serializable {
         final int prefixLenToStartEclat = 3;
         BigFimProperties props = new BigFimProperties(minSupp, prefixLenToStartEclat);
         props.maxEclatNumParts = 3;
+        props.inputNumParts = 2;
         BigFimAlg alg = new BigFimAlg(props);
 
         StopWatch sw = new StopWatch();
         sw.start();
-        Thread.sleep(5_000L);
         pp(sw, "Starting the Spark context");
-        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext(props.isUseKrio());
+//        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext(props.isUseKrio());
+        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext(false);
         pp(sw, "Completed starting the Spark context");
-        Thread.sleep(5_000L);
 
-        sw.stop();
-        sw.reset();
-        sw.start();
         String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + inputFileName;
+        pp(sw, "Start reading " + inputFile);
         JavaRDD<String[]> trs = alg.readInput(sc, inputFile);
+        pp(sw, "Done reading " + inputFile);
+        pp(sw, "Done counting " + trs.count());
 
         BigFimResult res = alg.computeFis(trs, sw);
         res.printCounts(sw);

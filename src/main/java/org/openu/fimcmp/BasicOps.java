@@ -33,6 +33,7 @@ public class BasicOps implements Serializable {
 
     public static JavaRDD<String[]> linesAsSortedItemsArr(JavaRDD<String> lines) {
         return lines.map(BasicOps::splitLineToSortedArr);
+//        return lines.map(line -> line.split(" "));
     }
 
     public static <T> Map<T, Integer> itemToRank(List<T> f1) {
