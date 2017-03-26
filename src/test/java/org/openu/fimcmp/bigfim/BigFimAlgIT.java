@@ -24,14 +24,15 @@ public class BigFimAlgIT {
 //        final String inputFileName = "my.small.txt";
         final String inputFileName = "pumsb.dat";
         final int prefixLenToStartEclat = 3;
-        BigFimProperties props = new BigFimProperties(minSupp, prefixLenToStartEclat);
+        BigFimAlgProperties props = new BigFimAlgProperties(minSupp, prefixLenToStartEclat);
         props.maxEclatNumParts = 3;
         BigFimAlg alg = new BigFimAlg(props);
 
         StopWatch sw = new StopWatch();
         sw.start();
         pp(sw, "Starting the Spark context");
-        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext(props.isUseKrio());
+        boolean isUseKrio = !props.isCountingOnly;
+        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext(isUseKrio, "local");
         pp(sw, "Completed starting the Spark context");
         Thread.sleep(1_200_000L);
 

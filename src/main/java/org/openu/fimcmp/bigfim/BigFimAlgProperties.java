@@ -1,11 +1,14 @@
 package org.openu.fimcmp.bigfim;
 
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 import java.io.Serializable;
 
 /**
  * Holds all the properties for BigFim algorithm.
  */
-public class BigFimProperties implements Serializable {
+public class BigFimAlgProperties implements Serializable {
     /**
      * Min support as a ratio of itemset frequency to the total number of transactions
      */
@@ -20,7 +23,7 @@ public class BigFimProperties implements Serializable {
 
     //BigFim
     /**
-     * How many partitions to use to read teh input file. <br/>
+     * How many partitions to use to read the input file. <br/>
      * In the actual distributed environment this is the number of physical machines holding different parts of the file.
      */
     public int inputNumParts = 2;
@@ -39,12 +42,13 @@ public class BigFimProperties implements Serializable {
     public boolean isStatGatheringEnabled = true;
     public Integer maxEclatNumParts;
 
-    public BigFimProperties(double minSupp, int prefixLenToStartEclat) {
+    public BigFimAlgProperties(double minSupp, int prefixLenToStartEclat) {
         this.minSupp = minSupp;
         this.prefixLenToStartEclat = prefixLenToStartEclat;
     }
 
-    boolean isUseKrio() {
-        return !isCountingOnly;
+    @Override
+    public String toString() {
+        return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 }

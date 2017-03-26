@@ -22,7 +22,7 @@ public class FpGrowthStdIT extends AlgITBase {
 
     @Test
     public void test() {
-        final double minSupp = 0.8;
+        final double minSupp = 0.9;
         final PrepStepOutputAsList prep = prepareAsList("pumsb.dat", minSupp, false, 1);
 
         FPGrowth fpg = new FPGrowth()

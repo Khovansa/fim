@@ -4,7 +4,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.apriori.*;
 import org.openu.fimcmp.bigfim.BigFimAlg;
-import org.openu.fimcmp.bigfim.BigFimProperties;
+import org.openu.fimcmp.bigfim.BigFimAlgProperties;
 import org.openu.fimcmp.eclat.EclatAlg;
 import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
@@ -16,10 +16,11 @@ import java.util.*;
  */
 @SuppressWarnings("WeakerAccess")
 public class SparkContextFactory {
-    public static JavaSparkContext createLocalSparkContext(boolean useKryo) {
+    public static JavaSparkContext createLocalSparkContext(boolean useKryo, String sparkMasterUrl) {
         SparkConf conf = new SparkConf().setAppName("FI Comparison");
 //        conf.setMaster("local");
-        conf.setMaster("spark://192.168.1.68:7077");
+//        conf.setMaster("spark://192.168.1.68:7077");
+        conf.setMaster(sparkMasterUrl);
 
         conf.set("spark.rdd.compress", "true");
 
@@ -52,7 +53,7 @@ public class SparkContextFactory {
                     ItemsetAndTidsCollection.class, ItemsetAndTids.class, ItemsetAndTids[].class,
 
                     EclatAlg.class,
-                    BigFimProperties.class, BigFimAlg.class
+                    BigFimAlgProperties.class, BigFimAlg.class
 
             });
         }

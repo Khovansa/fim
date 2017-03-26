@@ -18,13 +18,13 @@ import java.util.List;
  * Unlike the upper-level BigFimAlg, holds state that allows it to move from one step to the other. <br/>
  */
 class BigFimStepExecutor {
-    private final BigFimProperties props;
+    private final BigFimAlgProperties props;
     private final AprContext cxt;
     //holds F1, F2, F3, ... - each Fi as a list of itemsets, each itemset as a bitset
     private final ArrayList<List<long[]>> aprioriFis;
     private final ArrayList<JavaRDD> allRanksRdds;
 
-    BigFimStepExecutor(BigFimProperties props, AprContext cxt) {
+    BigFimStepExecutor(BigFimAlgProperties props, AprContext cxt) {
         this.props = props;
         this.cxt = cxt;
         aprioriFis = new ArrayList<>();
@@ -99,16 +99,12 @@ class BigFimStepExecutor {
         allRanksRdds.add(res);
         return res;
     }
+
     AprioriStepRes computeF2(JavaRDD<int[]> ranks1Rdd) {
         List<int[]> fkAsArrays = cxt.apr.computeF2_Part(ranks1Rdd, cxt.totalFreqItems);
 
         FiRanksToFromItems prevSizeAllRanks = new FiRanksToFromItems();
-        AprioriStepRes res = new AprioriStepRes(2, fkAsArrays, prevSizeAllRanks, cxt.totalFreqItems, cxt);
-
-        res.print(cxt, props.isPrintFks);
-
-        aprioriFis.add(res.getItemsetBitsets(cxt));
-        return res;
+        return toNextAprioriStep(2, fkAsArrays, cxt.totalFreqItems, prevSizeAllRanks);
     }
 
     AprioriStepRes computeFk(JavaRDD<Tuple2<int[], long[]>> ranks1AndK, AprioriStepRes currStep) {
@@ -117,7 +113,17 @@ class BigFimStepExecutor {
         List<int[]> fkAsArrays = cxt.apr.computeFk_Part(kp1, ranks1AndK, nextSizeGenHelper);
 
         FiRanksToFromItems prevSizeAllRanks = currStep.currSizeAllRanks;
-        AprioriStepRes res = new AprioriStepRes(kp1, fkAsArrays, prevSizeAllRanks, currStep.getFkSize(), cxt);
+        return toNextAprioriStep(kp1, fkAsArrays, currStep.getFkSize(), prevSizeAllRanks);
+    }
+
+    private AprioriStepRes toNextAprioriStep(int kp1, List<int[]> fkAsArrays, int fkSize, FiRanksToFromItems prevSizeAllRanks) {
+        List<int[]> fk = cxt.apr.fkAsArraysToRankPairs(fkAsArrays);
+        if (fk.isEmpty()) {
+            cxt.pp(String.format("F%s is empty => stopping", kp1));
+            return null;
+        }
+
+        AprioriStepRes res = new AprioriStepRes(kp1, fkAsArrays, prevSizeAllRanks, fk, fkSize, cxt);
 
         res.print(cxt, props.isPrintFks);
 

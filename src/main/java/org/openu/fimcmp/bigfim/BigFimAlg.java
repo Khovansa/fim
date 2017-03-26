@@ -16,26 +16,25 @@ import java.util.List;
  * The main class that implements the Big FIM algorithm.
  */
 public class BigFimAlg implements Serializable {
-    private final BigFimProperties props;
+    private final BigFimAlgProperties props;
 
     public static void main(String[] args) throws Exception {
-        final double minSupp = 0.8;
-//        final String inputFileName = "my.small.txt";
-        final String inputFileName = "pumsb.dat";
-        final int prefixLenToStartEclat = 3;
-        BigFimProperties props = new BigFimProperties(minSupp, prefixLenToStartEclat);
-        props.maxEclatNumParts = 3;
-        props.inputNumParts = 2;
+        BigFimRunProperties runProps = BigFimRunProperties.parse(args);
+        if (runProps == null) {
+            return; //help
+        }
+
+        BigFimAlgProperties props = runProps.bigFimAlgProps;
         BigFimAlg alg = new BigFimAlg(props);
 
         StopWatch sw = new StopWatch();
         sw.start();
+        pp(sw, runProps);
         pp(sw, "Starting the Spark context");
-//        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext(props.isUseKrio());
-        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext(false);
+        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext(runProps.isUseKrio, runProps.sparkMasterUrl);
         pp(sw, "Completed starting the Spark context");
 
-        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + inputFileName;
+        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + runProps.inputFileName;
         pp(sw, "Start reading " + inputFile);
         JavaRDD<String[]> trs = alg.readInput(sc, inputFile);
         pp(sw, "Done reading " + inputFile);
@@ -45,7 +44,7 @@ public class BigFimAlg implements Serializable {
         res.printCounts(sw);
 
     }
-    public BigFimAlg(BigFimProperties props) {
+    public BigFimAlg(BigFimAlgProperties props) {
         this.props = props;
     }
 
@@ -64,13 +63,13 @@ public class BigFimAlg implements Serializable {
         AprioriStepRes currStep = helper.computeF2(ranks1Rdd);
 
         JavaRDD<Tuple2<int[], long[]>> ranks1AndK = null;
-        while (helper.isContinueWithApriori()) {
+        while (currStep != null && helper.isContinueWithApriori()) {
             ranks1AndK = helper.computeCurrSizeRdd(currStep, ranks1AndK, ranks1Rdd, false);
             currStep = helper.computeFk(ranks1AndK, currStep);
         }
 
         JavaRDD<List<long[]>> optionalEclatFis = null;
-        if (ranks1AndK != null && helper.canContinue()) {
+        if (currStep != null && ranks1AndK != null && helper.canContinue()) {
             ranks1AndK = helper.computeCurrSizeRdd(currStep, ranks1AndK, ranks1Rdd, true);
             optionalEclatFis = helper.computeWithEclat(currStep, ranks1AndK);
         }

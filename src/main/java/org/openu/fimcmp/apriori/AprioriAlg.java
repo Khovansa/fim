@@ -7,6 +7,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.FreqItemsetAsRanksBs;
+import org.openu.fimcmp.bigfim.BigFimAlgProperties;
 import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
 import scala.Tuple3;
@@ -121,7 +122,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
      * Ideally, if we use Fk as the base, it should be the number of (k-1)-size prefixes. <br/>
      * But it can't be too large number, so it is bounded by: <ol>
      * <li>(number of machines) * (number of processors)</li>
-     * <li>Optional user property (see {@link org.openu.fimcmp.bigfim.BigFimProperties#maxEclatNumParts})</li>
+     * <li>Optional user property (see {@link BigFimAlgProperties#maxEclatNumParts})</li>
      * </ol>
      * The returned number is accompanied by a string explaining how it has been obtained.
      *

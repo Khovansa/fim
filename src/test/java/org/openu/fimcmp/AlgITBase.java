@@ -4,7 +4,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
-import org.junit.Before;
 
 import java.util.ArrayList;
 
@@ -22,7 +21,7 @@ public class AlgITBase {
     }
 
     protected void setUpRun(boolean useKryo) throws Exception {
-        sc = SparkContextFactory.createLocalSparkContext(useKryo);
+        sc = SparkContextFactory.createLocalSparkContext(useKryo, "local");
         sw = new StopWatch();
         basicOps = new BasicOps();
     }

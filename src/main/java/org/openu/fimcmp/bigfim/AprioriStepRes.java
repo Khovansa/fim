@@ -21,13 +21,13 @@ class AprioriStepRes {
     final CurrSizeFiRanks currSizeRanks;
     final FiRanksToFromItems currSizeAllRanks;
 
-    AprioriStepRes(int kk, List<int[]> fkAsArrays, FiRanksToFromItems prevSizeAllRanks, int fkm1Size, AprContext cxt) {
+    AprioriStepRes(int kk, List<int[]> fkAsArrays, FiRanksToFromItems prevSizeAllRanks, List<int[]> fk, int fkm1Size, AprContext cxt) {
         this.kk = kk;
         this.fkAsArrays = fkAsArrays;
         this.prevSizeAllRanks = prevSizeAllRanks;
 
         this.fk = cxt.apr.fkAsArraysToRankPairs(fkAsArrays);
-        this.currSizeRanks = CurrSizeFiRanks.construct(fk, cxt.totalFreqItems, fkm1Size);
+        this.currSizeRanks = CurrSizeFiRanks.construct(this.fk, cxt.totalFreqItems, fkm1Size);
         this.currSizeAllRanks = prevSizeAllRanks.toNextSize(currSizeRanks);
     }
 
