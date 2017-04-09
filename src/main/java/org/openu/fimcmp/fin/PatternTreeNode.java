@@ -1,8 +1,10 @@
 package org.openu.fimcmp.fin;
 
+import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.util.Assert;
 
 import java.util.ArrayList;
+import java.util.List;
 
 class PatternTreeNode {
     private final DiffNodeset diffNodeset;
@@ -12,26 +14,52 @@ class PatternTreeNode {
 
 
     PatternTreeNode(DiffNodeset diffNodeset, PatternTreeNode parent) {
+        Assert.isTrue(diffNodeset != null);
         this.diffNodeset = diffNodeset;
         this.parent = parent;
+    }
+
+    void exploreAndProcessSubtree(
+            FiResultHolder resultHolder, List<Integer> sortedMoreFrequentItems,
+            int minSuppCnt, int totalFreqItems) {
+        Assert.isTrue(equivalentItems == null);
+        Assert.isTrue(lastItemToSon == null);
+        Assert.isTrue(parent != null);
+        Assert.isTrue(parent.lastItemToSon != null);
+
+        //create all the sons
+        ArrayList<Integer> newNodeLastItems = extendNodeByItems(sortedMoreFrequentItems, minSuppCnt, totalFreqItems);
+
+        //produce the output from the current node
+        resultHolder.addClosedItemset(
+                diffNodeset.getSupportCnt(), diffNodeset.getItemset(), parent.equivalentItems, equivalentItems);
+
+        //process the sub-tree, eliminating the processed sub-nodes
+        for (int ii=0; ii<newNodeLastItems.size(); ++ii) {
+            int newItem = newNodeLastItems.get(ii);
+            List<Integer> moreFreqItems = newNodeLastItems.subList(ii+1, newNodeLastItems.size());
+            lastItemToSon[newItem].exploreAndProcessSubtree(resultHolder, moreFreqItems, minSuppCnt, totalFreqItems);
+            lastItemToSon[newItem] = null; //done with this one, let's free the memory
+        }
     }
 
     /**
      * Extend the tree by extending the current node. <br/>
      * See lines 1-20 of 'Constructing_Pattern_Tree()' procedure of the DiffNodesets algorithm paper.
      */
-    void extendNodeByItems(ArrayList<Integer> sortedMoreFrequentItems, int minSuppCnt, int totalFreqItems) {
-        Assert.isTrue(equivalentItems == null);
-        Assert.isTrue(lastItemToSon == null);
+    ArrayList<Integer> extendNodeByItems(
+            List<Integer> sortedMoreFrequentItems, int minSuppCnt, int totalFreqItems) {
         Assert.isTrue(parent != null);
-        ArrayList<Integer> resNextCadSet = new ArrayList<>(sortedMoreFrequentItems.size());
+        ArrayList<Integer> newNodeItems = new ArrayList<>(sortedMoreFrequentItems.size());
 
         for (Integer extItem : sortedMoreFrequentItems) {
             PatternTreeNode yNode = parent.lastItemToSon[extItem];
             if (yNode != null) {
-                extendNodeByOneItem(yNode.diffNodeset, minSuppCnt, totalFreqItems, resNextCadSet);
+                extendNodeByOneItem(yNode.diffNodeset, minSuppCnt, totalFreqItems, newNodeItems);
             }
         }
+
+        return newNodeItems;
     }
 
     /**
@@ -39,7 +67,7 @@ class PatternTreeNode {
      * See lines 5-17 of 'Constructing_Pattern_Tree()' procedure of the DiffNodesets algorithm paper.
      */
     private void extendNodeByOneItem(
-            DiffNodeset y, int minSuppCnt, int totalFreqItems, ArrayList<Integer> resNextCadSet) {
+            DiffNodeset y, int minSuppCnt, int totalFreqItems, ArrayList<Integer> newNodeLastItems) {
         final int i = y.lastItem();
         final DiffNodeset x = diffNodeset;
         final DiffNodeset p = DiffNodeset.constructByDiff(x, y);
@@ -49,7 +77,7 @@ class PatternTreeNode {
             equivalentItems = addToSortedIfNotExists(equivalentItems, i);
         } else if (pSupportCnt >= minSuppCnt) {
             addSon(p, totalFreqItems);
-            addToSortedIfNotExists(resNextCadSet, i);
+            addToSortedIfNotExists(newNodeLastItems, i);
         }
     }
 

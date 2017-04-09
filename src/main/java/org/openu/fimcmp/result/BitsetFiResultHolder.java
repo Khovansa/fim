@@ -1,5 +1,6 @@
 package org.openu.fimcmp.result;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.util.BitArrays;
@@ -29,7 +30,7 @@ public class BitsetFiResultHolder implements FiResultHolder {
     @Override
     public void addClosedItemset(
             int supportCnt, int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems) {
-        if (parentEquivItems.isEmpty() && equivItems.isEmpty()) {
+        if (CollectionUtils.isEmpty(parentEquivItems) && CollectionUtils.isEmpty(equivItems)) {
             //fast treatment of the most frequent case:
             addFrequentItemset(supportCnt, basicItemset);
         } else {
@@ -82,6 +83,10 @@ public class BitsetFiResultHolder implements FiResultHolder {
     }
 
     private static void addIfNew(List<Integer> res, long[] itemsBs, int bsStartInd, List<Integer> possiblyNewItems) {
+        if (possiblyNewItems == null) {
+            return;
+        }
+
         for (Integer item : possiblyNewItems) {
             if (!BitArrays.get(itemsBs, bsStartInd, item)) {
                 BitArrays.set(itemsBs, bsStartInd, item);
