@@ -7,6 +7,7 @@ import org.apache.spark.storage.StorageLevel;
 import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.SparkContextFactory;
 import org.openu.fimcmp.apriori.*;
+import org.openu.fimcmp.result.FiResultHolder;
 import scala.Tuple2;
 
 import java.io.Serializable;
@@ -68,7 +69,7 @@ public class BigFimAlg implements Serializable {
             currStep = helper.computeFk(ranks1AndK, currStep);
         }
 
-        JavaRDD<List<long[]>> optionalEclatFis = null;
+        JavaRDD<FiResultHolder> optionalEclatFis = null;
         if (currStep != null && ranks1AndK != null && helper.canContinue()) {
             ranks1AndK = helper.computeCurrSizeRdd(currStep, ranks1AndK, ranks1Rdd, true);
             optionalEclatFis = helper.computeWithEclat(currStep, ranks1AndK);

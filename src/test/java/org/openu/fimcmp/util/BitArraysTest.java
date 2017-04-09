@@ -125,6 +125,6 @@ public class BitArraysTest {
 
     @Test
     public void tmp2() {
-        System.out.println(Long.parseLong(Integer.toBinaryString(-820428985), 2) - 3474515492L);
+        System.out.println(1L<<10);
     }
 }

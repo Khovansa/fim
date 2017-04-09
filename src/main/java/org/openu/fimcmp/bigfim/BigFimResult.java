@@ -5,6 +5,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.FreqItemsetAsRanksBs;
+import org.openu.fimcmp.result.FiResultHolder;
 import scala.Tuple2;
 
 import java.util.ArrayList;
@@ -19,13 +20,13 @@ public class BigFimResult {
     private final Map<String, Integer> itemToRank;
     private final String[] rankToItem;
     private final ArrayList<List<long[]>> aprioriFis;
-    private final JavaRDD<List<long[]>> optionalEclatFis;
+    private final JavaRDD<FiResultHolder> optionalEclatFis;
 
     public BigFimResult(
             Map<String, Integer> itemToRank,
             String[] rankToItem,
             ArrayList<List<long[]>> aprioriFis,
-            JavaRDD<List<long[]>> optionalEclatFis) {
+            JavaRDD<FiResultHolder> optionalEclatFis) {
         this.itemToRank = itemToRank;
         this.rankToItem = rankToItem;
         this.aprioriFis = aprioriFis;
@@ -47,7 +48,7 @@ public class BigFimResult {
     }
 
     public int getEclatResCount() {
-        return (optionalEclatFis != null) ? optionalEclatFis.map(List::size).reduce((x, y) -> x+y) : 0;
+        return (optionalEclatFis != null) ? optionalEclatFis.map(FiResultHolder::size).reduce((x, y) -> x+y) : 0;
     }
 
     public List<FreqItemset> getAprioriFisOfLength(int itemsetLen) {
@@ -69,7 +70,7 @@ public class BigFimResult {
 
         maxResCnt = Math.min(maxResCnt, getEclatResCount());
         JavaPairRDD<Integer, long[]> supportAndRanksRdd = optionalEclatFis
-                .flatMap(List::iterator)
+                .flatMap(FiResultHolder::fiAsBitsetIterator)
                 .mapToPair(p -> new Tuple2<>(FreqItemsetAsRanksBs.extractSupportCnt(p), p));
         if (isSort) {
             supportAndRanksRdd = supportAndRanksRdd.sortByKey(false);

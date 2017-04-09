@@ -8,7 +8,7 @@ import java.util.List;
 class DiffNodeset {
     //Item ranks are sorted in descending order, i.e. from the least to the most frequent:
     private final int[] itemset;
-     //Nodes for the 'itemset' and sorted by the pre-order in ascending order:
+     //Nodes for the 'itemset' sorted by the pre-order in ascending order:
     private final ArrayList<PpcNode> sortedNodes;
     private final int supportCnt;
 

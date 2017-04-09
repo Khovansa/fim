@@ -6,10 +6,15 @@ import org.apache.spark.api.java.JavaRDD;
 import org.openu.fimcmp.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.ItemsetAndTids;
 import org.openu.fimcmp.ItemsetAndTidsCollection;
-import org.openu.fimcmp.util.CountingFakeList;
+import org.openu.fimcmp.result.BitsetFiResultHolder;
+import org.openu.fimcmp.result.CountingOnlyFiResultHolder;
+import org.openu.fimcmp.result.FiResultHolder;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The main class that implements the Eclat algorithm.
@@ -21,10 +26,9 @@ public class EclatAlg implements Serializable {
         this.props = props;
     }
 
-    public JavaRDD<List<long[]>> computeFreqItemsetsRdd(
+    public JavaRDD<FiResultHolder> computeFreqItemsetsRdd(
             JavaPairRDD<Integer, ItemsetAndTidsCollection> prefRankAndIsAndTidSetRdd) {
-        return
-                prefRankAndIsAndTidSetRdd.mapValues(this::computeFreqItemsetsSingleDfs)
+        return prefRankAndIsAndTidSetRdd.mapValues(this::computeFreqItemsetsSingleDfs)
                 .sortByKey()
                 .values();
     }
@@ -35,9 +39,9 @@ public class EclatAlg implements Serializable {
      * to properly get the FI and its support from the array. <br/>
      */
     @SuppressWarnings("WeakerAccess")
-    public List<long[]> computeFreqItemsetsSingleDfs(ItemsetAndTidsCollection initFis) {
+    public FiResultHolder computeFreqItemsetsSingleDfs(ItemsetAndTidsCollection initFis) {
         if (initFis.size() <= 1) {
-            return Collections.emptyList();
+            return BitsetFiResultHolder.emptyHolder();
         }
 
         StatPrinter statPrinter = new StatPrinter(true);
@@ -46,13 +50,14 @@ public class EclatAlg implements Serializable {
         statPrinter.onStart(initFis);
         LinkedList<ItemsetAndTidsCollection> queue = new LinkedList<>();
         queue.addFirst(initFis);
-        List<long[]> res = (props.isCountingOnly) ? new CountingFakeList<>() : new ArrayList<>(10_000);
+        FiResultHolder res = (props.isCountingOnly) ?
+                new CountingOnlyFiResultHolder(props.totalFreqItems) : new BitsetFiResultHolder(props.totalFreqItems, 10_000);
 
         while (!queue.isEmpty()) {
             ItemsetAndTidsCollection coll = queue.removeFirst().squeezeIfNeeded(props.isSqueezingEnabled);
             ItemsetAndTids head = coll.popFirst();
             ItemsetAndTidsCollection newColl =
-                    coll.joinWithHead(head, res, props.minSuppCount, props.totalFreqItems, props.isUseDiffSets);
+                    coll.joinWithHead(head, res, props.minSuppCount, props.isUseDiffSets);
             addFirstIfHasPairs(queue, coll);
             addFirstIfHasPairs(queue, newColl);
 
@@ -60,19 +65,12 @@ public class EclatAlg implements Serializable {
         }
 
         statPrinter.onCompletion(res);
-        trimToSize(res);
         return res;
     }
 
     private static void addFirstIfHasPairs(LinkedList<ItemsetAndTidsCollection> queue, ItemsetAndTidsCollection coll) {
         if (coll.size() > 1) {
             queue.addFirst(coll);
-        }
-    }
-
-    private static <T> void trimToSize(List<T> res) {
-        if (res instanceof ArrayList) {
-            ((ArrayList)res).trimToSize();
         }
     }
 
@@ -113,7 +111,7 @@ public class EclatAlg implements Serializable {
             }
         }
 
-        void onStep(List<ItemsetAndTidsCollection> queue, List<?> res, ItemsetAndTids head) {
+        void onStep(List<ItemsetAndTidsCollection> queue, FiResultHolder res, ItemsetAndTids head) {
             if (!isEnabled) {
                 return;
             }
@@ -135,7 +133,7 @@ public class EclatAlg implements Serializable {
             }
         }
 
-        void onCompletion(List<?> res) {
+        void onCompletion(FiResultHolder res) {
             if (!isEnabled) {
                 return;
             }

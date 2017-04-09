@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.openu.fimcmp.*;
 import org.openu.fimcmp.eclat.EclatAlg;
 import org.openu.fimcmp.eclat.EclatProperties;
+import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;
 
@@ -118,7 +119,7 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
 //        exploreFirstEclatInputElem(r2ToEclatInput);
 
         pp("Starting Eclat computations");
-        JavaRDD<List<long[]>> resRdd = eclat.computeFreqItemsetsRdd(r2ToEclatInput);
+        JavaRDD<FiResultHolder> resRdd = eclat.computeFreqItemsetsRdd(r2ToEclatInput);
         pp("Num parts: " + r2ToTidSets.getNumPartitions());
         pp("Num parts (res): " + resRdd.getNumPartitions());
         //TODO: actual results generation is here:

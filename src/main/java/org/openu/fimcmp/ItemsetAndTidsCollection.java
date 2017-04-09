@@ -1,5 +1,6 @@
 package org.openu.fimcmp;
 
+import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
 
@@ -57,15 +58,15 @@ public class ItemsetAndTidsCollection implements Serializable {
     }
 
     public ItemsetAndTidsCollection joinWithHead(
-            ItemsetAndTids head, List<long[]> totalResult,
-            long minSuppCount, int totalFreqItems, boolean isUseDiffSets) {
+            ItemsetAndTids head, FiResultHolder totalResult,
+            long minSuppCount, boolean isUseDiffSets) {
         LinkedList<ItemsetAndTids> resList = new LinkedList<>();
         for (ItemsetAndTids is2 : itemsetAndTidsList) {
             ItemsetAndTids newIs =
                     head.computeNewFromNextDiffsetWithSamePrefixOrNull(is2, totalTids, minSuppCount, isUseDiffSets);
             if (newIs != null) {
                 resList.add(newIs);
-                totalResult.add(FreqItemsetAsRanksBs.toBitSet(newIs, totalFreqItems));
+                totalResult.addFrequentItemset(newIs.getSupportCount(), newIs.getItemset());
             }
         }
 
@@ -146,7 +147,7 @@ public class ItemsetAndTidsCollection implements Serializable {
 
     private static void setTidToEachMatchingItemset(
             ArrayList<ItemsetAndTids> resIatList, int resTid, ArrayList<ItemsetAndTids> origIatList, int origTid) {
-        for (int ii=0; ii<origIatList.size(); ++ii) {
+        for (int ii = 0; ii < origIatList.size(); ++ii) {
             ItemsetAndTids origSet = origIatList.get(ii);
             if (origSet.hasTid(origTid)) {
                 ItemsetAndTids resSet = resIatList.get(ii);

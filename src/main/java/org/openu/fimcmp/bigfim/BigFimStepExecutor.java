@@ -7,6 +7,7 @@ import org.openu.fimcmp.ItemsetAndTidsCollection;
 import org.openu.fimcmp.apriori.*;
 import org.openu.fimcmp.eclat.EclatAlg;
 import org.openu.fimcmp.eclat.EclatProperties;
+import org.openu.fimcmp.result.FiResultHolder;
 import scala.Tuple2;
 
 import java.io.Serializable;
@@ -131,13 +132,13 @@ class BigFimStepExecutor {
         return res;
     }
 
-    JavaRDD<List<long[]>> computeWithEclat(AprioriStepRes currStep, JavaRDD<Tuple2<int[], long[]>> ranks1AndK) {
+    JavaRDD<FiResultHolder> computeWithEclat(AprioriStepRes currStep, JavaRDD<Tuple2<int[], long[]>> ranks1AndK) {
         JavaPairRDD<Integer, ItemsetAndTidsCollection> rKm1ToEclatInput = computeEclatInput(currStep, ranks1AndK);
         cxt.pp("\n\n");
         return computeWithSequentialEclat(rKm1ToEclatInput);
     }
 
-    BigFimResult createResult(JavaRDD<List<long[]>> optionalEclatFis) {
+    BigFimResult createResult(JavaRDD<FiResultHolder> optionalEclatFis) {
         return new BigFimResult(cxt.itemToRank, cxt.rankToItem, aprioriFis, optionalEclatFis);
     }
 
@@ -184,7 +185,7 @@ class BigFimStepExecutor {
         }
     }
 
-    private JavaRDD<List<long[]>> computeWithSequentialEclat(
+    private JavaRDD<FiResultHolder> computeWithSequentialEclat(
             JavaPairRDD<Integer, ItemsetAndTidsCollection> rKm1ToEclatInput) {
         cxt.pp("Starting Eclat computations");
         EclatProperties eclatProps = new EclatProperties(cxt.cnts.minSuppCnt, cxt.totalFreqItems);
@@ -194,7 +195,7 @@ class BigFimStepExecutor {
         eclatProps.setRankToItem(cxt.rankToItem);
 
         EclatAlg eclat = new EclatAlg(eclatProps);
-        JavaRDD<List<long[]>> resRdd = eclat.computeFreqItemsetsRdd(rKm1ToEclatInput);
+        JavaRDD<FiResultHolder> resRdd = eclat.computeFreqItemsetsRdd(rKm1ToEclatInput);
         cxt.pp("Num parts for Eclat: " + resRdd.getNumPartitions());
 
         return resRdd;

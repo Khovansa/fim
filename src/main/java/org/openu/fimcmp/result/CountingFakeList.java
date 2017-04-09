@@ -1,4 +1,4 @@
-package org.openu.fimcmp.util;
+package org.openu.fimcmp.result;
 
 import org.apache.commons.lang.NotImplementedException;
 
