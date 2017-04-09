@@ -10,6 +10,7 @@ import java.util.List;
 
 /**
  * Holds the frequent itemsets and their support count as a bitset. <br/>
+ *
  * @see org.openu.fimcmp.FreqItemsetAsRanksBs
  */
 public class BitsetFiResultHolder implements FiResultHolder {
@@ -25,21 +26,18 @@ public class BitsetFiResultHolder implements FiResultHolder {
         this.freqItemsetBitsets = new ArrayList<>(resultEstimation);
     }
 
+    @Override
     public void addClosedItemset(
             int supportCnt, int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems) {
-        //fast treatment of the most frequent case:
-        addFrequentItemset(supportCnt, basicItemset);
         if (parentEquivItems.isEmpty() && equivItems.isEmpty()) {
-            return;
+            //fast treatment of the most frequent case:
+            addFrequentItemset(supportCnt, basicItemset);
+        } else {
+            //the general case
+            ArrayList<Integer> newItems = getUniqueNewItems(basicItemset, parentEquivItems, equivItems);
+            freqItemsetBitsets.addAll(
+                    FreqItemsetAsRanksBs.toBitSets(supportCnt, basicItemset, newItems, totalFreqItems));
         }
-
-        final int bsStartInd=0;
-        final int bsArrSize = BitArrays.requiredSize(totalFreqItems, bsStartInd);
-        long[] itemsBs = new long[bsArrSize];
-        BitArrays.setAll(itemsBs, bsStartInd, basicItemset);
-
-        //TODO - implement
-
     }
 
     @Override
@@ -66,5 +64,29 @@ public class BitsetFiResultHolder implements FiResultHolder {
     @Override
     public Iterator<long[]> fiAsBitsetIterator() {
         return freqItemsetBitsets.iterator();
+    }
+
+    private ArrayList<Integer> getUniqueNewItems(
+            int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems) {
+        ArrayList<Integer> res = new ArrayList<>(parentEquivItems.size() + equivItems.size());
+
+        final int bsStartInd = 0;
+        final int bsArrSize = BitArrays.requiredSize(totalFreqItems, bsStartInd);
+        long[] itemsBs = new long[bsArrSize];
+
+        BitArrays.setAll(itemsBs, bsStartInd, basicItemset);
+        addIfNew(res, itemsBs, bsStartInd, parentEquivItems);
+        addIfNew(res, itemsBs, bsStartInd, equivItems);
+
+        return res;
+    }
+
+    private static void addIfNew(List<Integer> res, long[] itemsBs, int bsStartInd, List<Integer> possiblyNewItems) {
+        for (Integer item : possiblyNewItems) {
+            if (!BitArrays.get(itemsBs, bsStartInd, item)) {
+                BitArrays.set(itemsBs, bsStartInd, item);
+                res.add(item);
+            }
+        }
     }
 }

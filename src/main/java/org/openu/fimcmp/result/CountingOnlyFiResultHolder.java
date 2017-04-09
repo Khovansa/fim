@@ -22,12 +22,14 @@ public class CountingOnlyFiResultHolder implements FiResultHolder {
         this.size = 0;
     }
 
+    @Override
     public void addClosedItemset(
             int supportCnt, int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems) {
-        //fast treatment of the most frequent case:
         if (parentEquivItems.isEmpty() && equivItems.isEmpty()) {
+            //fast treatment of the most frequent case:
             size += 1;
         } else {
+            //the general case
             int differentEqivItemsCnt = countNewItems(basicItemset, parentEquivItems, equivItems);
             size += SubsetsGenerator.getNumberOfAllSubsets(differentEqivItemsCnt);
         }
