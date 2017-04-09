@@ -2,6 +2,7 @@ package org.openu.fimcmp.result;
 
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.util.BitArrays;
+import org.openu.fimcmp.util.SubsetsGenerator;
 
 import java.util.Iterator;
 import java.util.List;
@@ -28,7 +29,7 @@ public class CountingOnlyFiResultHolder implements FiResultHolder {
             size += 1;
         } else {
             int differentEqivItemsCnt = countNewItems(basicItemset, parentEquivItems, equivItems);
-            size += (1L << differentEqivItemsCnt);
+            size += SubsetsGenerator.getNumberOfAllSubsets(differentEqivItemsCnt);
         }
     }
 
