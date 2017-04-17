@@ -1,5 +1,6 @@
 package org.openu.fimcmp.fin;
 
+import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.util.Assert;
 
 import java.util.ArrayList;
@@ -70,6 +71,46 @@ class DiffNodeset {
 
         int supportCnt = xSet.supportCnt - countSum(resNodes);
         return new DiffNodeset(resItemset, resNodes, supportCnt);
+    }
+
+    static List<ProcessedNodeset> createProcessedLevel1(ArrayList<DiffNodeset> ascSortedF1, int minSuppCnt) {
+        final int totalFreqItems = ascSortedF1.size();
+        List<ProcessedNodeset> level1Nodes = new ArrayList<>(totalFreqItems);
+        for (int ii = 0; ii< totalFreqItems; ++ii) {
+            DiffNodeset xSet = ascSortedF1.get(ii);
+            List<DiffNodeset> rightSiblings = ascSortedF1.subList(ii+1, ascSortedF1.size());
+            ProcessedNodeset level1Node = xSet.createEquivItemsAndSons(true, rightSiblings, minSuppCnt);
+            level1Nodes.add(level1Node);
+        }
+
+        return level1Nodes;
+    }
+
+    static void updateResultBy(FiResultHolder resultHolder, List<DiffNodeset> nodes) {
+        for (DiffNodeset node : nodes) {
+            resultHolder.addFrequentItemset(node.getSupportCnt(), node.getItemset());
+        }
+    }
+
+    ProcessedNodeset createEquivItemsAndSons(boolean isLevel1, List<DiffNodeset> rightSiblings, int minSuppCnt) {
+        ProcessedNodeset res = new ProcessedNodeset(this);
+
+        for (DiffNodeset y : rightSiblings) {
+            final int i = y.lastItem();
+            final DiffNodeset p = constructNew(isLevel1, y);
+
+            final int pSupportCnt = p.getSupportCnt();
+            if (pSupportCnt == supportCnt && !isLevel1) {
+                res.addNewEquivItem(i);
+            } else if (pSupportCnt >= minSuppCnt) {
+                res.addSon(p);
+            }
+        }
+        return res;
+    }
+
+    private DiffNodeset constructNew(boolean isLevel1, DiffNodeset ySet) {
+        return (isLevel1) ? constructForItemPair(this, ySet) : constructByDiff(this, ySet);
     }
 
     private static ArrayList<PpcNode> constructPpcNodeListForItemPair(
