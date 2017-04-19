@@ -10,7 +10,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- *
+ * Replacement of the 'pattern tree node' in the original FIN+ algorithm. <br/>
+ * It seems to be unnecessary to keep the entire tree in memory. <br/>
+ * To process a node we only need its parent and its right siblings. <br/>
  */
 class ProcessedNodeset {
     private final DiffNodeset diffNodeset;
@@ -35,7 +37,7 @@ class ProcessedNodeset {
         List<ProcessedNodeset> res = new ArrayList<>(sons.size());
         while (!sons.isEmpty()) {
             DiffNodeset son = sons.pop();
-            ProcessedNodeset processedSon = son.createEquivItemsAndSons(false, sons, minSuppCnt);
+            ProcessedNodeset processedSon = son.createProcessedNode(sons, minSuppCnt);
             processedSon.updateResult(resultHolder, equivalentItems);
             res.add(processedSon);
         }
@@ -43,6 +45,10 @@ class ProcessedNodeset {
         return res;
     }
 
+    /**
+     * The main method for the parallel algorithm's 'map' phase. <br/>
+     * Collect results from each son and its subtree. <br/>
+     */
     void processSubtree(FiResultHolder resultHolder, int minSuppCnt) {
         if (CollectionUtils.isEmpty(sons)) {
             return;
@@ -50,12 +56,21 @@ class ProcessedNodeset {
 
         while (!sons.isEmpty()) {
             DiffNodeset son = sons.pop();
-            ProcessedNodeset processedSon = son.createEquivItemsAndSons(false, sons, minSuppCnt);
+            ProcessedNodeset processedSon = son.createProcessedNode(sons, minSuppCnt);
             processedSon.updateResult(resultHolder, equivalentItems);
             processedSon.processSubtree(resultHolder, minSuppCnt);
         }
     }
 
+    static int countSons(List<ProcessedNodeset> nodes) {
+        int res = 0;
+        for (ProcessedNodeset node : nodes) {
+            if (node.sons != null) {
+                res += node.sons.size();
+            }
+        }
+        return res;
+    }
     List<DiffNodeset> getSons() {
         if (sons != null) {
             return sons;

@@ -73,13 +73,13 @@ class DiffNodeset {
         return new DiffNodeset(resItemset, resNodes, supportCnt);
     }
 
-    static List<ProcessedNodeset> createProcessedLevel1(ArrayList<DiffNodeset> ascSortedF1, int minSuppCnt) {
+    static List<ProcessedNodeset> createProcessedNodesLevel1(ArrayList<DiffNodeset> ascSortedF1, int minSuppCnt) {
         final int totalFreqItems = ascSortedF1.size();
         List<ProcessedNodeset> level1Nodes = new ArrayList<>(totalFreqItems);
         for (int ii = 0; ii< totalFreqItems; ++ii) {
             DiffNodeset xSet = ascSortedF1.get(ii);
             List<DiffNodeset> rightSiblings = ascSortedF1.subList(ii+1, ascSortedF1.size());
-            ProcessedNodeset level1Node = xSet.createEquivItemsAndSons(true, rightSiblings, minSuppCnt);
+            ProcessedNodeset level1Node = xSet.createProcessedNode(true, rightSiblings, minSuppCnt);
             level1Nodes.add(level1Node);
         }
 
@@ -92,7 +92,11 @@ class DiffNodeset {
         }
     }
 
-    ProcessedNodeset createEquivItemsAndSons(boolean isLevel1, List<DiffNodeset> rightSiblings, int minSuppCnt) {
+    ProcessedNodeset createProcessedNode(List<DiffNodeset> rightSiblings, int minSuppCnt) {
+        return createProcessedNode(false, rightSiblings, minSuppCnt);
+    }
+
+    private ProcessedNodeset createProcessedNode(boolean isLevel1, List<DiffNodeset> rightSiblings, int minSuppCnt) {
         ProcessedNodeset res = new ProcessedNodeset(this);
 
         for (DiffNodeset y : rightSiblings) {
