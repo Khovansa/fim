@@ -96,6 +96,10 @@ class DiffNodeset {
         return createProcessedNode(false, rightSiblings, minSuppCnt);
     }
 
+    /**
+     * Extend the tree by extending the current node. <br/>
+     * See lines 1-20 of 'Constructing_Pattern_Tree()' procedure of the DiffNodesets algorithm paper.
+     */
     private ProcessedNodeset createProcessedNode(boolean isLevel1, List<DiffNodeset> rightSiblings, int minSuppCnt) {
         ProcessedNodeset res = new ProcessedNodeset(this);
 
