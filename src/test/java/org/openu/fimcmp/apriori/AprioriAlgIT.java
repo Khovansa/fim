@@ -7,6 +7,7 @@ import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
 import org.junit.Test;
 import org.openu.fimcmp.*;
+import org.openu.fimcmp.algbase.BasicOps;
 import org.openu.fimcmp.eclat.EclatAlg;
 import org.openu.fimcmp.eclat.EclatProperties;
 import org.openu.fimcmp.result.FiResultHolder;

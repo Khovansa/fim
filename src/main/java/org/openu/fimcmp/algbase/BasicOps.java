@@ -1,4 +1,4 @@
-package org.openu.fimcmp;
+package org.openu.fimcmp.algbase;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -47,7 +47,7 @@ public class BasicOps implements Serializable {
     }
 
     public static <T> List<T> toItems(List<Tuple2<T, Integer>> itemWithSuppList) {
-        List<T> res = new ArrayList<T>(itemWithSuppList.size());
+        List<T> res = new ArrayList<>(itemWithSuppList.size());
         for (Tuple2<T, Integer> itemWithSupp : itemWithSuppList) {
             res.add(itemWithSupp._1);
         }

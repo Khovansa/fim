@@ -2,6 +2,10 @@ package org.openu.fimcmp;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.openu.fimcmp.algbase.AlgBase;
+import org.openu.fimcmp.algbase.AlgBaseProperties;
+import org.openu.fimcmp.algbase.BasicOps;
+import org.openu.fimcmp.algbase.F1Context;
 import org.openu.fimcmp.apriori.*;
 import org.openu.fimcmp.bigfim.BigFimAlg;
 import org.openu.fimcmp.bigfim.BigFimAlgProperties;
@@ -55,6 +59,7 @@ public class SparkContextFactory {
                     NextSizeItemsetGenHelper.class,
                     ItemsetAndTidsCollection.class, ItemsetAndTids.class, ItemsetAndTids[].class,
 
+                    AlgBase.class, AlgBaseProperties.class,
                     EclatAlg.class,
                     BigFimAlgProperties.class, BigFimAlg.class,
 

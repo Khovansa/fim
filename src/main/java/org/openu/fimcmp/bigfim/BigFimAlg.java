@@ -3,8 +3,6 @@ package org.openu.fimcmp.bigfim;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.storage.StorageLevel;
-import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.SparkContextFactory;
 import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.result.FiResultHolder;
@@ -43,14 +41,6 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties> {
     }
     public BigFimAlg(BigFimAlgProperties props) {
         super(props);
-    }
-
-    public JavaRDD<String[]> readInput(JavaSparkContext sc, String inputFile) {
-        JavaRDD<String[]> res = BasicOps.readLinesAsSortedItemsArr(inputFile, props.inputNumParts, sc);
-        if (props.isPersistInput) {
-            res = res.persist(StorageLevel.MEMORY_ONLY_SER());
-        }
-        return res;
     }
 
     public BigFimResult computeFis(JavaRDD<String[]> trs, StopWatch sw) {

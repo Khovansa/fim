@@ -3,7 +3,6 @@ package org.openu.fimcmp.algbase;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.storage.StorageLevel;
-import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.apriori.AprioriAlg;
 import scala.Tuple2;

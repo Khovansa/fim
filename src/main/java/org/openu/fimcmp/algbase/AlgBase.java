@@ -4,7 +4,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
-import org.openu.fimcmp.BasicOps;
 import org.openu.fimcmp.apriori.AprioriAlg;
 import scala.Tuple2;
 

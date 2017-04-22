@@ -7,6 +7,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.openu.fimcmp.algbase.BasicOps;
 import scala.Tuple2;
 
 import java.util.*;
