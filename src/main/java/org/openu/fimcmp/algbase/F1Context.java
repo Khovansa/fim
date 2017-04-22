@@ -1,4 +1,4 @@
-package org.openu.fimcmp.bigfim;
+package org.openu.fimcmp.algbase;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaRDD;
@@ -14,30 +14,33 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Auxiliary class to hold all the context of Apriori algorithm execution by BigFimAlg
+ * Auxiliary class to hold all the context related to F1 and item to rank mapping.
  */
-class AprContext {
-    final AprioriAlg<String> apr;
-    private final List<Tuple2<String, Integer>> sortedF1;
-    final TrsCount cnts;
-    final int totalFreqItems;
-    final Map<String, Integer> itemToRank;
-    final String[] rankToItem;
+public class F1Context {
     private final StopWatch sw;
+    private final List<Tuple2<String, Integer>> sortedF1;
 
-    AprContext(AprioriAlg<String> apr, List<Tuple2<String, Integer>> sortedF1, TrsCount cnts, StopWatch sw) {
+    public final AprioriAlg<String> apr;
+    public final long totalTrs;
+    public final long minSuppCnt;
+    public final int totalFreqItems;
+    public final Map<String, Integer> itemToRank;
+    public final String[] rankToItem;
+
+    F1Context(AprioriAlg<String> apr, List<Tuple2<String, Integer>> sortedF1, TrsCount cnts, StopWatch sw) {
         this.apr = apr;
-
         this.sortedF1 = sortedF1;
         this.totalFreqItems = sortedF1.size();
         this.itemToRank = BasicOps.itemToRank(BasicOps.toItems(sortedF1));
         this.rankToItem = BasicOps.getRankToItem(itemToRank);
 
-        this.cnts = cnts;
+        this.totalTrs = cnts.totalTrs;
+        this.minSuppCnt = cnts.minSuppCnt;
+
         this.sw = sw;
     }
 
-    JavaRDD<int[]> computeRddRanks1(JavaRDD<String[]> trs) {
+    public JavaRDD<int[]> computeRddRanks1(JavaRDD<String[]> trs) {
         SerToRanks1 toRanks1 = new SerToRanks1(itemToRank);
         JavaRDD<int[]> res = trs.map(toRanks1::getMappedFilteredAndSortedTrs);
         res = res.persist(StorageLevel.MEMORY_ONLY_SER());
@@ -60,7 +63,7 @@ class AprContext {
         }
     }
 
-    List<long[]> freqItemRanksAsItemsetBs() {
+    public List<long[]> freqItemRanksAsItemsetBs() {
         List<long[]> res = new ArrayList<>(totalFreqItems);
         for (Tuple2<String, Integer> itemWithSupp : sortedF1) {
             int rank = itemToRank.get(itemWithSupp._1);
@@ -70,7 +73,7 @@ class AprContext {
         return res;
     }
 
-    void pp(Object msg) {
-        BigFimAlg.pp(sw, msg);
+    public void pp(Object msg) {
+        AlgBase.pp(sw, msg);
     }
 }

@@ -4,6 +4,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.storage.StorageLevel;
 import org.openu.fimcmp.ItemsetAndTidsCollection;
+import org.openu.fimcmp.algbase.F1Context;
 import org.openu.fimcmp.apriori.*;
 import org.openu.fimcmp.eclat.EclatAlg;
 import org.openu.fimcmp.eclat.EclatProperties;
@@ -20,12 +21,12 @@ import java.util.List;
  */
 class BigFimStepExecutor {
     private final BigFimAlgProperties props;
-    private final AprContext cxt;
+    private final F1Context cxt;
     //holds F1, F2, F3, ... - each Fi as a list of itemsets, each itemset as a bitset
     private final ArrayList<List<long[]>> aprioriFis;
     private final ArrayList<JavaRDD> allRanksRdds;
 
-    BigFimStepExecutor(BigFimAlgProperties props, AprContext cxt) {
+    BigFimStepExecutor(BigFimAlgProperties props, F1Context cxt) {
         this.props = props;
         this.cxt = cxt;
         aprioriFis = new ArrayList<>();
@@ -124,7 +125,7 @@ class BigFimStepExecutor {
             return null;
         }
 
-        AprioriStepRes res = new AprioriStepRes(kp1, fkAsArrays, prevSizeAllRanks, fk, fkSize, cxt);
+        AprioriStepRes res = new AprioriStepRes(kp1, fkAsArrays, prevSizeAllRanks, fkSize, cxt);
 
         res.print(cxt, props.isPrintFks);
 
@@ -152,7 +153,7 @@ class BigFimStepExecutor {
 
         //compute TIDs
         cxt.pp("Computing TIDs");
-        TidsGenHelper tidsGenHelper = currStep.constructTidGenHelper(cxt.cnts.totalTrs);
+        TidsGenHelper tidsGenHelper = currStep.constructTidGenHelper(cxt.totalTrs);
         PairRanks rkToRkm1AndR1 = currStep.currSizeAllRanks.constructRkToRkm1AndR1ForMaxK();
         JavaRDD<long[][]> rankToTidBsRdd = cxt.apr.computeCurrRankToTidBitSet_Part(kRanksBsRdd, tidsGenHelper);
         rankToTidBsRdd = rankToTidBsRdd.persist(StorageLevel.MEMORY_AND_DISK_SER());
@@ -188,7 +189,7 @@ class BigFimStepExecutor {
     private JavaRDD<FiResultHolder> computeWithSequentialEclat(
             JavaPairRDD<Integer, ItemsetAndTidsCollection> rKm1ToEclatInput) {
         cxt.pp("Starting Eclat computations");
-        EclatProperties eclatProps = new EclatProperties(cxt.cnts.minSuppCnt, cxt.totalFreqItems);
+        EclatProperties eclatProps = new EclatProperties(cxt.minSuppCnt, cxt.totalFreqItems);
         eclatProps.setUseDiffSets(props.isUseDiffSets);
         eclatProps.setSqueezingEnabled(props.isSqueezingEnabled);
         eclatProps.setCountingOnly(props.isCountingOnly);

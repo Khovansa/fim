@@ -1,4 +1,4 @@
-package org.openu.fimcmp.bigfim;
+package org.openu.fimcmp.algbase;
 
 import java.io.Serializable;
 

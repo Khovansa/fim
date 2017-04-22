@@ -2,6 +2,7 @@ package org.openu.fimcmp.bigfim;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openu.fimcmp.FreqItemset;
+import org.openu.fimcmp.algbase.F1Context;
 import org.openu.fimcmp.apriori.CurrSizeFiRanks;
 import org.openu.fimcmp.apriori.FiRanksToFromItems;
 import org.openu.fimcmp.apriori.NextSizeItemsetGenHelper;
@@ -21,7 +22,9 @@ class AprioriStepRes {
     final CurrSizeFiRanks currSizeRanks;
     final FiRanksToFromItems currSizeAllRanks;
 
-    AprioriStepRes(int kk, List<int[]> fkAsArrays, FiRanksToFromItems prevSizeAllRanks, List<int[]> fk, int fkm1Size, AprContext cxt) {
+    AprioriStepRes(
+            int kk, List<int[]> fkAsArrays,
+            FiRanksToFromItems prevSizeAllRanks, int fkm1Size, F1Context cxt) {
         this.kk = kk;
         this.fkAsArrays = fkAsArrays;
         this.prevSizeAllRanks = prevSizeAllRanks;
@@ -35,7 +38,7 @@ class AprioriStepRes {
         return fk.size();
     }
 
-    List<long[]> getItemsetBitsets(AprContext cxt) {
+    List<long[]> getItemsetBitsets(F1Context cxt) {
         return cxt.apr.fkAsArraysToItemsetBitsets(fkAsArrays, prevSizeAllRanks, cxt.totalFreqItems);
     }
 
@@ -47,7 +50,7 @@ class AprioriStepRes {
         return currSizeRanks.constructTidGenHelper(fk, (int) totalTrs);
     }
 
-    void print(AprContext cxt, boolean isPrintFks) {
+    void print(F1Context cxt, boolean isPrintFks) {
         cxt.pp(String.format("F%s size: %s", kk, fk.size()));
         final int maxSampleSize = 10;
 
