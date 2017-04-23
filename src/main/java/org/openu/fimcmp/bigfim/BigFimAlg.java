@@ -25,15 +25,10 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties> {
         StopWatch sw = new StopWatch();
         sw.start();
         pp(sw, runProps);
-        pp(sw, "Starting the Spark context");
-        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext(runProps.isUseKrio, runProps.sparkMasterUrl);
-        pp(sw, "Completed starting the Spark context");
+        JavaSparkContext sc = createSparkContext(runProps.isUseKrio, runProps.sparkMasterUrl, sw);
 
         String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + runProps.inputFileName;
-        pp(sw, "Start reading " + inputFile);
-        JavaRDD<String[]> trs = alg.readInput(sc, inputFile);
-        pp(sw, "Done reading " + inputFile);
-        pp(sw, "Done counting " + trs.count());
+        JavaRDD<String[]> trs = alg.readInput(sc, inputFile, sw);
 
         BigFimResult res = alg.computeFis(trs, sw);
         res.printCounts(sw);

@@ -22,7 +22,7 @@ public class AlgITBase {
     }
 
     protected void setUpRun(boolean useKryo) throws Exception {
-        sc = SparkContextFactory.createLocalSparkContext(useKryo, "local");
+        sc = SparkContextFactory.createSparkContext(useKryo, "local");
         sw = new StopWatch();
         basicOps = new BasicOps();
     }

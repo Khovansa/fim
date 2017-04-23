@@ -23,7 +23,7 @@ import java.util.*;
  */
 @SuppressWarnings("WeakerAccess")
 public class SparkContextFactory {
-    public static JavaSparkContext createLocalSparkContext(boolean useKryo, String sparkMasterUrl) {
+    public static JavaSparkContext createSparkContext(boolean useKryo, String sparkMasterUrl) {
         SparkConf conf = new SparkConf().setAppName("FI Comparison");
 //        conf.setMaster("local");
 //        conf.setMaster("spark://192.168.1.68:7077");

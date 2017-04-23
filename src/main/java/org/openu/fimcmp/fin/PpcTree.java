@@ -16,7 +16,13 @@ class PpcTree {
         this.currNode = currNode;
     }
 
-    void insertTransaction(int[] sortedTr, int currInd) {
+    /**
+     * @param sortedTr transaction ranks, sorted in descending frequency (e.g. in ascending natural order)
+     */
+    void insertTransaction(int[] sortedTr) {
+        insertTransaction(sortedTr, 0);
+    }
+    private void insertTransaction(int[] sortedTr, int currInd) {
         if (currInd >= sortedTr.length) {
             return; //recursion end
         }

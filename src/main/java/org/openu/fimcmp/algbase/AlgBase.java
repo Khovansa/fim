@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
+import org.openu.fimcmp.SparkContextFactory;
 import org.openu.fimcmp.apriori.AprioriAlg;
 import scala.Tuple2;
 
@@ -20,11 +21,20 @@ public abstract class AlgBase<P extends AlgBaseProperties> implements Serializab
         this.props = props;
     }
 
-    public JavaRDD<String[]> readInput(JavaSparkContext sc, String inputFile) {
+    public static JavaSparkContext createSparkContext(boolean useKryo, String sparkMasterUrl, StopWatch sw) {
+        pp(sw, "Starting the Spark context");
+        JavaSparkContext sc = SparkContextFactory.createSparkContext(useKryo, sparkMasterUrl);
+        pp(sw, "Completed starting the Spark context");
+        return sc;
+    }
+
+    public JavaRDD<String[]> readInput(JavaSparkContext sc, String inputFile, StopWatch sw) {
+        pp(sw, "Start reading " + inputFile);
         JavaRDD<String[]> res = BasicOps.readLinesAsSortedItemsArr(inputFile, props.inputNumParts, sc);
         if (props.isPersistInput) {
             res = res.persist(StorageLevel.MEMORY_ONLY_SER());
         }
+        pp(sw, "Done reading " + inputFile);
         return res;
     }
 

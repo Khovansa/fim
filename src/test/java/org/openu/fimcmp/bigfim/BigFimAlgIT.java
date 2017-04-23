@@ -32,7 +32,7 @@ public class BigFimAlgIT {
         sw.start();
         pp(sw, "Starting the Spark context");
         boolean isUseKrio = !props.isCountingOnly;
-        JavaSparkContext sc = SparkContextFactory.createLocalSparkContext(isUseKrio, "local");
+        JavaSparkContext sc = SparkContextFactory.createSparkContext(isUseKrio, "local");
         pp(sw, "Completed starting the Spark context");
         Thread.sleep(1_200_000L);
 
@@ -40,7 +40,7 @@ public class BigFimAlgIT {
         sw.reset();
         sw.start();
         String inputFile = TestDataLocation.fileStr(inputFileName);
-        JavaRDD<String[]> trs = alg.readInput(sc, inputFile);
+        JavaRDD<String[]> trs = alg.readInput(sc, inputFile, sw);
 
         BigFimResult res = alg.computeFis(trs, sw);
         res.printCounts(sw);
