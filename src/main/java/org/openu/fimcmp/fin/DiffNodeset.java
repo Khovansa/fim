@@ -150,6 +150,7 @@ class DiffNodeset {
             } else if (nx.getPreOrder() > ny.getPreOrder()) {
                 ++xInd; //ny is ancestor of nx => skipping nx
             } else {
+                ++xInd;
                 resNodes.add(nx); //ny is NOT an ancestor of nx
             }
         }

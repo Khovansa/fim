@@ -26,6 +26,23 @@ public class FreqItemset {
         return itemset.containsAll(Arrays.asList(items));
     }
 
+    public int compareForNiceOutput(FreqItemset other) {
+        if (freq != other.freq) {
+            return Integer.compare(other.freq, freq);
+        }
+        if (itemset.size() != other.itemset.size()) {
+            return Integer.compare(other.itemset.size(), itemset.size());
+        }
+        return toString().compareTo(other.toString());
+    }
+
+    public int compareForNiceOutput2(FreqItemset other) {
+        if (itemset.size() != other.itemset.size()) {
+            return Integer.compare(other.itemset.size(), itemset.size());
+        }
+        return toString().compareTo(other.toString());
+    }
+
     @Override
     public String toString() {
         return String.format("FI: %s: %s", new TreeSet<>(itemset), freq);

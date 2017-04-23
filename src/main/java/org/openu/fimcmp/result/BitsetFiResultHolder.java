@@ -69,7 +69,7 @@ public class BitsetFiResultHolder implements FiResultHolder {
 
     private ArrayList<Integer> getUniqueNewItems(
             int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems) {
-        ArrayList<Integer> res = new ArrayList<>(parentEquivItems.size() + equivItems.size());
+        ArrayList<Integer> res = new ArrayList<>(safeSize(parentEquivItems) + safeSize(equivItems));
 
         final int bsStartInd = 0;
         final int bsArrSize = BitArrays.requiredSize(totalFreqItems, bsStartInd);
@@ -93,5 +93,9 @@ public class BitsetFiResultHolder implements FiResultHolder {
                 res.add(item);
             }
         }
+    }
+
+    private static int safeSize(List<?> lst) {
+        return (lst != null) ? lst.size() : 0;
     }
 }

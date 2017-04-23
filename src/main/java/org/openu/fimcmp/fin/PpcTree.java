@@ -47,7 +47,7 @@ class PpcTree {
 
     ArrayList<ArrayList<PpcNode>> getPreOrderItemToPpcNodes(int totalFreqItems) {
         ArrayList<ArrayList<PpcNode>> resItemToPpcNodes = new ArrayList<>(totalFreqItems);
-        for (int ii=0; ii<resItemToPpcNodes.size(); ++ii) {
+        for (int ii=0; ii<totalFreqItems; ++ii) {
             resItemToPpcNodes.add(new ArrayList<>(2));
         }
 

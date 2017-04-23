@@ -11,6 +11,7 @@ import org.openu.fimcmp.result.FiResultHolder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implement the main steps of the FIN+ algorithm.
@@ -18,8 +19,7 @@ import java.util.List;
 public class FinAlg extends AlgBase<FinAlgProperties> {
 
     public static void main(String[] args) throws Exception {
-        //TODO
-        FinAlgProperties props = new FinAlgProperties(0.5);
+        FinAlgProperties props = new FinAlgProperties(0.8);
         props.inputNumParts = 1;
         props.isPersistInput = true;
         FinAlg alg = new FinAlg(props);
@@ -28,7 +28,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         sw.start();
         JavaSparkContext sc = createSparkContext(false, "local", sw);
 
-        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "1.txt";
+        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
         JavaRDD<String[]> trs = alg.readInput(sc, inputFile, sw);
 
         F1Context f1Context = alg.computeF1Context(trs, sw);
@@ -41,9 +41,12 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         //output the results
         List<FreqItemset> allFrequentItemsets = resultHolder.getAllFrequentItemsets(f1Context.rankToItem);
         System.out.println("Total results: " + allFrequentItemsets.size());
+        allFrequentItemsets = allFrequentItemsets.stream().
+                sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
         for (FreqItemset freqItemset : allFrequentItemsets) {
             System.out.println(freqItemset);
         }
+        System.out.println("Total results: " + allFrequentItemsets.size());
     }
 
     public FinAlg(FinAlgProperties props) {
@@ -75,7 +78,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
     }
 
     /**
-     * @param ascFreqSortedF1        F1 sorted in increasing frequency
+     * @param ascFreqSortedF1    F1 sorted in increasing frequency
      * @param minSuppCnt         -
      * @param requiredItemsetLen the required itemset length of the returned nodes, e.g. '1' for individual items. <br/>
      *                           Note that each node will contain sons, i.e. '1' means a node for an individual frequent
