@@ -2,6 +2,7 @@ package org.openu.fimcmp.fin;
 
 import scala.Tuple2;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -42,6 +43,29 @@ class PpcTree {
         }
         currNode.setPostOrder(nextPostOrder++);
         return new Tuple2<>(nextPreOrder, nextPostOrder);
+    }
+
+    ArrayList<ArrayList<PpcNode>> getPreOrderItemToPpcNodes(int totalFreqItems) {
+        ArrayList<ArrayList<PpcNode>> resItemToPpcNodes = new ArrayList<>(totalFreqItems);
+        for (int ii=0; ii<resItemToPpcNodes.size(); ++ii) {
+            resItemToPpcNodes.add(new ArrayList<>(2));
+        }
+
+        preOrderCollectItemToPpcNodes(resItemToPpcNodes);
+
+        return resItemToPpcNodes;
+    }
+
+    private void preOrderCollectItemToPpcNodes(ArrayList<ArrayList<PpcNode>> resItemToPpcNodes) {
+        if (itemToChildNode != null) {
+            for (Map.Entry<Integer, PpcTree> entry : itemToChildNode.entrySet()) {
+                int item = entry.getKey();
+                PpcTree child = entry.getValue();
+
+                resItemToPpcNodes.get(item).add(child.currNode);
+                child.preOrderCollectItemToPpcNodes(resItemToPpcNodes);
+            }
+        }
     }
 
     PpcNode getBy(int... sortedTr) {

@@ -5,6 +5,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.storage.StorageLevel;
 import org.openu.fimcmp.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.apriori.AprioriAlg;
+import org.openu.fimcmp.result.FiResultHolder;
 import scala.Tuple2;
 
 import java.io.Serializable;
@@ -70,6 +71,15 @@ public class F1Context {
             res.add(FreqItemsetAsRanksBs.toBitSet(itemWithSupp._2, itemset, totalFreqItems));
         }
         return res;
+    }
+
+    public void updateByF1(FiResultHolder resultHolder) {
+        for (Tuple2<String, Integer> itemWithSupp : sortedF1) {
+            int rank = itemToRank.get(itemWithSupp._1);
+            int[] itemset = new int[]{rank};
+            int supportCnt = itemWithSupp._2;
+            resultHolder.addFrequentItemset(supportCnt, itemset);
+        }
     }
 
     public void pp(Object msg) {

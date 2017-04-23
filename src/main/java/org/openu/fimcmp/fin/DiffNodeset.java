@@ -32,6 +32,68 @@ class DiffNodeset {
     }
 
     /**
+     * Assuming the item ranks start with 0
+     */
+    static ArrayList<DiffNodeset> createF1NodesetsSortedByAscFreq(ArrayList<ArrayList<PpcNode>> itemToPpcNodes) {
+        final int totalFreqItems = itemToPpcNodes.size();
+        ArrayList<DiffNodeset> resList = new ArrayList<>(totalFreqItems);
+        for (int item = totalFreqItems-1; item>=0; --item) {
+            ArrayList<PpcNode> ppcNodes = itemToPpcNodes.get(item);
+            DiffNodeset nodeset = constructForItem(item, ppcNodes);
+            resList.add(nodeset);
+        }
+        return resList;
+    }
+
+    static List<ProcessedNodeset> createProcessedNodesLevel1(ArrayList<DiffNodeset> ascFreqSortedF1, long minSuppCnt) {
+        final int totalFreqItems = ascFreqSortedF1.size();
+        List<ProcessedNodeset> level1Nodes = new ArrayList<>(totalFreqItems);
+        for (int ii = 0; ii< totalFreqItems; ++ii) {
+            DiffNodeset xSet = ascFreqSortedF1.get(ii);
+            List<DiffNodeset> rightSiblings = ascFreqSortedF1.subList(ii+1, ascFreqSortedF1.size());
+            ProcessedNodeset level1Node = xSet.createProcessedNode(true, rightSiblings, minSuppCnt);
+            level1Nodes.add(level1Node);
+        }
+
+        return level1Nodes;
+    }
+
+    static void updateResultBy(FiResultHolder resultHolder, List<DiffNodeset> nodes) {
+        for (DiffNodeset node : nodes) {
+            resultHolder.addFrequentItemset(node.getSupportCnt(), node.getItemset());
+        }
+    }
+
+    ProcessedNodeset createProcessedNode(List<DiffNodeset> rightSiblings, long minSuppCnt) {
+        return createProcessedNode(false, rightSiblings, minSuppCnt);
+    }
+
+    /**
+     * Extend the tree by extending the current node. <br/>
+     * See lines 1-20 of 'Constructing_Pattern_Tree()' procedure of the DiffNodesets algorithm paper.
+     */
+    private ProcessedNodeset createProcessedNode(boolean isLevel1, List<DiffNodeset> rightSiblings, long minSuppCnt) {
+        ProcessedNodeset res = new ProcessedNodeset(this);
+
+        for (DiffNodeset y : rightSiblings) {
+            final int i = y.lastItem();
+            final DiffNodeset p = constructNew(isLevel1, y);
+
+            final int pSupportCnt = p.getSupportCnt();
+            if (pSupportCnt == supportCnt && !isLevel1) {
+                res.addNewEquivItem(i);
+            } else if (pSupportCnt >= minSuppCnt) {
+                res.addSon(p);
+            }
+        }
+        return res;
+    }
+
+    private DiffNodeset constructNew(boolean isLevel1, DiffNodeset ySet) {
+        return (isLevel1) ? constructForItemPair(this, ySet) : constructByDiff(this, ySet);
+    }
+
+    /**
      * Creates a DiffNodeset for a single item. <br/>
      */
     static DiffNodeset constructForItem(int itemRank, ArrayList<PpcNode> itemSortedPpcNodes) {
@@ -71,54 +133,6 @@ class DiffNodeset {
 
         int supportCnt = xSet.supportCnt - countSum(resNodes);
         return new DiffNodeset(resItemset, resNodes, supportCnt);
-    }
-
-    static List<ProcessedNodeset> createProcessedNodesLevel1(ArrayList<DiffNodeset> ascFreqSortedF1, int minSuppCnt) {
-        final int totalFreqItems = ascFreqSortedF1.size();
-        List<ProcessedNodeset> level1Nodes = new ArrayList<>(totalFreqItems);
-        for (int ii = 0; ii< totalFreqItems; ++ii) {
-            DiffNodeset xSet = ascFreqSortedF1.get(ii);
-            List<DiffNodeset> rightSiblings = ascFreqSortedF1.subList(ii+1, ascFreqSortedF1.size());
-            ProcessedNodeset level1Node = xSet.createProcessedNode(true, rightSiblings, minSuppCnt);
-            level1Nodes.add(level1Node);
-        }
-
-        return level1Nodes;
-    }
-
-    static void updateResultBy(FiResultHolder resultHolder, List<DiffNodeset> nodes) {
-        for (DiffNodeset node : nodes) {
-            resultHolder.addFrequentItemset(node.getSupportCnt(), node.getItemset());
-        }
-    }
-
-    ProcessedNodeset createProcessedNode(List<DiffNodeset> rightSiblings, int minSuppCnt) {
-        return createProcessedNode(false, rightSiblings, minSuppCnt);
-    }
-
-    /**
-     * Extend the tree by extending the current node. <br/>
-     * See lines 1-20 of 'Constructing_Pattern_Tree()' procedure of the DiffNodesets algorithm paper.
-     */
-    private ProcessedNodeset createProcessedNode(boolean isLevel1, List<DiffNodeset> rightSiblings, int minSuppCnt) {
-        ProcessedNodeset res = new ProcessedNodeset(this);
-
-        for (DiffNodeset y : rightSiblings) {
-            final int i = y.lastItem();
-            final DiffNodeset p = constructNew(isLevel1, y);
-
-            final int pSupportCnt = p.getSupportCnt();
-            if (pSupportCnt == supportCnt && !isLevel1) {
-                res.addNewEquivItem(i);
-            } else if (pSupportCnt >= minSuppCnt) {
-                res.addSon(p);
-            }
-        }
-        return res;
-    }
-
-    private DiffNodeset constructNew(boolean isLevel1, DiffNodeset ySet) {
-        return (isLevel1) ? constructForItemPair(this, ySet) : constructByDiff(this, ySet);
     }
 
     private static ArrayList<PpcNode> constructPpcNodeListForItemPair(

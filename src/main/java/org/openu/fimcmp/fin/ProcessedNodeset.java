@@ -29,7 +29,7 @@ class ProcessedNodeset {
                 diffNodeset.getSupportCnt(), diffNodeset.getItemset(), parentEquivItems, equivalentItems);
     }
 
-    List<ProcessedNodeset> processSonsOnly(FiResultHolder resultHolder, int minSuppCnt) {
+    List<ProcessedNodeset> processSonsOnly(FiResultHolder resultHolder, long minSuppCnt) {
         if (CollectionUtils.isEmpty(sons)) {
             return Collections.emptyList();
         }
@@ -49,7 +49,7 @@ class ProcessedNodeset {
      * The main method for the parallel algorithm's 'map' phase. <br/>
      * Collect results from each son and its subtree. <br/>
      */
-    void processSubtree(FiResultHolder resultHolder, int minSuppCnt) {
+    void processSubtree(FiResultHolder resultHolder, long minSuppCnt) {
         if (CollectionUtils.isEmpty(sons)) {
             return;
         }
