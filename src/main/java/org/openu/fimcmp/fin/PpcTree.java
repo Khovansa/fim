@@ -72,6 +72,19 @@ class PpcTree {
         return getBy(sortedTr, 0);
     }
 
+    void print(String[] rankToItem, String pref, Integer itemRank) {
+        String item = (itemRank != null) ? rankToItem[itemRank] : "";
+        System.out.println(String.format("%s%s<%s>:%s (%s, %s)", pref, itemRank, item,
+                currNode.getCount(), currNode.getPreOrder(), currNode.getPostOrder()));
+        if (itemToChildNode != null) {
+            for (Map.Entry<Integer, PpcTree> entry : itemToChildNode.entrySet()) {
+                PpcTree son = entry.getValue();
+                int sonItemRank = entry.getKey();
+                son.print(rankToItem, pref+"\t", sonItemRank);
+            }
+        }
+    }
+
     private PpcNode getBy(int[] sortedTr, int currInd) {
         if (currInd < sortedTr.length) {
             PpcTree child = (itemToChildNode != null) ? itemToChildNode.get(sortedTr[currInd]) : null;
