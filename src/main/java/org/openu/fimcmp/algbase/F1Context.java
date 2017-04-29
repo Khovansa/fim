@@ -85,4 +85,10 @@ public class F1Context {
     public void pp(Object msg) {
         AlgBase.pp(sw, msg);
     }
+
+    public void printRankToItem() {
+        for (int rank=0; rank<rankToItem.length; ++rank) {
+            System.out.println(String.format("%-10s %s", rank, rankToItem[rank]));
+        }
+    }
 }

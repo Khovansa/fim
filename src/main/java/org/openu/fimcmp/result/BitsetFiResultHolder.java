@@ -6,6 +6,7 @@ import org.openu.fimcmp.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.util.BitArrays;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class BitsetFiResultHolder implements FiResultHolder {
     @Override
     public void addClosedItemset(
             int supportCnt, int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems) {
+//        System.out.println(String.format("Adding %s + %s %s", Arrays.toString(basicItemset), parentEquivItems, equivItems));
         if (CollectionUtils.isEmpty(parentEquivItems) && CollectionUtils.isEmpty(equivItems)) {
             //fast treatment of the most frequent case:
             addFrequentItemset(supportCnt, basicItemset);

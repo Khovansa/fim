@@ -74,8 +74,7 @@ class PpcTree {
 
     void print(String[] rankToItem, String pref, Integer itemRank) {
         String item = (itemRank != null) ? rankToItem[itemRank] : "";
-        System.out.println(String.format("%s%s<%s>:%s (%s, %s)", pref, itemRank, item,
-                currNode.getCount(), currNode.getPreOrder(), currNode.getPostOrder()));
+        System.out.println(String.format("%s%s<%s>:%s", pref, itemRank, item, currNode));
         if (itemToChildNode != null) {
             for (Map.Entry<Integer, PpcTree> entry : itemToChildNode.entrySet()) {
                 PpcTree son = entry.getValue();

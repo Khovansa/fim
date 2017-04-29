@@ -1,8 +1,5 @@
 package org.openu.fimcmp.fin;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-
 import java.util.Objects;
 
 class PpcNode {
@@ -61,10 +58,6 @@ class PpcNode {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE)
-                .append("count", count)
-                .append("preOrder", preOrder)
-                .append("postOrder", postOrder)
-                .toString();
+        return String.format("%s (%s,%s)", count, preOrder, postOrder);
     }
 }

@@ -4,6 +4,7 @@ import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.util.Assert;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 class DiffNodeset {
@@ -68,6 +69,11 @@ class DiffNodeset {
         return createProcessedNode(false, rightSiblings, minSuppCnt);
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s<%s>: %s", Arrays.toString(itemset), supportCnt, sortedNodes);
+    }
+
     /**
      * Extend the tree by extending the current node. <br/>
      * See lines 1-20 of 'Constructing_Pattern_Tree()' procedure of the DiffNodesets algorithm paper.
@@ -129,7 +135,7 @@ class DiffNodeset {
         System.arraycopy(xSet.itemset, 0, resItemset, 0, xSet.itemset.length);
         resItemset[resItemset.length - 1] = ySet.lastItem();
 
-        ArrayList<PpcNode> resNodes = nodesMinus(xSet.sortedNodes, ySet.sortedNodes);
+        ArrayList<PpcNode> resNodes = nodesMinus(ySet.sortedNodes, xSet.sortedNodes);
 
         int supportCnt = xSet.supportCnt - countSum(resNodes);
         return new DiffNodeset(resItemset, resNodes, supportCnt);

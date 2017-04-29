@@ -32,6 +32,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         JavaRDD<String[]> trs = alg.readInput(sc, inputFile, sw);
 
         F1Context f1Context = alg.computeF1Context(trs, sw);
+        f1Context.printRankToItem();
         JavaRDD<int[]> rankTrsRdd = f1Context.computeRddRanks1(trs);
 
         //run the algorithm
@@ -63,6 +64,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
             root.insertTransaction(sortedTr);
         }
         root.updatePreAndPostOrderNumbers(1, 1);
+//        root.print(f1Context.rankToItem, "", null);
 
         //create root nodesets
         f1Context.updateByF1(resultHolder);
