@@ -21,4 +21,6 @@ public interface FiResultHolder extends Serializable {
     List<FreqItemset> getAllFrequentItemsets(String[] rankToItem);
 
     Iterator<long[]> fiAsBitsetIterator();
+
+    FiResultHolder uniteWith(FiResultHolder other);
 }

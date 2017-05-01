@@ -2,6 +2,7 @@ package org.openu.fimcmp.fin;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.openu.fimcmp.result.FiResultHolder;
+import org.openu.fimcmp.result.FiResultHolderFactory;
 import org.openu.fimcmp.util.Assert;
 
 import java.util.ArrayList;
@@ -43,6 +44,12 @@ class ProcessedNodeset {
         }
 
         return res;
+    }
+
+    FiResultHolder processSubtree(FiResultHolderFactory resultHolderFactory, int totalFreqItems, int expResSize, long minSuppCnt) {
+        FiResultHolder resultHolder = resultHolderFactory.newResultHolder(totalFreqItems, expResSize);
+        processSubtree(resultHolder, minSuppCnt);
+        return resultHolder;
     }
 
     /**

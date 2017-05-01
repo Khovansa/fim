@@ -6,7 +6,6 @@ import org.openu.fimcmp.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.util.BitArrays;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -67,6 +66,14 @@ public class BitsetFiResultHolder implements FiResultHolder {
     @Override
     public Iterator<long[]> fiAsBitsetIterator() {
         return freqItemsetBitsets.iterator();
+    }
+
+    @Override
+    public FiResultHolder uniteWith(FiResultHolder otherObj) {
+        BitsetFiResultHolder other = (BitsetFiResultHolder)otherObj;
+
+        //TODO - need O(n) merge => need bitset hash and equals
+        return null;
     }
 
     private ArrayList<Integer> getUniqueNewItems(

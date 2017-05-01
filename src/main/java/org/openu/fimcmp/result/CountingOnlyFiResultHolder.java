@@ -56,6 +56,13 @@ public class CountingOnlyFiResultHolder implements FiResultHolder {
         throw new UnsupportedOperationException(UNSUPPORTED_ERR_MSG);
     }
 
+    @Override
+    public FiResultHolder uniteWith(FiResultHolder otherObj) {
+        CountingOnlyFiResultHolder other = (CountingOnlyFiResultHolder)otherObj;
+        size += other.size;
+        return this;
+    }
+
     private int countNewItems(int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems) {
         final int bsStartInd=0;
         long[] itemsBs = new long[BitArrays.requiredSize(totalFreqItems, bsStartInd)];
