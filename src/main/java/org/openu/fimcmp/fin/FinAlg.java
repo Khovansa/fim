@@ -72,8 +72,10 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
 
         //process each subtree
         FiResultHolder initResultHolder = resultHolderFactory.newResultHolder(f1Context.totalFreqItems, 20_000);
+        final int totalFreqItems = f1Context.totalFreqItems;
+        final long minSuppCnt = f1Context.minSuppCnt;
         FiResultHolder subtreeResultHolder = rootsRdd.map(
-                pn -> pn.processSubtree(resultHolderFactory, f1Context.totalFreqItems, 10_000, f1Context.minSuppCnt))
+                pn -> pn.processSubtree(resultHolderFactory, totalFreqItems, 10_000, minSuppCnt))
                 .fold(initResultHolder, FiResultHolder::uniteWith);
 
         return rootsResultHolder.uniteWith(subtreeResultHolder);

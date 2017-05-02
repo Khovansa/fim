@@ -5,6 +5,7 @@ import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.result.FiResultHolderFactory;
 import org.openu.fimcmp.util.Assert;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -15,7 +16,7 @@ import java.util.List;
  * It seems to be unnecessary to keep the entire tree in memory. <br/>
  * To process a node we only need its parent and its right siblings. <br/>
  */
-class ProcessedNodeset {
+public class ProcessedNodeset implements Serializable {
     private final DiffNodeset diffNodeset;
     private ArrayList<Integer> equivalentItems = null;
     private LinkedList<DiffNodeset> sons = null;
@@ -46,7 +47,8 @@ class ProcessedNodeset {
         return res;
     }
 
-    FiResultHolder processSubtree(FiResultHolderFactory resultHolderFactory, int totalFreqItems, int expResSize, long minSuppCnt) {
+    FiResultHolder processSubtree(
+            FiResultHolderFactory resultHolderFactory, int totalFreqItems, int expResSize, long minSuppCnt) {
         FiResultHolder resultHolder = resultHolderFactory.newResultHolder(totalFreqItems, expResSize);
         processSubtree(resultHolder, minSuppCnt);
         return resultHolder;

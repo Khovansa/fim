@@ -3,11 +3,12 @@ package org.openu.fimcmp.fin;
 import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.util.Assert;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class DiffNodeset {
+public class DiffNodeset implements Serializable {
     //Item ranks are sorted in descending order, i.e. from the least to the most frequent:
     private final int[] itemset;
      //Nodes for the 'itemset' sorted by the pre-order in ascending order:

@@ -9,6 +9,10 @@ import org.openu.fimcmp.apriori.*;
 import org.openu.fimcmp.bigfim.BigFimAlg;
 import org.openu.fimcmp.bigfim.BigFimAlgProperties;
 import org.openu.fimcmp.eclat.EclatAlg;
+import org.openu.fimcmp.fin.DiffNodeset;
+import org.openu.fimcmp.fin.FinAlgProperties;
+import org.openu.fimcmp.fin.PpcNode;
+import org.openu.fimcmp.fin.ProcessedNodeset;
 import org.openu.fimcmp.result.*;
 import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
@@ -62,7 +66,8 @@ public class SparkContextFactory {
 
                     FiResultHolder.class, BitsetFiResultHolder.class, CountingOnlyFiResultHolder.class,
                     FiResultHolderFactory.class, BitsetFiResultHolderFactory.class,
-                    CountingOnlyFiResultHolderFactory.class
+                    CountingOnlyFiResultHolderFactory.class,
+                    FinAlgProperties.class, ProcessedNodeset.class, DiffNodeset.class, PpcNode.class,
             });
         }
 
