@@ -5,9 +5,7 @@ import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.util.BitArrays;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Holds the frequent itemsets and their support count as a bitset. <br/>
@@ -23,8 +21,12 @@ public class BitsetFiResultHolder implements FiResultHolder {
     }
 
     public BitsetFiResultHolder(int totalFreqItems, int resultEstimation) {
+        this(totalFreqItems, new ArrayList<>(resultEstimation));
+    }
+
+    private BitsetFiResultHolder(int totalFreqItems, List<long[]> freqItemsetBitsets) {
         this.totalFreqItems = totalFreqItems;
-        this.freqItemsetBitsets = new ArrayList<>(resultEstimation);
+        this.freqItemsetBitsets = freqItemsetBitsets;
     }
 
     @Override
@@ -69,11 +71,51 @@ public class BitsetFiResultHolder implements FiResultHolder {
     }
 
     @Override
-    public FiResultHolder uniteWith(FiResultHolder otherObj) {
+    public BitsetFiResultHolder uniteWith(FiResultHolder otherObj) {
         BitsetFiResultHolder other = (BitsetFiResultHolder)otherObj;
+        if (other.freqItemsetBitsets.isEmpty()) {
+            return this;
+        }
 
-        //TODO - need O(n) merge => need bitset hash and equals
-        return null;
+        if (freqItemsetBitsets.isEmpty()) {
+            //deep copy of 'other':
+            List<long[]> newFiBitsets = new ArrayList<>(other.freqItemsetBitsets.size());
+            for (long[] fiBitset : other.freqItemsetBitsets) {
+                newFiBitsets.add(Arrays.copyOf(fiBitset, fiBitset.length));
+            }
+            return new BitsetFiResultHolder(totalFreqItems, newFiBitsets);
+        }
+
+        //need actual merge
+        Map<FiBitsetWrapper, long[]> mergedFis =
+                new LinkedHashMap<>((freqItemsetBitsets.size() + other.freqItemsetBitsets.size()) * 2);
+        for (long[] fiBitset : freqItemsetBitsets) {
+            mergedFis.put(new FiBitsetWrapper(fiBitset), fiBitset);
+        }
+        for (long[] otherBs : other.freqItemsetBitsets) {
+            FiBitsetWrapper otherBsWrapper = new FiBitsetWrapper(otherBs);
+            long[] thisBs = mergedFis.get(otherBsWrapper);
+            if (thisBs != null) {
+                FreqItemsetAsRanksBs.addSupportCntTo1st(thisBs, otherBs);
+            } else {
+                otherBs = Arrays.copyOf(otherBs, otherBs.length); //we might change it, so need to copy
+                mergedFis.put(new FiBitsetWrapper(otherBs), otherBs);
+            }
+        }
+        //returning 'this' since we have modified the support count in-place:
+        freqItemsetBitsets.clear();
+        freqItemsetBitsets.addAll(mergedFis.values());
+        return this;
+    }
+
+    int getSupportForTest(int[] itemset) {
+        for (long[] fiBitset : freqItemsetBitsets) {
+            int[] currItemset = FreqItemsetAsRanksBs.extractItemset(fiBitset);
+            if (Arrays.equals(itemset, currItemset)) {
+                return FreqItemsetAsRanksBs.extractSupportCnt(fiBitset);
+            }
+        }
+        return 0;
     }
 
     private ArrayList<Integer> getUniqueNewItems(
@@ -106,5 +148,27 @@ public class BitsetFiResultHolder implements FiResultHolder {
 
     private static int safeSize(List<?> lst) {
         return (lst != null) ? lst.size() : 0;
+    }
+
+    private static class FiBitsetWrapper {
+        private final long[] fiBitset;
+
+        FiBitsetWrapper(long[] fiBitset) {
+            this.fiBitset = fiBitset;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            FiBitsetWrapper that = (FiBitsetWrapper) o;
+            return FreqItemsetAsRanksBs.haveSameItemset(fiBitset, that.fiBitset);
+        }
+
+        @Override
+        public int hashCode() {
+            return FreqItemsetAsRanksBs.itemsetHashCode(fiBitset);
+        }
     }
 }

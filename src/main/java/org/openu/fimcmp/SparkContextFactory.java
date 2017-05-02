@@ -5,14 +5,11 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.algbase.AlgBaseProperties;
 import org.openu.fimcmp.algbase.BasicOps;
-import org.openu.fimcmp.algbase.F1Context;
 import org.openu.fimcmp.apriori.*;
 import org.openu.fimcmp.bigfim.BigFimAlg;
 import org.openu.fimcmp.bigfim.BigFimAlgProperties;
 import org.openu.fimcmp.eclat.EclatAlg;
-import org.openu.fimcmp.result.BitsetFiResultHolder;
-import org.openu.fimcmp.result.CountingOnlyFiResultHolder;
-import org.openu.fimcmp.result.FiResultHolder;
+import org.openu.fimcmp.result.*;
 import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
 
@@ -63,7 +60,9 @@ public class SparkContextFactory {
                     EclatAlg.class,
                     BigFimAlgProperties.class, BigFimAlg.class,
 
-                    FiResultHolder.class, BitsetFiResultHolder.class, CountingOnlyFiResultHolder.class
+                    FiResultHolder.class, BitsetFiResultHolder.class, CountingOnlyFiResultHolder.class,
+                    FiResultHolderFactory.class, BitsetFiResultHolderFactory.class,
+                    CountingOnlyFiResultHolderFactory.class
             });
         }
 
