@@ -9,10 +9,7 @@ import org.openu.fimcmp.apriori.*;
 import org.openu.fimcmp.bigfim.BigFimAlg;
 import org.openu.fimcmp.bigfim.BigFimAlgProperties;
 import org.openu.fimcmp.eclat.EclatAlg;
-import org.openu.fimcmp.fin.DiffNodeset;
-import org.openu.fimcmp.fin.FinAlgProperties;
-import org.openu.fimcmp.fin.PpcNode;
-import org.openu.fimcmp.fin.ProcessedNodeset;
+import org.openu.fimcmp.fin.FinAlg;
 import org.openu.fimcmp.result.*;
 import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
@@ -54,10 +51,6 @@ public class SparkContextFactory {
                     long[].class, int[].class, int[][].class, int[][][].class, BitSet.class,
                     Tuple2.class, Tuple2[].class, boolean[].class,
                     new ArrayList<>().iterator().getClass(), new LinkedList<>().iterator().getClass(),
-                    AprCandidateFisGenerator.class, AprioriAlg.class, IteratorOverArray.class, PairRanks.class,
-                    TidsGenHelper.class, CurrSizeFiRanks.class,
-                    TidMergeSet.class, FiRanksToFromItems.class, PairElem1IteratorOverRankToTidSet.class,
-                    NextSizeItemsetGenHelper.class,
                     ItemsetAndTidsCollection.class, ItemsetAndTids.class, ItemsetAndTids[].class,
 
                     AlgBase.class, AlgBaseProperties.class,
@@ -67,8 +60,9 @@ public class SparkContextFactory {
                     FiResultHolder.class, BitsetFiResultHolder.class, CountingOnlyFiResultHolder.class,
                     FiResultHolderFactory.class, BitsetFiResultHolderFactory.class,
                     CountingOnlyFiResultHolderFactory.class,
-                    FinAlgProperties.class, ProcessedNodeset.class, DiffNodeset.class, PpcNode.class,
             });
+            conf.registerKryoClasses(FinAlg.getClassesToRegister());
+            conf.registerKryoClasses(AprioriAlg.getClassesToRegister());
         }
 
         conf.set("spark.driver.memory", "1200m");

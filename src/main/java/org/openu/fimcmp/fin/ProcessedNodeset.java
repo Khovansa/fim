@@ -16,7 +16,7 @@ import java.util.List;
  * It seems to be unnecessary to keep the entire tree in memory. <br/>
  * To process a node we only need its parent and its right siblings. <br/>
  */
-public class ProcessedNodeset implements Serializable {
+class ProcessedNodeset implements Serializable {
     private final DiffNodeset diffNodeset;
     private ArrayList<Integer> equivalentItems = null;
     private LinkedList<DiffNodeset> sons = null;

@@ -3,7 +3,7 @@ package org.openu.fimcmp.fin;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class PpcNode implements Serializable {
+class PpcNode implements Serializable {
     private int count;
     private int preOrder;
     private int postOrder;

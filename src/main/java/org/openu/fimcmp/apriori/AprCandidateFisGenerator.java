@@ -10,7 +10,7 @@ import java.util.*;
  * Generate candidate itemsets of size i+1 from frequent itemsets of size i. <br/>
  * Necessary for next step Apriori.
  */
-public class AprCandidateFisGenerator implements Serializable {
+class AprCandidateFisGenerator implements Serializable {
 
     Iterator<int[][]> countCands2_Part(Iterator<int[]> sortedTrIt, int totalFreqItems) {
         int[][] candToCount = new int[totalFreqItems][totalFreqItems];

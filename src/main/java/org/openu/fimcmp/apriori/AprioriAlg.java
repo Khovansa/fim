@@ -24,6 +24,15 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     private final long minSuppCount;
     private final AprCandidateFisGenerator candidateFisGenerator;
 
+    public static Class[] getClassesToRegister() {
+        return new Class[] {
+                AprioriAlg.class, AprCandidateFisGenerator.class, PairRanks.class,
+                TidsGenHelper.class, CurrSizeFiRanks.class,
+                TidMergeSet.class, FiRanksToFromItems.class, PairElem1IteratorOverRankToTidSet.class,
+                NextSizeItemsetGenHelper.class,
+        };
+    }
+
     public AprioriAlg(long minSuppCount) {
         this.minSuppCount = minSuppCount;
         this.candidateFisGenerator = new AprCandidateFisGenerator();

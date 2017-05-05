@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class DiffNodeset implements Serializable {
+class DiffNodeset implements Serializable {
     //Item ranks are sorted in descending order, i.e. from the least to the most frequent:
     private final int[] itemset;
      //Nodes for the 'itemset' sorted by the pre-order in ascending order:

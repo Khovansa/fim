@@ -6,9 +6,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.algbase.F1Context;
-import org.openu.fimcmp.result.BitsetFiResultHolderFactory;
-import org.openu.fimcmp.result.FiResultHolder;
-import org.openu.fimcmp.result.FiResultHolderFactory;
+import org.openu.fimcmp.result.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,6 +56,12 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
 
     public FinAlg(FinAlgProperties props) {
         super(props);
+    }
+
+    public static Class[] getClassesToRegister() {
+        return new Class[] {
+                FinAlgProperties.class, ProcessedNodeset.class, DiffNodeset.class, PpcNode.class,
+        };
     }
 
     FiResultHolder collectResultsSequentiallyWithSpark(
