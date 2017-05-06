@@ -17,4 +17,7 @@ public class FinAlgProperties extends AlgBaseProperties {
      * item + its sons representing frequent pairs.
      */
     public int requiredItemsetLenForSeqProcessing = 2;
+
+    enum RunType {SEQ_PURE_JAVA, SEQ_SPARK, PAR_SPARK}
+    public RunType runType;
 }

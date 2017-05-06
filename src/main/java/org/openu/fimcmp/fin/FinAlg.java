@@ -18,42 +18,6 @@ import java.util.stream.Collectors;
  */
 public class FinAlg extends AlgBase<FinAlgProperties> {
 
-    public static void main(String[] args) throws Exception {
-        FinAlgProperties props = new FinAlgProperties(0.8);
-        props.inputNumParts = 1;
-        props.isPersistInput = true;
-        props.requiredItemsetLenForSeqProcessing = 2;
-        FinAlg alg = new FinAlg(props);
-
-        StopWatch sw = new StopWatch();
-        sw.start();
-        JavaSparkContext sc = createSparkContext(false, "local", sw);
-
-        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
-        JavaRDD<String[]> trs = alg.readInput(sc, inputFile, sw);
-
-        F1Context f1Context = alg.computeF1Context(trs, sw);
-        f1Context.printRankToItem();
-        JavaRDD<int[]> rankTrsRdd = f1Context.computeRddRanks1(trs);
-
-        //run the algorithm
-//        FiResultHolder resultHolder = new BitsetFiResultHolder(f1Context.totalFreqItems, 20_000);
-//        alg.collectResultsSequentiallyPureJava(resultHolder, rankTrsRdd, f1Context, props.requiredItemsetLenForSeqProcessing);
-        FiResultHolderFactory resultHolderFactory = new BitsetFiResultHolderFactory();
-        FiResultHolder resultHolder = alg.collectResultsSequentiallyWithSpark(
-                resultHolderFactory, rankTrsRdd, f1Context, props.requiredItemsetLenForSeqProcessing, sc);
-
-        //output the results
-        List<FreqItemset> allFrequentItemsets = resultHolder.getAllFrequentItemsets(f1Context.rankToItem);
-        System.out.println("Total results: " + allFrequentItemsets.size());
-        allFrequentItemsets = allFrequentItemsets.stream().
-                sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
-        for (FreqItemset freqItemset : allFrequentItemsets) {
-            System.out.println(freqItemset);
-        }
-        System.out.println("Total results: " + allFrequentItemsets.size());
-    }
-
     public FinAlg(FinAlgProperties props) {
         super(props);
     }
@@ -64,7 +28,71 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         };
     }
 
-    FiResultHolder collectResultsSequentiallyWithSpark(
+    public static void main(String[] args) throws Exception {
+        FinAlgProperties props = new FinAlgProperties(0.8);
+        props.inputNumParts = 1;
+        props.isPersistInput = true;
+        props.requiredItemsetLenForSeqProcessing = 2;
+        props.runType = FinAlgProperties.RunType.SEQ_SPARK;
+
+        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
+        runAlg(props, inputFile);
+    }
+
+    private static void runAlg(FinAlgProperties props, String inputFile) throws Exception {
+        FinContext ctx = prepare(props, inputFile);
+
+        FiResultHolder resultHolder;
+        switch (props.runType) {
+            case SEQ_PURE_JAVA:
+                resultHolder = ctx.alg.collectResultsSequentiallyPureJava(
+                        ctx.resultHolderFactory, ctx.rankTrsRdd, ctx.f1Context,
+                        props.requiredItemsetLenForSeqProcessing);
+                break;
+            case SEQ_SPARK:
+                resultHolder = ctx.alg.collectResultsSequentiallyWithSpark(
+                        ctx.resultHolderFactory, ctx.rankTrsRdd, ctx.f1Context,
+                        props.requiredItemsetLenForSeqProcessing, ctx.sc);
+                break;
+            case PAR_SPARK:
+                resultHolder = ctx.alg.collectResultsInParallel(
+                        ctx.resultHolderFactory, ctx.rankTrsRdd, ctx.f1Context,
+                        props.requiredItemsetLenForSeqProcessing, ctx.sc);
+                break;
+            default: throw new IllegalArgumentException("Unsupporter run type " + props.runType);
+        }
+
+        outpuResults(resultHolder, ctx.f1Context);
+    }
+
+    private static FinContext prepare(FinAlgProperties props, String inputFile) throws Exception {
+        FinContext res = new FinContext();
+        res.alg = new FinAlg(props);
+
+        res.sw = new StopWatch();
+        res.sw.start();
+
+        res.sc = createSparkContext(false, "local", res.sw);
+
+        JavaRDD<String[]> trs = res.alg.readInput(res.sc, inputFile, res.sw);
+
+        res.f1Context = res.alg.computeF1Context(trs, res.sw);
+        res.f1Context.printRankToItem();
+        res.rankTrsRdd = res.f1Context.computeRddRanks1(trs);
+
+        res.resultHolderFactory = new BitsetFiResultHolderFactory();
+        return res;
+    }
+
+    private FiResultHolder collectResultsInParallel(
+            FiResultHolderFactory resultHolderFactory, JavaRDD<int[]> rankTrsRdd,
+            F1Context f1Context, int requiredItemsetLenForSeqProcessing, JavaSparkContext sc) {
+        //TODO
+        FiResultHolder rootsResultHolder = resultHolderFactory.newResultHolder(f1Context.totalFreqItems, 20_000);
+        return null;
+    }
+
+    private FiResultHolder collectResultsSequentiallyWithSpark(
             FiResultHolderFactory resultHolderFactory, JavaRDD<int[]> rankTrsRdd, F1Context f1Context,
             int requiredItemsetLenForSeqProcessing, JavaSparkContext sc) {
 
@@ -85,10 +113,11 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         return rootsResultHolder.uniteWith(subtreeResultHolder);
     }
 
-    void collectResultsSequentiallyPureJava(
-            FiResultHolder resultHolder, JavaRDD<int[]> rankTrsRdd, F1Context f1Context,
+    private FiResultHolder collectResultsSequentiallyPureJava(
+            FiResultHolderFactory resultHolderFactory, JavaRDD<int[]> rankTrsRdd, F1Context f1Context,
             int requiredItemsetLenForSeqProcessing) {
 
+        FiResultHolder resultHolder = resultHolderFactory.newResultHolder(f1Context.totalFreqItems, 20_000);
         List<ProcessedNodeset> rootNodesets = createAscFreqSortedRoots(
                 resultHolder, rankTrsRdd, f1Context, requiredItemsetLenForSeqProcessing);
 
@@ -96,6 +125,19 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         for (ProcessedNodeset rootNodeset : rootNodesets) {
             rootNodeset.processSubtree(resultHolder, f1Context.minSuppCnt);
         }
+
+        return resultHolder;
+    }
+
+    private static void outpuResults(FiResultHolder resultHolder, F1Context f1Context) {
+        List<FreqItemset> allFrequentItemsets = resultHolder.getAllFrequentItemsets(f1Context.rankToItem);
+        System.out.println("Total results: " + allFrequentItemsets.size());
+        allFrequentItemsets = allFrequentItemsets.stream().
+                sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
+        for (FreqItemset freqItemset : allFrequentItemsets) {
+            System.out.println(freqItemset);
+        }
+        System.out.println("Total results: " + allFrequentItemsets.size());
     }
 
     private List<ProcessedNodeset> createAscFreqSortedRoots(
@@ -143,5 +185,14 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
             res.addAll(root.processSonsOnly(resultHolder, minSuppCnt));
         }
         return res;
+    }
+
+    private static class FinContext {
+        StopWatch sw;
+        JavaSparkContext sc;
+        F1Context f1Context;
+        FinAlg alg;
+        JavaRDD<int[]> rankTrsRdd;
+        FiResultHolderFactory resultHolderFactory;
     }
 }
