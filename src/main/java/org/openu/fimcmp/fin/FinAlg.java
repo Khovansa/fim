@@ -36,7 +36,8 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         props.inputNumParts = 1;
         props.isPersistInput = true;
         props.requiredItemsetLenForSeqProcessing = 2;
-        props.runType = FinAlgProperties.RunType.SEQ_SPARK;
+//        props.runType = FinAlgProperties.RunType.SEQ_SPARK;
+        props.runType = FinAlgProperties.RunType.PAR_SPARK;
 
         String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
         runAlg(props, inputFile);

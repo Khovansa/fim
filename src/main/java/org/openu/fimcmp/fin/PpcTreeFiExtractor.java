@@ -26,13 +26,13 @@ class PpcTreeFiExtractor implements Serializable {
 
     static Iterator<Tuple2<Integer, int[]>> genCondTransactions(
             int[] ascSortedTr, Partitioner partitioner) {
-        int numParts = partitioner.numPartitions();
+        final int numParts = partitioner.numPartitions();
         Map<Integer, int[]> resPartToSlice = new HashMap<>(numParts * 2);
-        for (int i=ascSortedTr.length-1; i>=0; --i) {
+        for (int i = ascSortedTr.length - 1; i >= 0; --i) {
             int itemRank = ascSortedTr[i];
             int part = partitioner.getPartition(itemRank);
             if (!resPartToSlice.containsKey(part)) {
-                int[] slice = Arrays.copyOf(ascSortedTr, i+1);
+                int[] slice = Arrays.copyOf(ascSortedTr, i + 1);
                 resPartToSlice.put(part, slice);
             }
         }
@@ -54,13 +54,13 @@ class PpcTreeFiExtractor implements Serializable {
     static FiResultHolder findAllFis(
             JavaPairRDD<Integer, int[]> partToRankTrsRdd, Partitioner partitioner,
             FiResultHolderFactory resultHolderFactory, F1Context f1Context, FinAlgProperties props) {
-        FiResultHolder rootsResultHolder = resultHolderFactory.newResultHolder(f1Context.totalFreqItems, 10_000);
+        FiResultHolder rootsResultHolder = resultHolderFactory.newResultHolder(f1Context.totalFreqItems, 20_000);
         f1Context.updateByF1(rootsResultHolder);
 
         PpcTree emptyTree = PpcTree.emptyTree();
         JavaPairRDD<Integer, PpcTree> partAndTreeRdd =
                 partToRankTrsRdd.aggregateByKey(emptyTree, partitioner, PpcTree::insertTransaction, PpcTree::merge).
-                mapValues(PpcTree::withUpdatedPreAndPostOrderNumbers);
+                        mapValues(PpcTree::withUpdatedPreAndPostOrderNumbers);
 
         long minSuppCnt = f1Context.minSuppCnt;
         int totalFreqItems = f1Context.totalFreqItems;
