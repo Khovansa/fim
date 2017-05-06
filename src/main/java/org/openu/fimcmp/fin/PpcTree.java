@@ -1,6 +1,5 @@
 package org.openu.fimcmp.fin;
 
-import org.apache.commons.lang.NotImplementedException;
 import scala.Tuple2;
 
 import java.io.Serializable;
@@ -32,9 +31,8 @@ class PpcTree implements Serializable {
     }
 
     PpcTree merge(PpcTree other) {
-        //TODO
-        throw new NotImplementedException();
-        //return this;
+        other.copySubtreeTo(this);
+        return this;
     }
 
     private void insertTransaction(int[] sortedTr, int currInd) {
@@ -91,6 +89,7 @@ class PpcTree implements Serializable {
         return getBy(sortedTr, 0);
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     void print(String[] rankToItem, String pref, Integer itemRank) {
         String item = (itemRank != null) ? rankToItem[itemRank] : "";
         System.out.println(String.format("%s%s<%s>:%s", pref, itemRank, item, currNode));
@@ -100,6 +99,19 @@ class PpcTree implements Serializable {
                 int sonItemRank = entry.getKey();
                 son.print(rankToItem, pref+"\t", sonItemRank);
             }
+        }
+    }
+
+    private void copySubtreeTo(PpcTree destCurrNode) {
+        if (itemToChildNode == null) {
+            return;
+        }
+
+        for (Map.Entry<Integer, PpcTree> entry : itemToChildNode.entrySet()) {
+            int item = entry.getKey();
+            PpcTree child = entry.getValue();
+            PpcTree destChild = destCurrNode.insertItem(item, child.currNode.getCount());
+            child.copySubtreeTo(destChild);
         }
     }
 
@@ -115,15 +127,19 @@ class PpcTree implements Serializable {
     }
 
     private PpcTree insertItem(int item) {
+        return insertItem(item, 1);
+    }
+
+    private PpcTree insertItem(int item, int cnt) {
         if (itemToChildNode == null) {
             itemToChildNode = new TreeMap<>();
         }
 
         PpcTree child = itemToChildNode.get(item);
         if (child != null) {
-            child.currNode.incCount();
+            child.currNode.incCount(cnt);
         } else {
-            child = new PpcTree(new PpcNode(1));
+            child = new PpcTree(new PpcNode(cnt));
             itemToChildNode.put(item, child);
         }
 

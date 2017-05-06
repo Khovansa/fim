@@ -46,12 +46,7 @@ class PpcTreeFiExtractor implements Serializable {
 
     static PpcTree createRoot(JavaRDD<int[]> rankTrsRdd) {
         PpcTree root = PpcTree.emptyTree();
-        //TODO - fix using merge
-//        root = rankTrsRdd.aggregate(root, PpcTree::insertTransaction, PpcTree::merge);
-        List<int[]> trsList = rankTrsRdd.collect();
-        for (int[] sortedTr : trsList) {
-            root.insertTransaction(sortedTr);
-        }
+        root = rankTrsRdd.aggregate(root, PpcTree::insertTransaction, PpcTree::merge);
 
         return root.withUpdatedPreAndPostOrderNumbers();
     }

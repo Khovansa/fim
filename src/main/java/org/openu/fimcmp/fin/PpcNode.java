@@ -22,8 +22,8 @@ class PpcNode implements Serializable {
         return count;
     }
 
-    void incCount() {
-        ++count;
+    void incCount(int increment) {
+        count += increment;
     }
 
     int getPreOrder() {
