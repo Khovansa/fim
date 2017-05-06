@@ -1,6 +1,9 @@
 package org.openu.fimcmp.fin;
 
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.spark.HashPartitioner;
+import org.apache.spark.Partitioner;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.FreqItemset;
@@ -8,9 +11,7 @@ import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.algbase.F1Context;
 import org.openu.fimcmp.result.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
  */
 public class FinAlg extends AlgBase<FinAlgProperties> {
 
+    @SuppressWarnings("WeakerAccess")
     public FinAlg(FinAlgProperties props) {
         super(props);
     }
@@ -25,6 +27,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
     public static Class[] getClassesToRegister() {
         return new Class[] {
                 FinAlgProperties.class, ProcessedNodeset.class, DiffNodeset.class, PpcNode.class,
+                PpcTreeFiExtractor.class
         };
     }
 
@@ -56,8 +59,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
                 break;
             case PAR_SPARK:
                 resultHolder = ctx.alg.collectResultsInParallel(
-                        ctx.resultHolderFactory, ctx.rankTrsRdd, ctx.f1Context,
-                        props.requiredItemsetLenForSeqProcessing, ctx.sc);
+                        ctx.resultHolderFactory, ctx.rankTrsRdd, ctx.f1Context, props);
                 break;
             default: throw new IllegalArgumentException("Unsupporter run type " + props.runType);
         }
@@ -85,12 +87,16 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
     }
 
     private FiResultHolder collectResultsInParallel(
-            FiResultHolderFactory resultHolderFactory, JavaRDD<int[]> rankTrsRdd,
-            F1Context f1Context, int requiredItemsetLenForSeqProcessing, JavaSparkContext sc) {
-        //TODO
-        FiResultHolder rootsResultHolder = resultHolderFactory.newResultHolder(f1Context.totalFreqItems, 20_000);
-        return null;
+            FiResultHolderFactory resultHolderFactory, JavaRDD<int[]> data,
+            F1Context f1Context, FinAlgProperties props) {
+        int numParts = data.getNumPartitions();
+        Partitioner partitioner = new HashPartitioner(numParts);
+        JavaPairRDD<Integer, int[]> partToRankTrsRdd =
+                data.flatMapToPair(tr -> PpcTreeFiExtractor.genCondTransactions(tr, partitioner));
+        return PpcTreeFiExtractor.findAllFis(
+                partToRankTrsRdd, partitioner, resultHolderFactory, f1Context, props);
     }
+
 
     private FiResultHolder collectResultsSequentiallyWithSpark(
             FiResultHolderFactory resultHolderFactory, JavaRDD<int[]> rankTrsRdd, F1Context f1Context,
@@ -134,9 +140,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         System.out.println("Total results: " + allFrequentItemsets.size());
         allFrequentItemsets = allFrequentItemsets.stream().
                 sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
-        for (FreqItemset freqItemset : allFrequentItemsets) {
-            System.out.println(freqItemset);
-        }
+        allFrequentItemsets.forEach(System.out::println);
         System.out.println("Total results: " + allFrequentItemsets.size());
     }
 
@@ -144,12 +148,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
             FiResultHolder resultHolder, JavaRDD<int[]> rankTrsRdd, F1Context f1Context,
             int requiredItemsetLenForSeqProcessing) {
         //create PpcTree
-        List<int[]> trsList = rankTrsRdd.collect();
-        PpcTree root = new PpcTree(new PpcNode(0));
-        for (int[] sortedTr : trsList) {
-            root.insertTransaction(sortedTr);
-        }
-        root.updatePreAndPostOrderNumbers(1, 1);
+        PpcTree root = PpcTreeFiExtractor.createRoot(rankTrsRdd);
 //        root.print(f1Context.rankToItem, "", null);
 
         //create root nodesets
@@ -157,34 +156,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
 
         ArrayList<ArrayList<PpcNode>> itemToPpcNodes = root.getPreOrderItemToPpcNodes(f1Context.totalFreqItems);
         ArrayList<DiffNodeset> sortedF1Nodesets = DiffNodeset.createF1NodesetsSortedByAscFreq(itemToPpcNodes);
-        return prepareAscFreqSortedRoots(resultHolder, sortedF1Nodesets, f1Context.minSuppCnt, requiredItemsetLenForSeqProcessing);
-    }
-
-    /**
-     * @param ascFreqSortedF1    F1 sorted in increasing frequency
-     * @param minSuppCnt         -
-     * @param requiredItemsetLen the required itemset length of the returned nodes, e.g. '1' for individual items. <br/>
-     *                           Note that each node will contain sons, i.e. '1' means a node for an individual frequent
-     *                           item + its sons representing frequent pairs.
-     */
-    private List<ProcessedNodeset> prepareAscFreqSortedRoots(
-            FiResultHolder resultHolder, ArrayList<DiffNodeset> ascFreqSortedF1,
-            long minSuppCnt, int requiredItemsetLen) {
-
-        List<ProcessedNodeset> roots = DiffNodeset.createProcessedNodesLevel1(ascFreqSortedF1, minSuppCnt);
-        for (int currItemsetLen = 1; currItemsetLen < requiredItemsetLen; ++currItemsetLen) {
-            roots = createNextLevel(resultHolder, roots, minSuppCnt);
-        }
-        return roots;
-    }
-
-    private List<ProcessedNodeset> createNextLevel(
-            FiResultHolder resultHolder, List<ProcessedNodeset> roots, long minSuppCnt) {
-        ArrayList<ProcessedNodeset> res = new ArrayList<>(ProcessedNodeset.countSons(roots));
-        for (ProcessedNodeset root : roots) {
-            res.addAll(root.processSonsOnly(resultHolder, minSuppCnt));
-        }
-        return res;
+        return PpcTreeFiExtractor.prepareAscFreqSortedRoots(resultHolder, sortedF1Nodesets, f1Context.minSuppCnt, requiredItemsetLenForSeqProcessing);
     }
 
     private static class FinContext {

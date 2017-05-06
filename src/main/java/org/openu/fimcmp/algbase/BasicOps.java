@@ -54,6 +54,9 @@ public class BasicOps implements Serializable {
         return res;
     }
 
+    /**
+     * @return sorted ranks in ascending order, i.e. in decreasing frequency
+     */
     public static <T> int[] getMappedFilteredAndSortedTrs(T[] tr, Map<T, Integer> itemToRank) {
         int resCnt = 0;
         for (T item : tr) {

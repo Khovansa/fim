@@ -1,7 +1,9 @@
 package org.openu.fimcmp.fin;
 
+import org.apache.commons.lang.NotImplementedException;
 import scala.Tuple2;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
@@ -9,7 +11,7 @@ import java.util.TreeMap;
 /**
  * Tree of PpcNode instances.
  */
-class PpcTree {
+class PpcTree implements Serializable {
     private final PpcNode currNode;
     private Map<Integer, PpcTree> itemToChildNode;
 
@@ -17,12 +19,24 @@ class PpcTree {
         this.currNode = currNode;
     }
 
+    static PpcTree emptyTree() {
+        return new PpcTree(new PpcNode(0));
+    }
+
     /**
      * @param sortedTr transaction ranks, sorted in descending frequency (e.g. in ascending natural order)
      */
-    void insertTransaction(int[] sortedTr) {
+    PpcTree insertTransaction(int[] sortedTr) {
         insertTransaction(sortedTr, 0);
+        return this;
     }
+
+    PpcTree merge(PpcTree other) {
+        //TODO
+        throw new NotImplementedException();
+        //return this;
+    }
+
     private void insertTransaction(int[] sortedTr, int currInd) {
         if (currInd >= sortedTr.length) {
             return; //recursion end
@@ -30,6 +44,11 @@ class PpcTree {
 
         PpcTree child = insertItem(sortedTr[currInd]);
         child.insertTransaction(sortedTr, currInd + 1);
+    }
+
+    PpcTree withUpdatedPreAndPostOrderNumbers() {
+        updatePreAndPostOrderNumbers(1, 1);
+        return this;
     }
 
     Tuple2<Integer, Integer> updatePreAndPostOrderNumbers(int nextPreOrder, int nextPostOrder) {
