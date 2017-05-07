@@ -7,11 +7,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 
 class DiffNodeset implements Serializable {
     //Item ranks are sorted in descending order, i.e. from the least to the most frequent:
     private final int[] itemset;
-     //Nodes for the 'itemset' sorted by the pre-order in ascending order:
+    //Nodes for the 'itemset' sorted by the pre-order in ascending order:
     private final ArrayList<PpcNode> sortedNodes;
     private final int supportCnt;
 
@@ -25,10 +26,6 @@ class DiffNodeset implements Serializable {
         return itemset;
     }
 
-    int lastItem() {
-        return itemset[itemset.length - 1];
-    }
-
     int getSupportCnt() {
         return supportCnt;
     }
@@ -39,7 +36,7 @@ class DiffNodeset implements Serializable {
     static ArrayList<DiffNodeset> createF1NodesetsSortedByAscFreq(ArrayList<ArrayList<PpcNode>> itemToPpcNodes) {
         final int totalFreqItems = itemToPpcNodes.size();
         ArrayList<DiffNodeset> resList = new ArrayList<>(totalFreqItems);
-        for (int item = totalFreqItems-1; item>=0; --item) {
+        for (int item = totalFreqItems - 1; item >= 0; --item) {
             ArrayList<PpcNode> ppcNodes = itemToPpcNodes.get(item);
             DiffNodeset nodeset = constructForItem(item, ppcNodes);
             resList.add(nodeset);
@@ -47,12 +44,19 @@ class DiffNodeset implements Serializable {
         return resList;
     }
 
-    static List<ProcessedNodeset> createProcessedNodesLevel1(ArrayList<DiffNodeset> ascFreqSortedF1, long minSuppCnt) {
+    static List<ProcessedNodeset> createProcessedNodesLevel1(
+            ArrayList<DiffNodeset> ascFreqSortedF1, long minSuppCnt, Predicate<Integer> leastFreqItemFilter) {
         final int totalFreqItems = ascFreqSortedF1.size();
         List<ProcessedNodeset> level1Nodes = new ArrayList<>(totalFreqItems);
-        for (int ii = 0; ii< totalFreqItems; ++ii) {
+        for (int ii = 0; ii < totalFreqItems; ++ii) {
             DiffNodeset xSet = ascFreqSortedF1.get(ii);
-            List<DiffNodeset> rightSiblings = ascFreqSortedF1.subList(ii+1, ascFreqSortedF1.size());
+            // For the group-dependent shard with group id = gid,
+            // we should *only include Nodeset(i_gid, i_any) and exclude the rest
+            // (i_gid is an item so that part(i_gid)=gid, i_any - any item):
+            if (leastFreqItemFilter != null && !leastFreqItemFilter.test(xSet.leastFrequentItem())) {
+                continue;
+            }
+            List<DiffNodeset> rightSiblings = ascFreqSortedF1.subList(ii + 1, ascFreqSortedF1.size());
             ProcessedNodeset level1Node = xSet.createProcessedNode(true, rightSiblings, minSuppCnt);
             level1Nodes.add(level1Node);
         }
@@ -103,17 +107,17 @@ class DiffNodeset implements Serializable {
     /**
      * Creates a DiffNodeset for a single item. <br/>
      */
-    static DiffNodeset constructForItem(int itemRank, ArrayList<PpcNode> itemSortedPpcNodes) {
+    private static DiffNodeset constructForItem(int itemRank, ArrayList<PpcNode> itemSortedPpcNodes) {
         int supportCnt = countSum(itemSortedPpcNodes);
         return new DiffNodeset(new int[]{itemRank}, itemSortedPpcNodes, supportCnt);
     }
 
     /**
-     *  Create a DiffNodeset from a pair of nodesets. <br/>
-     *  'x' should be less frequent than 'y'. <br/>
-     *  Procedure 'Build_2-itemset_DN()' in the DiffNodesets algorithm paper. <br/>
+     * Create a DiffNodeset from a pair of nodesets. <br/>
+     * 'x' should be less frequent than 'y'. <br/>
+     * Procedure 'Build_2-itemset_DN()' in the DiffNodesets algorithm paper. <br/>
      */
-    static DiffNodeset constructForItemPair(DiffNodeset xSet, DiffNodeset ySet) {
+    private static DiffNodeset constructForItemPair(DiffNodeset xSet, DiffNodeset ySet) {
         Assert.isTrue(xSet.itemset.length == 1);
         Assert.isTrue(ySet.itemset.length == 1);
         int x = xSet.itemset[0];
@@ -126,7 +130,7 @@ class DiffNodeset implements Serializable {
         return new DiffNodeset(new int[]{x, y}, resNodes, supportCnt);
     }
 
-    static DiffNodeset constructByDiff(DiffNodeset xSet, DiffNodeset ySet) {
+    private static DiffNodeset constructByDiff(DiffNodeset xSet, DiffNodeset ySet) {
         Assert.isTrue(xSet.itemset.length > 1);
         Assert.isTrue(ySet.itemset.length > 1);
         Assert.isTrue(xSet.itemset.length == ySet.itemset.length);
@@ -148,7 +152,7 @@ class DiffNodeset implements Serializable {
         final int yLen = ySortedNodes.size();
 
         ArrayList<PpcNode> resNodes = new ArrayList<>(xLen);
-        int xInd=0, yInd=0;
+        int xInd = 0, yInd = 0;
         while (xInd < xLen && yInd < yLen) {
             PpcNode nx = xSortedNodes.get(xInd);
             PpcNode ny = ySortedNodes.get(yInd);
@@ -172,7 +176,7 @@ class DiffNodeset implements Serializable {
         final int yLen = ySortedNodes.size();
 
         ArrayList<PpcNode> resNodes = new ArrayList<>(xLen);
-        int xInd=0, yInd=0;
+        int xInd = 0, yInd = 0;
         while (xInd < xLen && yInd < yLen) {
             PpcNode nx = xSortedNodes.get(xInd);
             PpcNode ny = ySortedNodes.get(yInd);
@@ -190,6 +194,14 @@ class DiffNodeset implements Serializable {
 
         resNodes.trimToSize();
         return resNodes;
+    }
+
+    private int lastItem() {
+        return itemset[itemset.length - 1];
+    }
+
+    private int leastFrequentItem() {
+        return itemset[0];
     }
 
     private static int countSum(List<PpcNode> ppcNodes) {

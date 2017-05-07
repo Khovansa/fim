@@ -23,7 +23,8 @@ class PpcTree implements Serializable {
     }
 
     /**
-     * @param sortedTr transaction ranks, sorted in descending frequency (e.g. in ascending natural order)
+     * @param sortedTr transaction ranks, sorted in descending frequency (e.g. in ascending natural order) <br/>
+     *                 It means that the most frequent items would be closer to the root.
      */
     PpcTree insertTransaction(int[] sortedTr) {
         insertTransaction(sortedTr, 0);

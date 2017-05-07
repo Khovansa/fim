@@ -17,11 +17,11 @@ import java.util.function.Predicate;
  */
 class PpcTreeFiExtractor implements Serializable {
     private final PpcTree root;
-    private final Predicate<Integer> validate2ndNode;
+    private final Predicate<Integer> leastFreqItemFilter;
 
-    PpcTreeFiExtractor(PpcTree root, Predicate<Integer> validate2ndNode) {
+    PpcTreeFiExtractor(PpcTree root, Predicate<Integer> leastFreqItemFilter) {
         this.root = root;
-        this.validate2ndNode = validate2ndNode;
+        this.leastFreqItemFilter = leastFreqItemFilter;
     }
 
     static Iterator<Tuple2<Integer, int[]>> genCondTransactions(
@@ -58,6 +58,7 @@ class PpcTreeFiExtractor implements Serializable {
         f1Context.updateByF1(rootsResultHolder);
 
         PpcTree emptyTree = PpcTree.emptyTree();
+        //Note that transaction's items are stored in ascending order, i.e. in decreasing frequency
         JavaPairRDD<Integer, PpcTree> partAndTreeRdd =
                 partToRankTrsRdd.aggregateByKey(emptyTree, partitioner, PpcTree::insertTransaction, PpcTree::merge).
                         mapValues(PpcTree::withUpdatedPreAndPostOrderNumbers);
@@ -83,8 +84,18 @@ class PpcTreeFiExtractor implements Serializable {
         Integer part = partAndTreeRoot._1;
         PpcTree root = partAndTreeRoot._2;
 
-        Predicate<Integer> validate2ndNode = (itemRank -> partitioner.getPartition(itemRank) == part);
-        PpcTreeFiExtractor fiExtractor = new PpcTreeFiExtractor(root, validate2ndNode);
+        /*
+         (1) In PFPGrowth they only look for patterns ending in i | part(i)=gid, because that's their idea:
+             if FI ends at i | part(i)=gid, then it can be counted solely in the group-dependent shard of this gid
+         (2) We should do the same in Nodesets: only look for FIs ending at i | part(i)=gid
+             In any Nodeset(i1,...ik), i1 is the least frequent item so the sorted FI would end in i1 in the PpcTree.
+             So for each group-dependent shard we should only take Nodeset(i1...ik) | part(i1) = gid.
+         (3) Let i1 denote an item for which part(i1) = gid.
+             For the group-dependent shard with this gid,
+             we should *only include Nodeset(i1, i) and exclude the rest, i is any item*
+         */
+        Predicate<Integer> leastFreqItemFilter = (itemRank -> partitioner.getPartition(itemRank) == part);
+        PpcTreeFiExtractor fiExtractor = new PpcTreeFiExtractor(root, leastFreqItemFilter);
 
         FiResultHolder resultHolder = resultHolderFactory.newResultHolder(totalFreqItems, 10_000);
         fiExtractor.genAllFisForPartition(resultHolder, minSuppCnt, totalFreqItems, props);
@@ -97,11 +108,10 @@ class PpcTreeFiExtractor implements Serializable {
             int totalFreqItems,
             FinAlgProperties props) {
 
-        //TODO - only take nodesets whose i2 matches 'validate2ndNode' predicate
         ArrayList<ArrayList<PpcNode>> itemToPpcNodes = root.getPreOrderItemToPpcNodes(totalFreqItems);
         ArrayList<DiffNodeset> ascFreqSortedF1 = DiffNodeset.createF1NodesetsSortedByAscFreq(itemToPpcNodes);
         List<ProcessedNodeset> rootNodesets = prepareAscFreqSortedRoots(
-                resultHolder, ascFreqSortedF1, minSuppCnt, props.requiredItemsetLenForSeqProcessing);
+                resultHolder, ascFreqSortedF1, minSuppCnt, props.requiredItemsetLenForSeqProcessing, leastFreqItemFilter);
         Collections.reverse(rootNodesets); //nodes sorted in descending frequency, to start the most frequent ones first
 
         for (ProcessedNodeset rootNodeset : rootNodesets) {
@@ -110,17 +120,18 @@ class PpcTreeFiExtractor implements Serializable {
     }
 
     /**
-     * @param ascFreqSortedF1    F1 sorted in increasing frequency
-     * @param minSuppCnt         -
-     * @param requiredItemsetLen the required itemset length of the returned nodes, e.g. '1' for individual items. <br/>
-     *                           Note that each node will contain sons, i.e. '1' means a node for an individual frequent
-     *                           item + its sons representing frequent pairs.
+     * @param ascFreqSortedF1     F1 sorted in increasing frequency
+     * @param minSuppCnt          -
+     * @param requiredItemsetLen  the required itemset length of the returned nodes, e.g. '1' for individual items. <br/>
+     *                            Note that each node will contain sons, i.e. '1' means a node for an individual frequent
+     * @param leastFreqItemFilter optional
      */
     static List<ProcessedNodeset> prepareAscFreqSortedRoots(
             FiResultHolder resultHolder, ArrayList<DiffNodeset> ascFreqSortedF1,
-            long minSuppCnt, int requiredItemsetLen) {
+            long minSuppCnt, int requiredItemsetLen, Predicate<Integer> leastFreqItemFilter) {
 
-        List<ProcessedNodeset> roots = DiffNodeset.createProcessedNodesLevel1(ascFreqSortedF1, minSuppCnt);
+        List<ProcessedNodeset> roots =
+                DiffNodeset.createProcessedNodesLevel1(ascFreqSortedF1, minSuppCnt, leastFreqItemFilter);
         for (int currItemsetLen = 1; currItemsetLen < requiredItemsetLen; ++currItemsetLen) {
             roots = createNextLevel(resultHolder, roots, minSuppCnt);
         }

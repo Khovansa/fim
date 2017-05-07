@@ -12,6 +12,7 @@ import org.openu.fimcmp.algbase.F1Context;
 import org.openu.fimcmp.result.*;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -27,13 +28,14 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
     public static Class[] getClassesToRegister() {
         return new Class[] {
                 FinAlgProperties.class, ProcessedNodeset.class, DiffNodeset.class, PpcNode.class,
-                PpcTreeFiExtractor.class
+                PpcTreeFiExtractor.class,
+                Predicate.class
         };
     }
 
     public static void main(String[] args) throws Exception {
         FinAlgProperties props = new FinAlgProperties(0.8);
-        props.inputNumParts = 1;
+        props.inputNumParts = 4;
         props.isPersistInput = true;
         props.requiredItemsetLenForSeqProcessing = 2;
 //        props.runType = FinAlgProperties.RunType.SEQ_SPARK;
@@ -157,7 +159,8 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
 
         ArrayList<ArrayList<PpcNode>> itemToPpcNodes = root.getPreOrderItemToPpcNodes(f1Context.totalFreqItems);
         ArrayList<DiffNodeset> sortedF1Nodesets = DiffNodeset.createF1NodesetsSortedByAscFreq(itemToPpcNodes);
-        return PpcTreeFiExtractor.prepareAscFreqSortedRoots(resultHolder, sortedF1Nodesets, f1Context.minSuppCnt, requiredItemsetLenForSeqProcessing);
+        return PpcTreeFiExtractor.prepareAscFreqSortedRoots(
+                resultHolder, sortedF1Nodesets, f1Context.minSuppCnt, requiredItemsetLenForSeqProcessing, null);
     }
 
     private static class FinContext {
