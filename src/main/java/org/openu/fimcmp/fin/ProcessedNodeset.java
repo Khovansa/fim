@@ -26,7 +26,7 @@ class ProcessedNodeset implements Serializable {
         this.diffNodeset = diffNodeset;
     }
 
-    void updateResult(FiResultHolder resultHolder, List<Integer> parentEquivItems) {
+    private void updateResult(FiResultHolder resultHolder, List<Integer> parentEquivItems) {
         resultHolder.addClosedItemset(
                 diffNodeset.getSupportCnt(), diffNodeset.getItemset(), parentEquivItems, equivalentItems);
     }
@@ -48,8 +48,8 @@ class ProcessedNodeset implements Serializable {
     }
 
     FiResultHolder processSubtree(
-            FiResultHolderFactory resultHolderFactory, int totalFreqItems, int expResSize, long minSuppCnt) {
-        FiResultHolder resultHolder = resultHolderFactory.newResultHolder(totalFreqItems, expResSize);
+            FiResultHolderFactory resultHolderFactory, long minSuppCnt) {
+        FiResultHolder resultHolder = resultHolderFactory.newResultHolder();
         processSubtree(resultHolder, minSuppCnt);
         return resultHolder;
     }
@@ -79,13 +79,6 @@ class ProcessedNodeset implements Serializable {
             }
         }
         return res;
-    }
-    List<DiffNodeset> getSons() {
-        if (sons != null) {
-            return sons;
-        } else {
-            return Collections.emptyList();
-        }
     }
 
     void addNewEquivItem(int item) {

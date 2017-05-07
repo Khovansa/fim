@@ -9,9 +9,12 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.algbase.F1Context;
-import org.openu.fimcmp.result.*;
+import org.openu.fimcmp.result.BitsetFiResultHolderFactory;
+import org.openu.fimcmp.result.FiResultHolder;
+import org.openu.fimcmp.result.FiResultHolderFactory;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -26,7 +29,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
     }
 
     public static Class[] getClassesToRegister() {
-        return new Class[] {
+        return new Class[]{
                 FinAlgProperties.class, ProcessedNodeset.class, DiffNodeset.class, PpcNode.class,
                 PpcTreeFiExtractor.class,
                 Predicate.class
@@ -64,7 +67,8 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
                 resultHolder = ctx.alg.collectResultsInParallel(
                         ctx.resultHolderFactory, ctx.rankTrsRdd, ctx.f1Context, props);
                 break;
-            default: throw new IllegalArgumentException("Unsupporter run type " + props.runType);
+            default:
+                throw new IllegalArgumentException("Unsupporter run type " + props.runType);
         }
 
         outpuResults(resultHolder, ctx.f1Context);
@@ -85,7 +89,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         res.f1Context.printRankToItem();
         res.rankTrsRdd = res.f1Context.computeRddRanks1(trs);
 
-        res.resultHolderFactory = new BitsetFiResultHolderFactory();
+        res.resultHolderFactory = new BitsetFiResultHolderFactory(res.f1Context.totalFreqItems, 20_000);
         return res;
     }
 
@@ -96,7 +100,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         Partitioner partitioner = new HashPartitioner(numParts);
         JavaPairRDD<Integer, int[]> partToRankTrsRdd =
                 data.flatMapToPair(tr -> PpcTreeFiExtractor.genCondTransactions(tr, partitioner));
-        return PpcTreeFiExtractor.findAllFis(
+        return PpcTreeFiExtractor.findAllFisByParallelFin(
                 partToRankTrsRdd, partitioner, resultHolderFactory, f1Context, props);
     }
 
@@ -105,18 +109,17 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
             FiResultHolderFactory resultHolderFactory, JavaRDD<int[]> rankTrsRdd, F1Context f1Context,
             int requiredItemsetLenForSeqProcessing, JavaSparkContext sc) {
 
-        FiResultHolder rootsResultHolder = resultHolderFactory.newResultHolder(f1Context.totalFreqItems, 20_000);
-        List<ProcessedNodeset> rootNodesets =
-                createAscFreqSortedRoots(rootsResultHolder, rankTrsRdd, f1Context, requiredItemsetLenForSeqProcessing);
+        FiResultHolder rootsResultHolder = resultHolderFactory.newResultHolder();
+        List<ProcessedNodeset> rootNodesets = PpcTreeFiExtractor.createAscFreqSortedRoots(
+                rootsResultHolder, rankTrsRdd, f1Context, requiredItemsetLenForSeqProcessing);
         Collections.reverse(rootNodesets); //nodes sorted in descending frequency, to start the most frequent ones first
         JavaRDD<ProcessedNodeset> rootsRdd = sc.parallelize(rootNodesets);
 
         //process each subtree
-        FiResultHolder initResultHolder = resultHolderFactory.newResultHolder(f1Context.totalFreqItems, 20_000);
-        final int totalFreqItems = f1Context.totalFreqItems;
+        FiResultHolder initResultHolder = resultHolderFactory.newResultHolder();
         final long minSuppCnt = f1Context.minSuppCnt;
-        FiResultHolder subtreeResultHolder = rootsRdd.map(
-                pn -> pn.processSubtree(resultHolderFactory, totalFreqItems, 10_000, minSuppCnt))
+        FiResultHolder subtreeResultHolder = rootsRdd
+                .map(pn -> pn.processSubtree(resultHolderFactory, minSuppCnt))
                 .fold(initResultHolder, FiResultHolder::uniteWith);
 
         return rootsResultHolder.uniteWith(subtreeResultHolder);
@@ -126,8 +129,8 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
             FiResultHolderFactory resultHolderFactory, JavaRDD<int[]> rankTrsRdd, F1Context f1Context,
             int requiredItemsetLenForSeqProcessing) {
 
-        FiResultHolder resultHolder = resultHolderFactory.newResultHolder(f1Context.totalFreqItems, 20_000);
-        List<ProcessedNodeset> rootNodesets = createAscFreqSortedRoots(
+        FiResultHolder resultHolder = resultHolderFactory.newResultHolder();
+        List<ProcessedNodeset> rootNodesets = PpcTreeFiExtractor.createAscFreqSortedRoots(
                 resultHolder, rankTrsRdd, f1Context, requiredItemsetLenForSeqProcessing);
 
         //process each subtree
@@ -145,22 +148,6 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
                 sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
         allFrequentItemsets.forEach(System.out::println);
         System.out.println("Total results: " + allFrequentItemsets.size());
-    }
-
-    private List<ProcessedNodeset> createAscFreqSortedRoots(
-            FiResultHolder resultHolder, JavaRDD<int[]> rankTrsRdd, F1Context f1Context,
-            int requiredItemsetLenForSeqProcessing) {
-        //create PpcTree
-        PpcTree root = PpcTreeFiExtractor.createRoot(rankTrsRdd);
-//        root.print(f1Context.rankToItem, "", null);
-
-        //create root nodesets
-        f1Context.updateByF1(resultHolder);
-
-        ArrayList<ArrayList<PpcNode>> itemToPpcNodes = root.getPreOrderItemToPpcNodes(f1Context.totalFreqItems);
-        ArrayList<DiffNodeset> sortedF1Nodesets = DiffNodeset.createF1NodesetsSortedByAscFreq(itemToPpcNodes);
-        return PpcTreeFiExtractor.prepareAscFreqSortedRoots(
-                resultHolder, sortedF1Nodesets, f1Context.minSuppCnt, requiredItemsetLenForSeqProcessing, null);
     }
 
     private static class FinContext {

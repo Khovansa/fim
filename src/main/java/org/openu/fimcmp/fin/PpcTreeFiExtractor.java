@@ -16,14 +16,12 @@ import java.util.function.Predicate;
  * Extract all frequent itemsets from the given PpcTree
  */
 class PpcTreeFiExtractor implements Serializable {
-    private final PpcTree root;
-    private final Predicate<Integer> leastFreqItemFilter;
 
-    PpcTreeFiExtractor(PpcTree root, Predicate<Integer> leastFreqItemFilter) {
-        this.root = root;
-        this.leastFreqItemFilter = leastFreqItemFilter;
-    }
-
+    /**
+     * Generate 'group-dependent/conditional transactions'. <br/>
+     * Copy-paste from FPGrowth.genCondTransactions(). <br/>
+     * @return list of (group-id, conditional-transaction)
+     */
     static Iterator<Tuple2<Integer, int[]>> genCondTransactions(
             int[] ascSortedTr, Partitioner partitioner) {
         final int numParts = partitioner.numPartitions();
@@ -44,45 +42,70 @@ class PpcTreeFiExtractor implements Serializable {
         return res.iterator();
     }
 
-    static PpcTree createRoot(JavaRDD<int[]> rankTrsRdd) {
+    /**
+     * The core of PFIN+ algorithm.
+     */
+    static FiResultHolder findAllFisByParallelFin(
+            JavaPairRDD<Integer, int[]> partToCondTrsRdd, Partitioner partitioner,
+            FiResultHolderFactory resultHolderFactory, F1Context f1Context, FinAlgProperties props) {
+
+        FiResultHolder rootsResultHolder = resultHolderFactory.newResultHolder();
+        f1Context.updateByF1(rootsResultHolder);
+
+        PpcTree emptyTree = PpcTree.emptyTree();
+        //Generate PpcTree per partition.
+        //Note that transaction's items are stored in ascending order, i.e. in decreasing frequency
+        JavaPairRDD<Integer, PpcTree> partAndTreeRdd = partToCondTrsRdd
+                .aggregateByKey(emptyTree, partitioner, PpcTree::insertTransaction, PpcTree::merge)
+                .mapValues(PpcTree::withUpdatedPreAndPostOrderNumbers);
+
+        //Generate all FIs from the PpcTree objects
+        long minSuppCnt = f1Context.minSuppCnt;
+        int totalFreqItems = f1Context.totalFreqItems;
+        FiResultHolder initResultHolder = resultHolderFactory.newResultHolder();
+        FiResultHolder subtreeResultHolder = partAndTreeRdd
+                .map(partAndTree -> PpcTreeFiExtractor.genAllFisForPartition(
+                        resultHolderFactory, partAndTree, minSuppCnt, totalFreqItems, props, partitioner))
+                .fold(initResultHolder, FiResultHolder::uniteWith);
+
+        return rootsResultHolder.uniteWith(subtreeResultHolder);
+    }
+
+    /**
+     * Only prepare the roots using a <b>single</b> PpcTree that should be kept in memory. <br/>
+     * The FI mining could then proceed either sequentially or in parallel.
+     */
+    static List<ProcessedNodeset> createAscFreqSortedRoots(
+            FiResultHolder resultHolder, JavaRDD<int[]> rankTrsRdd, F1Context f1Context,
+            int requiredItemsetLenForSeqProcessing) {
+
+        f1Context.updateByF1(resultHolder);
+
+        //create the single PpcTree
+        PpcTree root = createRoot(rankTrsRdd);
+//        root.print(f1Context.rankToItem, "", null);
+
+        //create root nodesets
+        ArrayList<ArrayList<PpcNode>> itemToPpcNodes = root.getPreOrderItemToPpcNodes(f1Context.totalFreqItems);
+        ArrayList<DiffNodeset> sortedF1Nodesets = DiffNodeset.createF1NodesetsSortedByAscFreq(itemToPpcNodes);
+        return prepareAscFreqSortedRoots(
+                resultHolder, sortedF1Nodesets, f1Context.minSuppCnt, requiredItemsetLenForSeqProcessing, null);
+    }
+
+    private static PpcTree createRoot(JavaRDD<int[]> rankTrsRdd) {
         PpcTree root = PpcTree.emptyTree();
         root = rankTrsRdd.aggregate(root, PpcTree::insertTransaction, PpcTree::merge);
 
         return root.withUpdatedPreAndPostOrderNumbers();
     }
 
-    static FiResultHolder findAllFis(
-            JavaPairRDD<Integer, int[]> partToRankTrsRdd, Partitioner partitioner,
-            FiResultHolderFactory resultHolderFactory, F1Context f1Context, FinAlgProperties props) {
-        FiResultHolder rootsResultHolder = resultHolderFactory.newResultHolder(f1Context.totalFreqItems, 20_000);
-        f1Context.updateByF1(rootsResultHolder);
-
-        PpcTree emptyTree = PpcTree.emptyTree();
-        //Note that transaction's items are stored in ascending order, i.e. in decreasing frequency
-        JavaPairRDD<Integer, PpcTree> partAndTreeRdd =
-                partToRankTrsRdd.aggregateByKey(emptyTree, partitioner, PpcTree::insertTransaction, PpcTree::merge).
-                        mapValues(PpcTree::withUpdatedPreAndPostOrderNumbers);
-
-        long minSuppCnt = f1Context.minSuppCnt;
-        int totalFreqItems = f1Context.totalFreqItems;
-        FiResultHolder initResultHolder = resultHolderFactory.newResultHolder(f1Context.totalFreqItems, 20_000);
-        FiResultHolder subtreeResultHolder = partAndTreeRdd
-                .map(partAndTree -> PpcTreeFiExtractor.genAllFisForPartition(
-                        resultHolderFactory, minSuppCnt, totalFreqItems, props, partitioner, partAndTree))
-                .fold(initResultHolder, FiResultHolder::uniteWith);
-
-        return rootsResultHolder.uniteWith(subtreeResultHolder);
-    }
-
     private static FiResultHolder genAllFisForPartition(
             FiResultHolderFactory resultHolderFactory,
+            Tuple2<Integer, PpcTree> partAndTreeRoot,
             long minSuppCnt,
             int totalFreqItems,
             FinAlgProperties props,
-            Partitioner partitioner,
-            Tuple2<Integer, PpcTree> partAndTreeRoot) {
-        Integer part = partAndTreeRoot._1;
-        PpcTree root = partAndTreeRoot._2;
+            Partitioner partitioner) {
 
         /*
          (1) In PFPGrowth they only look for patterns ending in i | part(i)=gid, because that's their idea:
@@ -94,29 +117,32 @@ class PpcTreeFiExtractor implements Serializable {
              For the group-dependent shard with this gid,
              we should *only include Nodeset(i1, i) and exclude the rest, i is any item*
          */
+        final Integer part = partAndTreeRoot._1;
         Predicate<Integer> leastFreqItemFilter = (itemRank -> partitioner.getPartition(itemRank) == part);
-        PpcTreeFiExtractor fiExtractor = new PpcTreeFiExtractor(root, leastFreqItemFilter);
 
-        FiResultHolder resultHolder = resultHolderFactory.newResultHolder(totalFreqItems, 10_000);
-        fiExtractor.genAllFisForPartition(resultHolder, minSuppCnt, totalFreqItems, props);
-        return resultHolder;
+        final PpcTree root = partAndTreeRoot._2;
+        return genAllFisForPartition(resultHolderFactory, root, leastFreqItemFilter, minSuppCnt, totalFreqItems, props);
     }
 
-    private void genAllFisForPartition(
-            FiResultHolder resultHolder,
-            long minSuppCnt,
-            int totalFreqItems,
-            FinAlgProperties props) {
+    private static FiResultHolder genAllFisForPartition(
+            FiResultHolderFactory resultHolderFactory,
+            PpcTree root, Predicate<Integer> leastFreqItemFilter,
+            long minSuppCnt, int totalFreqItems, FinAlgProperties props) {
+
+        FiResultHolder resultHolder = resultHolderFactory.newResultHolder();
 
         ArrayList<ArrayList<PpcNode>> itemToPpcNodes = root.getPreOrderItemToPpcNodes(totalFreqItems);
         ArrayList<DiffNodeset> ascFreqSortedF1 = DiffNodeset.createF1NodesetsSortedByAscFreq(itemToPpcNodes);
         List<ProcessedNodeset> rootNodesets = prepareAscFreqSortedRoots(
                 resultHolder, ascFreqSortedF1, minSuppCnt, props.requiredItemsetLenForSeqProcessing, leastFreqItemFilter);
-        Collections.reverse(rootNodesets); //nodes sorted in descending frequency, to start the most frequent ones first
+        //nodes sorted in descending frequency, to start the most frequent ones first:
+        Collections.reverse(rootNodesets);
 
         for (ProcessedNodeset rootNodeset : rootNodesets) {
             rootNodeset.processSubtree(resultHolder, minSuppCnt);
         }
+
+        return resultHolder;
     }
 
     /**
@@ -126,7 +152,7 @@ class PpcTreeFiExtractor implements Serializable {
      *                            Note that each node will contain sons, i.e. '1' means a node for an individual frequent
      * @param leastFreqItemFilter optional
      */
-    static List<ProcessedNodeset> prepareAscFreqSortedRoots(
+    private static List<ProcessedNodeset> prepareAscFreqSortedRoots(
             FiResultHolder resultHolder, ArrayList<DiffNodeset> ascFreqSortedF1,
             long minSuppCnt, int requiredItemsetLen, Predicate<Integer> leastFreqItemFilter) {
 

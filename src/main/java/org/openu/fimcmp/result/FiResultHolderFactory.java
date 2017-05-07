@@ -3,5 +3,5 @@ package org.openu.fimcmp.result;
 import java.io.Serializable;
 
 public interface FiResultHolderFactory extends Serializable {
-    FiResultHolder newResultHolder(int totalFreqItems, int sizeEstimation);
+    FiResultHolder newResultHolder();
 }
