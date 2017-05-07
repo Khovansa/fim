@@ -13,9 +13,9 @@ import java.util.*;
 import java.util.function.Predicate;
 
 /**
- * Extract all frequent itemsets from the given PpcTree
+ * Helper methods for the FinAlg class.
  */
-class PpcTreeFiExtractor implements Serializable {
+class FinAlgHelper implements Serializable {
 
     /**
      * Generate 'group-dependent/conditional transactions'. <br/>
@@ -64,7 +64,7 @@ class PpcTreeFiExtractor implements Serializable {
         int totalFreqItems = f1Context.totalFreqItems;
         FiResultHolder initResultHolder = resultHolderFactory.newResultHolder();
         FiResultHolder subtreeResultHolder = partAndTreeRdd
-                .map(partAndTree -> PpcTreeFiExtractor.genAllFisForPartition(
+                .map(partAndTree -> FinAlgHelper.genAllFisForPartition(
                         resultHolderFactory, partAndTree, minSuppCnt, totalFreqItems, props, partitioner))
                 .fold(initResultHolder, FiResultHolder::uniteWith);
 

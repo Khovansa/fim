@@ -31,7 +31,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
     public static Class[] getClassesToRegister() {
         return new Class[]{
                 FinAlgProperties.class, ProcessedNodeset.class, DiffNodeset.class, PpcNode.class,
-                PpcTreeFiExtractor.class,
+                FinAlgHelper.class,
                 Predicate.class
         };
     }
@@ -99,8 +99,8 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         int numParts = data.getNumPartitions();
         Partitioner partitioner = new HashPartitioner(numParts);
         JavaPairRDD<Integer, int[]> partToRankTrsRdd =
-                data.flatMapToPair(tr -> PpcTreeFiExtractor.genCondTransactions(tr, partitioner));
-        return PpcTreeFiExtractor.findAllFisByParallelFin(
+                data.flatMapToPair(tr -> FinAlgHelper.genCondTransactions(tr, partitioner));
+        return FinAlgHelper.findAllFisByParallelFin(
                 partToRankTrsRdd, partitioner, resultHolderFactory, f1Context, props);
     }
 
@@ -110,7 +110,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
             int requiredItemsetLenForSeqProcessing, JavaSparkContext sc) {
 
         FiResultHolder rootsResultHolder = resultHolderFactory.newResultHolder();
-        List<ProcessedNodeset> rootNodesets = PpcTreeFiExtractor.createAscFreqSortedRoots(
+        List<ProcessedNodeset> rootNodesets = FinAlgHelper.createAscFreqSortedRoots(
                 rootsResultHolder, rankTrsRdd, f1Context, requiredItemsetLenForSeqProcessing);
         Collections.reverse(rootNodesets); //nodes sorted in descending frequency, to start the most frequent ones first
         JavaRDD<ProcessedNodeset> rootsRdd = sc.parallelize(rootNodesets);
@@ -130,7 +130,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
             int requiredItemsetLenForSeqProcessing) {
 
         FiResultHolder resultHolder = resultHolderFactory.newResultHolder();
-        List<ProcessedNodeset> rootNodesets = PpcTreeFiExtractor.createAscFreqSortedRoots(
+        List<ProcessedNodeset> rootNodesets = FinAlgHelper.createAscFreqSortedRoots(
                 resultHolder, rankTrsRdd, f1Context, requiredItemsetLenForSeqProcessing);
 
         //process each subtree
