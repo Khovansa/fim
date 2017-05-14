@@ -38,13 +38,14 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
 
     public static void main(String[] args) throws Exception {
         FinAlgProperties props = new FinAlgProperties(0.8);
-        props.inputNumParts = 4;
+        props.inputNumParts = 1;
         props.isPersistInput = true;
-        props.requiredItemsetLenForSeqProcessing = 2;
+        props.requiredItemsetLenForSeqProcessing = 1;
 //        props.runType = FinAlgProperties.RunType.SEQ_SPARK;
         props.runType = FinAlgProperties.RunType.PAR_SPARK;
 
-        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
+//        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
+        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "pumsb.dat";
         runAlg(props, inputFile);
     }
 

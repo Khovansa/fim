@@ -22,7 +22,8 @@ public class FpGrowthStdIT extends AlgITBase {
     @Test
     public void test() {
         final double minSupp = 0.8;
-        final PrepStepOutputAsList prep = prepareAsList("my.small.txt", minSupp, false, 1);
+//        final PrepStepOutputAsList prep = prepareAsList("my.small.txt", minSupp, false, 1);
+        final PrepStepOutputAsList prep = prepareAsList("pumsb.dat", minSupp, false, 1);
 
         FPGrowth fpg = new FPGrowth()
                 .setMinSupport(minSupp)
@@ -31,12 +32,12 @@ public class FpGrowthStdIT extends AlgITBase {
 
         List<FPGrowth.FreqItemset<String>> resAsList = model.freqItemsets().toJavaRDD().collect();
         pp("Total results: " + resAsList.size());
-        List<FreqItemset> stdRes = resAsList.stream().
-                map(fi -> new FreqItemset(fi.javaItems(), (int)fi.freq())).
-                sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
-        for (FreqItemset fi : stdRes) {
-            System.out.println(fi);
-        }
-        pp("Total results: " + stdRes.size());
+//        List<FreqItemset> stdRes = resAsList.stream().
+//                map(fi -> new FreqItemset(fi.javaItems(), (int)fi.freq())).
+//                sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
+//        for (FreqItemset fi : stdRes) {
+//            System.out.println(fi);
+//        }
+//        pp("Total results: " + stdRes.size());
     }
 }

@@ -171,26 +171,31 @@ class DiffNodeset implements Serializable {
         return resNodes;
     }
 
-    private static ArrayList<PpcNode> nodesMinus(ArrayList<PpcNode> xSortedNodes, ArrayList<PpcNode> ySortedNodes) {
-        final int xLen = xSortedNodes.size();
+    /**
+     * Simply compute set difference (ySortedNodes - xSortedNodes) using pre-order numbers as element indicators.
+     */
+    private static ArrayList<PpcNode> nodesMinus(ArrayList<PpcNode> ySortedNodes, ArrayList<PpcNode> xSortedNodes) {
         final int yLen = ySortedNodes.size();
+        final int xLen = xSortedNodes.size();
 
-        ArrayList<PpcNode> resNodes = new ArrayList<>(xLen);
-        int xInd = 0, yInd = 0;
-        while (xInd < xLen && yInd < yLen) {
-            PpcNode nx = xSortedNodes.get(xInd);
+        ArrayList<PpcNode> resNodes = new ArrayList<>(yLen);
+        int yInd = 0, xInd = 0;
+        while (yInd < yLen && xInd < xLen) {
             PpcNode ny = ySortedNodes.get(yInd);
-            int xpo = nx.getPreOrder();
+            PpcNode nx = xSortedNodes.get(xInd);
             int ypo = ny.getPreOrder();
-            if (xpo > ypo) {
-                ++yInd; //ny is behind, so just advance it
+            int xpo = nx.getPreOrder();
+            if (xpo < ypo) {
+                ++xInd; //nx is behind, so just advance it
             } else if (xpo == ypo) {
-                ++xInd; //same node => no insertion
+                ++yInd; //same node => no insertion
+                ++xInd;
             } else {
-                resNodes.add(nx); //xpo < ypo => nx is not in the 'ySortedNodes'
+                resNodes.add(ny); //ypo < xpo => ny is not in the 'xSortedNodes'
+                ++yInd;
             }
         }
-        resNodes.addAll(xSortedNodes.subList(xInd, xLen));
+        resNodes.addAll(ySortedNodes.subList(yInd, yLen));
 
         resNodes.trimToSize();
         return resNodes;

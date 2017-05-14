@@ -118,10 +118,13 @@ class FinAlgHelper implements Serializable {
              we should *only include Nodeset(i1, i) and exclude the rest, i is any item*
          */
         final Integer part = partAndTreeRoot._1;
+        System.out.println("Starting FIs for partition " + part);
         Predicate<Integer> leastFreqItemFilter = (itemRank -> partitioner.getPartition(itemRank) == part);
 
         final PpcTree root = partAndTreeRoot._2;
-        return genAllFisForPartition(resultHolderFactory, root, leastFreqItemFilter, minSuppCnt, totalFreqItems, props);
+        FiResultHolder res = genAllFisForPartition(resultHolderFactory, root, leastFreqItemFilter, minSuppCnt, totalFreqItems, props);
+        System.out.println(String.format("Completed FIs for partition %s: %s", part, res.size()));
+        return res;
     }
 
     private static FiResultHolder genAllFisForPartition(
@@ -138,7 +141,9 @@ class FinAlgHelper implements Serializable {
         //nodes sorted in descending frequency, to start the most frequent ones first:
         Collections.reverse(rootNodesets);
 
+        System.out.println(String.format("Starting processing subtrees: %s roots", rootNodesets.size()));
         for (ProcessedNodeset rootNodeset : rootNodesets) {
+            System.out.println(String.format("Processing subtree of %s", Arrays.toString(rootNodeset.getItemset())));
             rootNodeset.processSubtree(resultHolder, minSuppCnt);
         }
 

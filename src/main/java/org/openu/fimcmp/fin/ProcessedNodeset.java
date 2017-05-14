@@ -6,10 +6,7 @@ import org.openu.fimcmp.result.FiResultHolderFactory;
 import org.openu.fimcmp.util.Assert;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Replacement of the 'pattern tree node' in the original FIN+ algorithm. <br/>
@@ -67,6 +64,7 @@ class ProcessedNodeset implements Serializable {
             DiffNodeset son = sons.pop();
             ProcessedNodeset processedSon = son.createProcessedNode(sons, minSuppCnt);
             processedSon.updateResult(resultHolder, equivalentItems);
+            System.out.println(String.format("Processing subtree of %s", Arrays.toString(processedSon.getItemset())));
             processedSon.processSubtree(resultHolder, minSuppCnt);
         }
     }
@@ -93,5 +91,9 @@ class ProcessedNodeset implements Serializable {
             sons = new LinkedList<>();
         }
         sons.add(son);
+    }
+
+    int[] getItemset() {
+        return diffNodeset.getItemset();
     }
 }
