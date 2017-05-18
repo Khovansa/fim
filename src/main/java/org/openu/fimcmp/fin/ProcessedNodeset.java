@@ -64,7 +64,7 @@ class ProcessedNodeset implements Serializable {
             DiffNodeset son = sons.pop();
             ProcessedNodeset processedSon = son.createProcessedNode(sons, minSuppCnt);
             processedSon.updateResult(resultHolder, equivalentItems);
-            System.out.println(String.format("Processing subtree of %s", Arrays.toString(processedSon.getItemset())));
+//            System.out.println(String.format("Processing subtree of %s", Arrays.toString(processedSon.getItemset())));
             processedSon.processSubtree(resultHolder, minSuppCnt);
         }
     }

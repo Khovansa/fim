@@ -13,6 +13,7 @@ import org.openu.fimcmp.result.BitsetFiResultHolderFactory;
 import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.result.FiResultHolderFactory;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
@@ -42,7 +43,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         props.isPersistInput = true;
         props.requiredItemsetLenForSeqProcessing = 1;
 //        props.runType = FinAlgProperties.RunType.SEQ_SPARK;
-        props.runType = FinAlgProperties.RunType.PAR_SPARK;
+        props.runType = FinAlgProperties.RunType.SEQ_PURE_JAVA;
 
 //        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
         String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "pumsb.dat";
@@ -72,7 +73,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
                 throw new IllegalArgumentException("Unsupporter run type " + props.runType);
         }
 
-        outpuResults(resultHolder, ctx.f1Context);
+        outputResults(resultHolder, ctx.f1Context, ctx.sw);
     }
 
     private static FinContext prepare(FinAlgProperties props, String inputFile) throws Exception {
@@ -133,22 +134,26 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         FiResultHolder resultHolder = resultHolderFactory.newResultHolder();
         List<ProcessedNodeset> rootNodesets = FinAlgHelper.createAscFreqSortedRoots(
                 resultHolder, rankTrsRdd, f1Context, requiredItemsetLenForSeqProcessing);
+//        Collections.reverse(rootNodesets);
 
         //process each subtree
         for (ProcessedNodeset rootNodeset : rootNodesets) {
+            System.out.println(String.format("Processing subtree of %s", Arrays.toString(rootNodeset.getItemset())));
             rootNodeset.processSubtree(resultHolder, f1Context.minSuppCnt);
+            System.out.println(String.format("Done processing subtree of %s: %s",
+                    Arrays.toString(rootNodeset.getItemset()), resultHolder.size()));
         }
 
         return resultHolder;
     }
 
-    private static void outpuResults(FiResultHolder resultHolder, F1Context f1Context) {
+    private static void outputResults(FiResultHolder resultHolder, F1Context f1Context, StopWatch sw) {
         List<FreqItemset> allFrequentItemsets = resultHolder.getAllFrequentItemsets(f1Context.rankToItem);
-        System.out.println("Total results: " + allFrequentItemsets.size());
+        pp(sw, "Total results: " + allFrequentItemsets.size());
         allFrequentItemsets = allFrequentItemsets.stream().
                 sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
         allFrequentItemsets.forEach(System.out::println);
-        System.out.println("Total results: " + allFrequentItemsets.size());
+        pp(sw, "Total results: " + allFrequentItemsets.size());
     }
 
     private static class FinContext {

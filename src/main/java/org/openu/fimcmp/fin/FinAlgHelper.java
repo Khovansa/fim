@@ -145,6 +145,8 @@ class FinAlgHelper implements Serializable {
         for (ProcessedNodeset rootNodeset : rootNodesets) {
             System.out.println(String.format("Processing subtree of %s", Arrays.toString(rootNodeset.getItemset())));
             rootNodeset.processSubtree(resultHolder, minSuppCnt);
+            System.out.println(String.format("Done processing subtree of %s: %s",
+                    Arrays.toString(rootNodeset.getItemset()), resultHolder.size()));
         }
 
         return resultHolder;
