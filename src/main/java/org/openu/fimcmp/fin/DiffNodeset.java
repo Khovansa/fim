@@ -45,19 +45,32 @@ class DiffNodeset implements Serializable {
     }
 
     static List<ProcessedNodeset> createProcessedNodesLevel1(
-            ArrayList<DiffNodeset> ascFreqSortedF1, long minSuppCnt, Predicate<Integer> leastFreqItemFilter) {
+            FiResultHolder resultHolder, ArrayList<DiffNodeset> ascFreqSortedF1,
+            long minSuppCnt, Predicate<Integer> leastFreqItemFilter) {
         final int totalFreqItems = ascFreqSortedF1.size();
+
         List<ProcessedNodeset> level1Nodes = new ArrayList<>(totalFreqItems);
+        boolean[] itemToIsEquiv = new boolean[totalFreqItems]; //initialized as 'false'
         for (int ii = 0; ii < totalFreqItems; ++ii) {
             DiffNodeset xSet = ascFreqSortedF1.get(ii);
+
+            //this 'root' always appears in pair with another, already processed, root => let's skip it:
+            if (itemToIsEquiv[xSet.leastFrequentItem()]) {
+                continue;
+            }
+
             // For the group-dependent shard with group id = gid,
             // we should *only include Nodeset(i_gid, i_any) and exclude the rest
             // (i_gid is an item so that part(i_gid)=gid, i_any - any item):
             if (leastFreqItemFilter != null && !leastFreqItemFilter.test(xSet.leastFrequentItem())) {
                 continue;
             }
+
             List<DiffNodeset> rightSiblings = ascFreqSortedF1.subList(ii + 1, ascFreqSortedF1.size());
             ProcessedNodeset level1Node = xSet.createProcessedNode(true, rightSiblings, minSuppCnt);
+
+            level1Node.markByEquivItems(itemToIsEquiv);
+            level1Node.updateResult(resultHolder, null);
             level1Nodes.add(level1Node);
         }
 
@@ -91,7 +104,7 @@ class DiffNodeset implements Serializable {
             final DiffNodeset p = constructNew(isLevel1, y);
 
             final int pSupportCnt = p.getSupportCnt();
-            if (pSupportCnt == supportCnt && !isLevel1) {
+            if (pSupportCnt == supportCnt) {
                 res.addNewEquivItem(i);
             } else if (pSupportCnt >= minSuppCnt) {
                 res.addSon(p);

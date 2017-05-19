@@ -45,8 +45,8 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
 //        props.runType = FinAlgProperties.RunType.SEQ_SPARK;
         props.runType = FinAlgProperties.RunType.SEQ_PURE_JAVA;
 
-//        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
-        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "pumsb.dat";
+        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
+//        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "pumsb.dat";
         runAlg(props, inputFile);
     }
 

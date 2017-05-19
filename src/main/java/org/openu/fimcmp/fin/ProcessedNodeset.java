@@ -23,7 +23,7 @@ class ProcessedNodeset implements Serializable {
         this.diffNodeset = diffNodeset;
     }
 
-    private void updateResult(FiResultHolder resultHolder, List<Integer> parentEquivItems) {
+    void updateResult(FiResultHolder resultHolder, List<Integer> parentEquivItems) {
         resultHolder.addClosedItemset(
                 diffNodeset.getSupportCnt(), diffNodeset.getItemset(), parentEquivItems, equivalentItems);
     }
@@ -95,5 +95,14 @@ class ProcessedNodeset implements Serializable {
 
     int[] getItemset() {
         return diffNodeset.getItemset();
+    }
+
+    void markByEquivItems(boolean[] itemToIsEquiv) {
+        if (equivalentItems != null) {
+            System.out.println(String.format("GGG: equivItems[%s]=%s", Arrays.toString(diffNodeset.getItemset()), equivalentItems));
+            for (Integer equivalentItem : equivalentItems) {
+                itemToIsEquiv[equivalentItem] = true;
+            }
+        }
     }
 }

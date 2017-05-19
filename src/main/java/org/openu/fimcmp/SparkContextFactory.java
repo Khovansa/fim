@@ -67,6 +67,14 @@ public class SparkContextFactory {
 
         conf.set("spark.driver.memory", "1200m");
 
+        //TODO
+        conf.set("spark.files.fetchTimeout", "1000000");
+        conf.set("spark.network.timeout", "1000000");
+        conf.set("spark.rpc.lookupTimeout", "1000000");
+        conf.set("spark.dynamicAllocation.executorIdleTimeout", "1000000");
+        conf.set("spark.r.heartBeatInterval", "1000000");
+        conf.set("spark.sql.broadcastTimeout",  "1000000");
+
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         sc.setLogLevel("WARN");
