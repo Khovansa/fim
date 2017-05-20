@@ -73,15 +73,6 @@ public class F1Context {
         return res;
     }
 
-    public void updateByF1(FiResultHolder resultHolder) {
-        for (Tuple2<String, Integer> itemWithSupp : sortedF1) {
-            int rank = itemToRank.get(itemWithSupp._1);
-            int[] itemset = new int[]{rank};
-            int supportCnt = itemWithSupp._2;
-            resultHolder.addFrequentItemset(supportCnt, itemset);
-        }
-    }
-
     public void pp(Object msg) {
         AlgBase.pp(sw, msg);
     }

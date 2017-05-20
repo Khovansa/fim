@@ -70,7 +70,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
                         ctx.resultHolderFactory, ctx.rankTrsRdd, ctx.f1Context, props);
                 break;
             default:
-                throw new IllegalArgumentException("Unsupporter run type " + props.runType);
+                throw new IllegalArgumentException("Unsupported run type " + props.runType);
         }
 
         outputResults(resultHolder, ctx.f1Context, ctx.sw);

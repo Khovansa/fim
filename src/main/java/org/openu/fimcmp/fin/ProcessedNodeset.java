@@ -23,7 +23,7 @@ class ProcessedNodeset implements Serializable {
         this.diffNodeset = diffNodeset;
     }
 
-    private void updateResult(FiResultHolder resultHolder, List<Integer> parentEquivItems) {
+    void updateResult(FiResultHolder resultHolder, List<Integer> parentEquivItems) {
         resultHolder.addClosedItemset(
                 diffNodeset.getSupportCnt(), diffNodeset.getItemset(), parentEquivItems, equivalentItems);
     }

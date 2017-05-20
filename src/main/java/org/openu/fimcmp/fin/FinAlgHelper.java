@@ -50,7 +50,6 @@ class FinAlgHelper implements Serializable {
             FiResultHolderFactory resultHolderFactory, F1Context f1Context, FinAlgProperties props) {
 
         FiResultHolder rootsResultHolder = resultHolderFactory.newResultHolder();
-        f1Context.updateByF1(rootsResultHolder);
 
         PpcTree emptyTree = PpcTree.emptyTree();
         //Generate PpcTree per partition.
@@ -78,8 +77,6 @@ class FinAlgHelper implements Serializable {
     static List<ProcessedNodeset> createAscFreqSortedRoots(
             FiResultHolder resultHolder, JavaRDD<int[]> rankTrsRdd, F1Context f1Context,
             int requiredItemsetLenForSeqProcessing) {
-
-        f1Context.updateByF1(resultHolder);
 
         //create the single PpcTree
         PpcTree root = createRoot(rankTrsRdd);
@@ -164,7 +161,7 @@ class FinAlgHelper implements Serializable {
             long minSuppCnt, int requiredItemsetLen, Predicate<Integer> leastFreqItemFilter) {
 
         List<ProcessedNodeset> roots =
-                DiffNodeset.createProcessedNodesLevel1(ascFreqSortedF1, minSuppCnt, leastFreqItemFilter);
+                DiffNodeset.createProcessedNodesLevel1(resultHolder, ascFreqSortedF1, minSuppCnt, leastFreqItemFilter);
         for (int currItemsetLen = 1; currItemsetLen < requiredItemsetLen; ++currItemsetLen) {
             roots = createNextLevel(resultHolder, roots, minSuppCnt);
         }

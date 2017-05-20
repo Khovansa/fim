@@ -45,7 +45,7 @@ class DiffNodeset implements Serializable {
     }
 
     static List<ProcessedNodeset> createProcessedNodesLevel1(
-            ArrayList<DiffNodeset> ascFreqSortedF1, long minSuppCnt, Predicate<Integer> leastFreqItemFilter) {
+            FiResultHolder resultHolder, ArrayList<DiffNodeset> ascFreqSortedF1, long minSuppCnt, Predicate<Integer> leastFreqItemFilter) {
         final int totalFreqItems = ascFreqSortedF1.size();
         List<ProcessedNodeset> level1Nodes = new ArrayList<>(totalFreqItems);
         for (int ii = 0; ii < totalFreqItems; ++ii) {
@@ -58,6 +58,7 @@ class DiffNodeset implements Serializable {
             }
             List<DiffNodeset> rightSiblings = ascFreqSortedF1.subList(ii + 1, ascFreqSortedF1.size());
             ProcessedNodeset level1Node = xSet.createProcessedNode(true, rightSiblings, minSuppCnt);
+            level1Node.updateResult(resultHolder, null);
             level1Nodes.add(level1Node);
         }
 
