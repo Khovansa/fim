@@ -7,13 +7,13 @@ import org.apache.commons.lang.builder.ToStringStyle;
 /**
  * Parse and hold the command-line options for the BigFimAlg.
  */
-class BigFimCmdLineProperties {
+class BigFimCmdLineOptions {
     final String sparkMasterUrl;
     final boolean isUseKrio;
     final String inputFileName;
     final BigFimAlgProperties bigFimAlgProps;
 
-    static BigFimCmdLineProperties parse(String[] args) throws ParseException {
+    static BigFimCmdLineOptions parse(String[] args) throws ParseException {
         Options options = new Options();
         options.addOption("h", "help", false, "Print help and quit");
         options.addOption("url", "spark-master-url", true, "Spark master URL");
@@ -46,7 +46,7 @@ class BigFimCmdLineProperties {
     }
 
     @SuppressWarnings("WeakerAccess")
-    BigFimCmdLineProperties(
+    BigFimCmdLineOptions(
             String sparkMasterUrl, boolean isUseKrio, String inputFileName, BigFimAlgProperties bigFimAlgProps) {
         this.sparkMasterUrl = sparkMasterUrl;
         this.isUseKrio = isUseKrio;
@@ -59,7 +59,7 @@ class BigFimCmdLineProperties {
         return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 
-    private static BigFimCmdLineProperties cmdOptionsToRunProps(CommandLine line) {
+    private static BigFimCmdLineOptions cmdOptionsToRunProps(CommandLine line) {
         String sparkMasterUrl = line.getOptionValue("url", "spark://192.168.1.68:7077");
         boolean isUseKrio = line.hasOption("krio");
         String inputFileName = line.getOptionValue("input");
@@ -79,7 +79,7 @@ class BigFimCmdLineProperties {
         algProps.isCountingOnly = getBooleanVal(line, "ecnt", algProps.isCountingOnly);
         algProps.maxEclatNumParts = getOptIntVal(line, "epnum", algProps.maxEclatNumParts);
 
-        return new BigFimCmdLineProperties(sparkMasterUrl, isUseKrio, inputFileName, algProps);
+        return new BigFimCmdLineOptions(sparkMasterUrl, isUseKrio, inputFileName, algProps);
     }
 
     private static int getIntVal(CommandLine line, String opt, int defaultVal) {

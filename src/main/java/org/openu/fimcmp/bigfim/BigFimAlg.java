@@ -13,7 +13,7 @@ import scala.Tuple2;
  */
 public class BigFimAlg extends AlgBase<BigFimAlgProperties> {
     public static void main(String[] args) throws Exception {
-        BigFimCmdLineProperties runProps = BigFimCmdLineProperties.parse(args);
+        BigFimCmdLineOptions runProps = BigFimCmdLineOptions.parse(args);
         if (runProps == null) {
             return; //help
         }
