@@ -65,12 +65,6 @@ class DiffNodeset implements Serializable {
         return level1Nodes;
     }
 
-    static void updateResultBy(FiResultHolder resultHolder, List<DiffNodeset> nodes) {
-        for (DiffNodeset node : nodes) {
-            resultHolder.addFrequentItemset(node.getSupportCnt(), node.getItemset());
-        }
-    }
-
     ProcessedNodeset createProcessedNode(List<DiffNodeset> rightSiblings, long minSuppCnt, ArrayList<Integer> optParentEquivItems) {
         return createProcessedNode(false, rightSiblings, minSuppCnt, optParentEquivItems);
     }
@@ -94,7 +88,7 @@ class DiffNodeset implements Serializable {
             final DiffNodeset p = constructNew(isLevel1, y);
 
             final int pSupportCnt = p.getSupportCnt();
-            if (pSupportCnt == supportCnt && !isLevel1) {
+            if (pSupportCnt == supportCnt /*&& !isLevel1*/) {
                 //There is no need to check for duplicates with 'optParentEquivItems',
                 // since an item can be either son or an equivalent item.
                 //All the siblings = the parent's sons, 'optParentEquivItems' = the parent's equivalent items.

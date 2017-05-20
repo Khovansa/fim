@@ -42,8 +42,8 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         props.inputNumParts = 1;
         props.isPersistInput = true;
         props.requiredItemsetLenForSeqProcessing = 1;
-//        props.runType = FinAlgProperties.RunType.SEQ_SPARK;
-        props.runType = FinAlgProperties.RunType.SEQ_PURE_JAVA;
+        props.runType = FinAlgProperties.RunType.PAR_SPARK;
+//        props.runType = FinAlgProperties.RunType.SEQ_PURE_JAVA;
 
 //        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
         String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "pumsb.dat";
@@ -151,10 +151,10 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
     private static void outputResults(FiResultHolder resultHolder, F1Context f1Context, StopWatch sw) {
         List<FreqItemset> allFrequentItemsets = resultHolder.getAllFrequentItemsets(f1Context.rankToItem);
         pp(sw, "Total results: " + allFrequentItemsets.size());
-        allFrequentItemsets = allFrequentItemsets.stream().
-                sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
-        allFrequentItemsets.forEach(System.out::println);
-        pp(sw, "Total results: " + allFrequentItemsets.size());
+//        allFrequentItemsets = allFrequentItemsets.stream().
+//                sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
+//        allFrequentItemsets.forEach(System.out::println);
+//        pp(sw, "Total results: " + allFrequentItemsets.size());
     }
 
     private static class FinContext {
