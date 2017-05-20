@@ -25,7 +25,7 @@ class ProcessedNodeset implements Serializable {
 
     void updateResult(FiResultHolder resultHolder, List<Integer> parentEquivItems) {
         resultHolder.addClosedItemset(
-                diffNodeset.getSupportCnt(), diffNodeset.getItemset(), parentEquivItems, equivalentItems);
+                diffNodeset.getSupportCnt(), diffNodeset.getItemset(), null, equivalentItems);
     }
 
     List<ProcessedNodeset> processSonsOnly(FiResultHolder resultHolder, long minSuppCnt) {
@@ -36,7 +36,7 @@ class ProcessedNodeset implements Serializable {
         List<ProcessedNodeset> res = new ArrayList<>(sons.size());
         while (!sons.isEmpty()) {
             DiffNodeset son = sons.pop();
-            ProcessedNodeset processedSon = son.createProcessedNode(sons, minSuppCnt);
+            ProcessedNodeset processedSon = son.createProcessedNode(sons, minSuppCnt, equivalentItems);
             processedSon.updateResult(resultHolder, equivalentItems);
             res.add(processedSon);
         }
@@ -62,7 +62,7 @@ class ProcessedNodeset implements Serializable {
 
         while (!sons.isEmpty()) {
             DiffNodeset son = sons.pop();
-            ProcessedNodeset processedSon = son.createProcessedNode(sons, minSuppCnt);
+            ProcessedNodeset processedSon = son.createProcessedNode(sons, minSuppCnt, equivalentItems);
             processedSon.updateResult(resultHolder, equivalentItems);
 //            System.out.println(String.format("Processing subtree of %s", Arrays.toString(processedSon.getItemset())));
             processedSon.processSubtree(resultHolder, minSuppCnt);
@@ -77,6 +77,17 @@ class ProcessedNodeset implements Serializable {
             }
         }
         return res;
+    }
+
+    void addNewEquivItems(List<Integer> optEquivItems) {
+        if (optEquivItems == null) {
+            return;
+        }
+
+        if (equivalentItems == null) {
+            equivalentItems = new ArrayList<>(optEquivItems.size() + 2);
+        }
+        equivalentItems.addAll(optEquivItems);
     }
 
     void addNewEquivItem(int item) {

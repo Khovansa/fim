@@ -57,7 +57,7 @@ class DiffNodeset implements Serializable {
                 continue;
             }
             List<DiffNodeset> rightSiblings = ascFreqSortedF1.subList(ii + 1, ascFreqSortedF1.size());
-            ProcessedNodeset level1Node = xSet.createProcessedNode(true, rightSiblings, minSuppCnt);
+            ProcessedNodeset level1Node = xSet.createProcessedNode(true, rightSiblings, minSuppCnt, null);
             level1Node.updateResult(resultHolder, null);
             level1Nodes.add(level1Node);
         }
@@ -71,8 +71,8 @@ class DiffNodeset implements Serializable {
         }
     }
 
-    ProcessedNodeset createProcessedNode(List<DiffNodeset> rightSiblings, long minSuppCnt) {
-        return createProcessedNode(false, rightSiblings, minSuppCnt);
+    ProcessedNodeset createProcessedNode(List<DiffNodeset> rightSiblings, long minSuppCnt, ArrayList<Integer> optParentEquivItems) {
+        return createProcessedNode(false, rightSiblings, minSuppCnt, optParentEquivItems);
     }
 
     @Override
@@ -84,8 +84,10 @@ class DiffNodeset implements Serializable {
      * Extend the tree by extending the current node. <br/>
      * See lines 1-20 of 'Constructing_Pattern_Tree()' procedure of the DiffNodesets algorithm paper.
      */
-    private ProcessedNodeset createProcessedNode(boolean isLevel1, List<DiffNodeset> rightSiblings, long minSuppCnt) {
+    private ProcessedNodeset createProcessedNode(
+            boolean isLevel1, List<DiffNodeset> rightSiblings, long minSuppCnt, ArrayList<Integer> optParentEquivItems) {
         ProcessedNodeset res = new ProcessedNodeset(this);
+        res.addNewEquivItems(optParentEquivItems);
 
         for (DiffNodeset y : rightSiblings) {
             final int i = y.lastItem();
@@ -93,6 +95,10 @@ class DiffNodeset implements Serializable {
 
             final int pSupportCnt = p.getSupportCnt();
             if (pSupportCnt == supportCnt && !isLevel1) {
+                //There is no need to check for duplicates with 'optParentEquivItems',
+                // since an item can be either son or an equivalent item.
+                //All the siblings = the parent's sons, 'optParentEquivItems' = the parent's equivalent items.
+                //So they are disjoint.
                 res.addNewEquivItem(i);
             } else if (pSupportCnt >= minSuppCnt) {
                 res.addSon(p);
