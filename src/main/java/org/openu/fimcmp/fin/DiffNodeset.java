@@ -58,7 +58,7 @@ class DiffNodeset implements Serializable {
             }
             List<DiffNodeset> rightSiblings = ascFreqSortedF1.subList(ii + 1, ascFreqSortedF1.size());
             ProcessedNodeset level1Node = xSet.createProcessedNode(true, rightSiblings, minSuppCnt, null);
-            level1Node.updateResult(resultHolder, null);
+            level1Node.updateResult(resultHolder);
             level1Nodes.add(level1Node);
         }
 

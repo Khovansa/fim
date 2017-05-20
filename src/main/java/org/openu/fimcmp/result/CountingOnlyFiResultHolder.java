@@ -25,13 +25,13 @@ public class CountingOnlyFiResultHolder implements FiResultHolder {
 
     @Override
     public void addClosedItemset(
-            int supportCnt, int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems) {
-        if (CollectionUtils.isEmpty(parentEquivItems) && CollectionUtils.isEmpty(equivItems)) {
+            int supportCnt, int[] basicItemset, List<Integer> equivItems) {
+        if (CollectionUtils.isEmpty(equivItems)) {
             //fast treatment of the most frequent case:
             size += 1;
         } else {
             //the general case
-            int differentEqivItemsCnt = countNewItems(basicItemset, parentEquivItems, equivItems);
+            int differentEqivItemsCnt = countNewItems(basicItemset, equivItems);
             size += SubsetsGenerator.getNumberOfAllSubsets(differentEqivItemsCnt);
         }
     }
@@ -63,13 +63,12 @@ public class CountingOnlyFiResultHolder implements FiResultHolder {
         return this;
     }
 
-    private int countNewItems(int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems) {
+    private int countNewItems(int[] basicItemset, List<Integer> equivItems) {
         final int bsStartInd=0;
         long[] itemsBs = new long[BitArrays.requiredSize(totalFreqItems, bsStartInd)];
         BitArrays.setAll(itemsBs, bsStartInd, basicItemset);
 
-        return countAndSetNewItems(itemsBs, bsStartInd, parentEquivItems) +
-                countAndSetNewItems(itemsBs, bsStartInd, equivItems);
+        return countAndSetNewItems(itemsBs, bsStartInd, equivItems);
     }
 
     private int countAndSetNewItems(long[] itemsBs, int bsStartInd, List<Integer> equivItems) {

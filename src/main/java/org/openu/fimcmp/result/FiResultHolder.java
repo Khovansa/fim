@@ -12,7 +12,7 @@ import java.util.List;
  */
 public interface FiResultHolder extends Serializable {
 
-    void addClosedItemset(int supportCnt, int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems);
+    void addClosedItemset(int supportCnt, int[] basicItemset, List<Integer> equivItems);
 
     void addFrequentItemset(int supportCnt, int[] itemset);
 

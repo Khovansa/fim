@@ -23,9 +23,8 @@ class ProcessedNodeset implements Serializable {
         this.diffNodeset = diffNodeset;
     }
 
-    void updateResult(FiResultHolder resultHolder, List<Integer> parentEquivItems) {
-        resultHolder.addClosedItemset(
-                diffNodeset.getSupportCnt(), diffNodeset.getItemset(), null, equivalentItems);
+    void updateResult(FiResultHolder resultHolder) {
+        resultHolder.addClosedItemset(diffNodeset.getSupportCnt(), diffNodeset.getItemset(), equivalentItems);
     }
 
     List<ProcessedNodeset> processSonsOnly(FiResultHolder resultHolder, long minSuppCnt) {
@@ -37,7 +36,7 @@ class ProcessedNodeset implements Serializable {
         while (!sons.isEmpty()) {
             DiffNodeset son = sons.pop();
             ProcessedNodeset processedSon = son.createProcessedNode(sons, minSuppCnt, equivalentItems);
-            processedSon.updateResult(resultHolder, equivalentItems);
+            processedSon.updateResult(resultHolder);
             res.add(processedSon);
         }
 
@@ -63,7 +62,7 @@ class ProcessedNodeset implements Serializable {
         while (!sons.isEmpty()) {
             DiffNodeset son = sons.pop();
             ProcessedNodeset processedSon = son.createProcessedNode(sons, minSuppCnt, equivalentItems);
-            processedSon.updateResult(resultHolder, equivalentItems);
+            processedSon.updateResult(resultHolder);
 //            System.out.println(String.format("Processing subtree of %s", Arrays.toString(processedSon.getItemset())));
             processedSon.processSubtree(resultHolder, minSuppCnt);
         }

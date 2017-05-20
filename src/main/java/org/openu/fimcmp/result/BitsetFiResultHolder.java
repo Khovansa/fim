@@ -3,7 +3,6 @@ package org.openu.fimcmp.result;
 import org.apache.commons.collections.CollectionUtils;
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.FreqItemsetAsRanksBs;
-import org.openu.fimcmp.util.BitArrays;
 
 import java.util.*;
 
@@ -31,16 +30,15 @@ public class BitsetFiResultHolder implements FiResultHolder {
 
     @Override
     public void addClosedItemset(
-            int supportCnt, int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems) {
-//        System.out.println(String.format("Adding %s + %s %s", Arrays.toString(basicItemset), parentEquivItems, equivItems));
-        if (CollectionUtils.isEmpty(parentEquivItems) && CollectionUtils.isEmpty(equivItems)) {
+            int supportCnt, int[] basicItemset, List<Integer> equivItems) {
+//        System.out.println(String.format("Adding %s + %s", Arrays.toString(basicItemset), equivItems));
+        if (CollectionUtils.isEmpty(equivItems)) {
             //fast treatment of the most frequent case:
             addFrequentItemset(supportCnt, basicItemset);
         } else {
             //the general case
-            ArrayList<Integer> newItems = getUniqueNewItems(basicItemset, parentEquivItems, equivItems);
-            freqItemsetBitsets.addAll(
-                    FreqItemsetAsRanksBs.toBitSets(supportCnt, basicItemset, newItems, totalFreqItems));
+            ArrayList<Integer> newItems = new ArrayList<>(equivItems);
+            freqItemsetBitsets.addAll(FreqItemsetAsRanksBs.toBitSets(supportCnt, basicItemset, newItems, totalFreqItems));
         }
     }
 
@@ -116,38 +114,6 @@ public class BitsetFiResultHolder implements FiResultHolder {
             }
         }
         return 0;
-    }
-
-    private ArrayList<Integer> getUniqueNewItems(
-            int[] basicItemset, List<Integer> parentEquivItems, List<Integer> equivItems) {
-        ArrayList<Integer> res = new ArrayList<>(safeSize(parentEquivItems) + safeSize(equivItems));
-
-        final int bsStartInd = 0;
-        final int bsArrSize = BitArrays.requiredSize(totalFreqItems, bsStartInd);
-        long[] itemsBs = new long[bsArrSize];
-
-        BitArrays.setAll(itemsBs, bsStartInd, basicItemset);
-        addIfNew(res, itemsBs, bsStartInd, parentEquivItems);
-        addIfNew(res, itemsBs, bsStartInd, equivItems);
-
-        return res;
-    }
-
-    private static void addIfNew(List<Integer> res, long[] itemsBs, int bsStartInd, List<Integer> possiblyNewItems) {
-        if (possiblyNewItems == null) {
-            return;
-        }
-
-        for (Integer item : possiblyNewItems) {
-            if (!BitArrays.get(itemsBs, bsStartInd, item)) {
-                BitArrays.set(itemsBs, bsStartInd, item);
-                res.add(item);
-            }
-        }
-    }
-
-    private static int safeSize(List<?> lst) {
-        return (lst != null) ? lst.size() : 0;
     }
 
     private static class FiBitsetWrapper {
