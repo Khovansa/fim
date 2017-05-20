@@ -45,8 +45,8 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
 //        props.runType = FinAlgProperties.RunType.SEQ_SPARK;
         props.runType = FinAlgProperties.RunType.SEQ_PURE_JAVA;
 
-        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
-//        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "pumsb.dat";
+//        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
+        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "pumsb.dat";
         runAlg(props, inputFile);
     }
 
@@ -139,9 +139,10 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         //process each subtree
         for (ProcessedNodeset rootNodeset : rootNodesets) {
             System.out.println(String.format("Processing subtree of %s", Arrays.toString(rootNodeset.getItemset())));
+            int sizeBefore = resultHolder.size();
             rootNodeset.processSubtree(resultHolder, f1Context.minSuppCnt);
-            System.out.println(String.format("Done processing subtree of %s: %s",
-                    Arrays.toString(rootNodeset.getItemset()), resultHolder.size()));
+            System.out.println(String.format("Done processing subtree of %s: +%s -> %s",
+                    Arrays.toString(rootNodeset.getItemset()), resultHolder.size() - sizeBefore, resultHolder.size()));
         }
 
         return resultHolder;
