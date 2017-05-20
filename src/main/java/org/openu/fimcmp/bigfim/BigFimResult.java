@@ -33,22 +33,22 @@ public class BigFimResult {
         this.optionalEclatFis = optionalEclatFis;
     }
 
-    public int getTotalResultsCount() {
-        int aprioriResCnt = getAprioriResCount();
-        int eclatResCnt = getEclatResCount();
+    public long getTotalResultsCount() {
+        long aprioriResCnt = getAprioriResCount();
+        long eclatResCnt = getEclatResCount();
         return aprioriResCnt + eclatResCnt;
     }
 
-    public int getAprioriResCount() {
-        int res = 0;
+    public long getAprioriResCount() {
+        long res = 0;
         for (List<long[]> oneStepRes : aprioriFis) {
             res += oneStepRes.size();
         }
         return res;
     }
 
-    public int getEclatResCount() {
-        return (optionalEclatFis != null) ? optionalEclatFis.map(FiResultHolder::size).reduce((x, y) -> x+y) : 0;
+    public long getEclatResCount() {
+        return (optionalEclatFis != null) ? optionalEclatFis.map(FiResultHolder::size).reduce((x, y) -> x+y) : 0L;
     }
 
     public List<FreqItemset> getAprioriFisOfLength(int itemsetLen) {
@@ -56,14 +56,14 @@ public class BigFimResult {
     }
 
     public List<FreqItemset> getAllAprioriFis() {
-        List<FreqItemset> res = new ArrayList<>(getAprioriResCount());
+        List<FreqItemset> res = new ArrayList<>((int)getAprioriResCount());
         for (List<long[]> oneStepFis : aprioriFis) {
             res.addAll(FreqItemsetAsRanksBs.toFreqItemsets(oneStepFis, rankToItem));
         }
         return res;
     }
 
-    public List<FreqItemset> getEclatFis(int maxResCnt, boolean isSort) {
+    public List<FreqItemset> getEclatFis(long maxResCnt, boolean isSort) {
         if (optionalEclatFis == null) {
             return Collections.emptyList();
         }
@@ -76,13 +76,13 @@ public class BigFimResult {
             supportAndRanksRdd = supportAndRanksRdd.sortByKey(false);
         }
 
-        List<long[]> resAsBs = supportAndRanksRdd.values().take(maxResCnt);
+        List<long[]> resAsBs = supportAndRanksRdd.values().take((int)maxResCnt);
         return FreqItemsetAsRanksBs.toFreqItemsets(resAsBs, rankToItem);
     }
 
     public void printCounts(StopWatch sw) {
-        int aprioriCnt = getAprioriResCount();
-        int eclatCnt = getEclatResCount();
+        long aprioriCnt = getAprioriResCount();
+        long eclatCnt = getEclatResCount();
         BigFimAlg.pp(sw, String.format(
                 "Total results: %s (Apriori: %s, Eclat: %s)", (aprioriCnt + eclatCnt), aprioriCnt, eclatCnt));
     }

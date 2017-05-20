@@ -133,7 +133,7 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
 //        printEclatRes1(eclatRes, itemToRank, prevResCnt);
         //--------------
         //counting only
-        Integer eclatTotalRes = resRdd.map(l -> l.size()).reduce((x, y) -> x + y);
+        Long eclatTotalRes = resRdd.map(FiResultHolder::size).reduce((x, y) -> x + y);
         pp(String.format("ZZZ: total res count=%s, Eclat only=%s", (eclatTotalRes+prevResCnt), eclatTotalRes));
 
 //        printSomeR2ToR3(fiRanksToFromItemsR3, r2ToTidSets);
