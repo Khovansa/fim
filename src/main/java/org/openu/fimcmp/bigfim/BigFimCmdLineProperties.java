@@ -7,13 +7,13 @@ import org.apache.commons.lang.builder.ToStringStyle;
 /**
  * Parse and hold the command-line options for the BigFimAlg.
  */
-class BigFimRunProperties {
+class BigFimCmdLineProperties {
     final String sparkMasterUrl;
     final boolean isUseKrio;
     final String inputFileName;
     final BigFimAlgProperties bigFimAlgProps;
 
-    static BigFimRunProperties parse(String[] args) throws ParseException {
+    static BigFimCmdLineProperties parse(String[] args) throws ParseException {
         Options options = new Options();
         options.addOption("h", "help", false, "Print help and quit");
         options.addOption("url", "spark-master-url", true, "Spark master URL");
@@ -42,10 +42,12 @@ class BigFimRunProperties {
             return null;
         }
 
-        return cmdOptionsToRunProps(line, options);
+        return cmdOptionsToRunProps(line);
     }
 
-    BigFimRunProperties(String sparkMasterUrl, boolean isUseKrio, String inputFileName, BigFimAlgProperties bigFimAlgProps) {
+    @SuppressWarnings("WeakerAccess")
+    BigFimCmdLineProperties(
+            String sparkMasterUrl, boolean isUseKrio, String inputFileName, BigFimAlgProperties bigFimAlgProps) {
         this.sparkMasterUrl = sparkMasterUrl;
         this.isUseKrio = isUseKrio;
         this.inputFileName = inputFileName;
@@ -57,7 +59,7 @@ class BigFimRunProperties {
         return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 
-    private static BigFimRunProperties cmdOptionsToRunProps(CommandLine line, Options options) {
+    private static BigFimCmdLineProperties cmdOptionsToRunProps(CommandLine line) {
         String sparkMasterUrl = line.getOptionValue("url", "spark://192.168.1.68:7077");
         boolean isUseKrio = line.hasOption("krio");
         String inputFileName = line.getOptionValue("input");
@@ -77,7 +79,7 @@ class BigFimRunProperties {
         algProps.isCountingOnly = getBooleanVal(line, "ecnt", algProps.isCountingOnly);
         algProps.maxEclatNumParts = getOptIntVal(line, "epnum", algProps.maxEclatNumParts);
 
-        return new BigFimRunProperties(sparkMasterUrl, isUseKrio, inputFileName, algProps);
+        return new BigFimCmdLineProperties(sparkMasterUrl, isUseKrio, inputFileName, algProps);
     }
 
     private static int getIntVal(CommandLine line, String opt, int defaultVal) {

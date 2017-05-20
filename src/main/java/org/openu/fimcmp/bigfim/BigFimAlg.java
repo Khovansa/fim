@@ -3,7 +3,6 @@ package org.openu.fimcmp.bigfim;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.openu.fimcmp.SparkContextFactory;
 import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.result.FiResultHolder;
 import scala.Tuple2;
@@ -14,7 +13,7 @@ import scala.Tuple2;
  */
 public class BigFimAlg extends AlgBase<BigFimAlgProperties> {
     public static void main(String[] args) throws Exception {
-        BigFimRunProperties runProps = BigFimRunProperties.parse(args);
+        BigFimCmdLineProperties runProps = BigFimCmdLineProperties.parse(args);
         if (runProps == null) {
             return; //help
         }
