@@ -16,7 +16,7 @@ public class CountingOnlyFiResultHolder implements FiResultHolder {
     private static final String UNSUPPORTED_ERR_MSG =
             "this is a counting-only result holder that does not actually keep the results";
     private final int totalFreqItems;
-    private int size;
+    private long size;
 
     public CountingOnlyFiResultHolder(int totalFreqItems) {
         this.totalFreqItems = totalFreqItems;
@@ -42,7 +42,7 @@ public class CountingOnlyFiResultHolder implements FiResultHolder {
     }
 
     @Override
-    public int size() {
+    public long size() {
         return size;
     }
 

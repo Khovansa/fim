@@ -48,7 +48,7 @@ public class BitsetFiResultHolder implements FiResultHolder {
     }
 
     @Override
-    public int size() {
+    public long size() {
         return freqItemsetBitsets.size();
     }
 

@@ -16,7 +16,7 @@ public interface FiResultHolder extends Serializable {
 
     void addFrequentItemset(int supportCnt, int[] itemset);
 
-    int size();
+    long size();
 
     List<FreqItemset> getAllFrequentItemsets(String[] rankToItem);
 
