@@ -10,6 +10,7 @@ import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.algbase.F1Context;
 import org.openu.fimcmp.result.BitsetFiResultHolderFactory;
+import org.openu.fimcmp.result.CountingOnlyFiResultHolderFactory;
 import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.result.FiResultHolderFactory;
 
@@ -43,7 +44,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         props.isPersistInput = true;
         props.requiredItemsetLenForSeqProcessing = 1;
         props.runType = FinAlgProperties.RunType.PAR_SPARK;
-//        props.runType = FinAlgProperties.RunType.SEQ_PURE_JAVA;
+//        props.runType = FinAlgProperties.RunType.SEQ_SPARK;
 
 //        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
         String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "pumsb.dat";
@@ -91,7 +92,8 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         res.f1Context.printRankToItem();
         res.rankTrsRdd = res.f1Context.computeRddRanks1(trs);
 
-        res.resultHolderFactory = new BitsetFiResultHolderFactory(res.f1Context.totalFreqItems, 20_000);
+//        res.resultHolderFactory = new BitsetFiResultHolderFactory(res.f1Context.totalFreqItems, 20_000);
+        res.resultHolderFactory = new CountingOnlyFiResultHolderFactory(res.f1Context.totalFreqItems);
         return res;
     }
 
@@ -139,7 +141,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         //process each subtree
         for (ProcessedNodeset rootNodeset : rootNodesets) {
             System.out.println(String.format("Processing subtree of %s", Arrays.toString(rootNodeset.getItemset())));
-            int sizeBefore = resultHolder.size();
+            long sizeBefore = resultHolder.size();
             rootNodeset.processSubtree(resultHolder, f1Context.minSuppCnt);
             System.out.println(String.format("Done processing subtree of %s: +%s -> %s",
                     Arrays.toString(rootNodeset.getItemset()), resultHolder.size() - sizeBefore, resultHolder.size()));
@@ -149,8 +151,8 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
     }
 
     private static void outputResults(FiResultHolder resultHolder, F1Context f1Context, StopWatch sw) {
-        List<FreqItemset> allFrequentItemsets = resultHolder.getAllFrequentItemsets(f1Context.rankToItem);
-        pp(sw, "Total results: " + allFrequentItemsets.size());
+        pp(sw, "Total results: " + resultHolder.size());
+//        List<FreqItemset> allFrequentItemsets = resultHolder.getAllFrequentItemsets(f1Context.rankToItem);
 //        allFrequentItemsets = allFrequentItemsets.stream().
 //                sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
 //        allFrequentItemsets.forEach(System.out::println);
