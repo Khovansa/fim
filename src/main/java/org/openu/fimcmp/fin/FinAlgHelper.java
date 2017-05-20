@@ -135,9 +135,9 @@ class FinAlgHelper implements Serializable {
         ArrayList<DiffNodeset> ascFreqSortedF1 = DiffNodeset.createF1NodesetsSortedByAscFreq(itemToPpcNodes);
         List<ProcessedNodeset> rootNodesets = prepareAscFreqSortedRoots(
                 resultHolder, ascFreqSortedF1, minSuppCnt, props.requiredItemsetLenForSeqProcessing, leastFreqItemFilter);
-        //nodes sorted in descending frequency, to start the most frequent ones first:
-        Collections.reverse(rootNodesets);
 
+        //nodes sorted in descending frequency, but from the largest sub-tree
+        // to the smallest one consisting just of the most frequent item:
         System.out.println(String.format("Starting processing subtrees: %s roots", rootNodesets.size()));
         for (ProcessedNodeset rootNodeset : rootNodesets) {
             System.out.println(String.format("Processing subtree of %s", Arrays.toString(rootNodeset.getItemset())));

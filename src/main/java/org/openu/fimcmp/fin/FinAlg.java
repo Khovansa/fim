@@ -39,7 +39,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
     }
 
     public static void main(String[] args) throws Exception {
-        FinAlgProperties props = new FinAlgProperties(0.4);
+        FinAlgProperties props = new FinAlgProperties(0.7);
         props.inputNumParts = 1;
         props.isPersistInput = true;
         props.requiredItemsetLenForSeqProcessing = 1;
