@@ -3,7 +3,7 @@ package org.openu.fimcmp;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.algbase.AlgBase;
-import org.openu.fimcmp.algbase.AlgBaseProperties;
+import org.openu.fimcmp.algbase.CommonAlgProperties;
 import org.openu.fimcmp.algbase.BasicOps;
 import org.openu.fimcmp.apriori.*;
 import org.openu.fimcmp.bigfim.BigFimAlg;
@@ -11,7 +11,6 @@ import org.openu.fimcmp.bigfim.BigFimAlgProperties;
 import org.openu.fimcmp.eclat.EclatAlg;
 import org.openu.fimcmp.fin.FinAlg;
 import org.openu.fimcmp.result.*;
-import org.openu.fimcmp.util.IteratorOverArray;
 import scala.Tuple2;
 
 import java.util.*;
@@ -53,7 +52,7 @@ public class SparkContextFactory {
                     new ArrayList<>().iterator().getClass(), new LinkedList<>().iterator().getClass(),
                     ItemsetAndTidsCollection.class, ItemsetAndTids.class, ItemsetAndTids[].class,
 
-                    AlgBase.class, AlgBaseProperties.class,
+                    AlgBase.class, CommonAlgProperties.class,
                     EclatAlg.class,
                     BigFimAlgProperties.class, BigFimAlg.class,
 

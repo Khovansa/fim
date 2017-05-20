@@ -1,11 +1,11 @@
 package org.openu.fimcmp.fin;
 
-import org.openu.fimcmp.algbase.AlgBaseProperties;
+import org.openu.fimcmp.algbase.CommonAlgProperties;
 
 /**
  * Properties for FIN+ algorithm
  */
-public class FinAlgProperties extends AlgBaseProperties {
+public class FinAlgProperties extends CommonAlgProperties {
     protected FinAlgProperties(double minSupp) {
         super(minSupp);
     }

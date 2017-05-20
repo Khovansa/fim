@@ -3,9 +3,9 @@ package org.openu.fimcmp.algbase;
 import java.io.Serializable;
 
 /**
- * Basic properties relevant to all algorithms
+ * Properties relevant to all algorithms
  */
-public class AlgBaseProperties implements Serializable {
+public class CommonAlgProperties implements Serializable {
     /**
      * Min support as a ratio of itemset frequency to the total number of transactions
      */
@@ -17,7 +17,7 @@ public class AlgBaseProperties implements Serializable {
     public int inputNumParts = 2;
     public boolean isPersistInput = false;
 
-    protected AlgBaseProperties(double minSupp) {
+    protected CommonAlgProperties(double minSupp) {
         this.minSupp = minSupp;
     }
 }

@@ -2,12 +2,12 @@ package org.openu.fimcmp.bigfim;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
-import org.openu.fimcmp.algbase.AlgBaseProperties;
+import org.openu.fimcmp.algbase.CommonAlgProperties;
 
 /**
  * Holds all the properties for BigFim algorithm.
  */
-public class BigFimAlgProperties extends AlgBaseProperties {
+public class BigFimAlgProperties extends CommonAlgProperties {
     /**
      * Determines when to stop Apriori an switch to Eclat. <br/>
      * E.g. prefixLenToStartEclat=2 means that the Apriori should compute F3 (so that the prefix size is 2). <br/>

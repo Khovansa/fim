@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Useful base class for all other main algorithms.
  */
-public abstract class AlgBase<P extends AlgBaseProperties> implements Serializable {
+public abstract class AlgBase<P extends CommonAlgProperties> implements Serializable {
     protected final P props;
 
     public AlgBase(P props) {
