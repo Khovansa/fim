@@ -6,9 +6,12 @@ import org.openu.fimcmp.algbase.CommonAlgProperties;
  * Properties for FIN+ algorithm
  */
 public class FinAlgProperties extends CommonAlgProperties {
-    protected FinAlgProperties(double minSupp) {
+    public FinAlgProperties(double minSupp) {
         super(minSupp);
     }
+
+    enum RunType {SEQ_PURE_JAVA, SEQ_SPARK, PAR_SPARK}
+    public RunType runType;
 
     /**
      * The required itemset length of the nodes processed sequentially on the driver machine.
@@ -16,8 +19,6 @@ public class FinAlgProperties extends CommonAlgProperties {
      * Note that each node will contain sons, i.e. '1' means a node for an individual frequent
      * item + its sons representing frequent pairs.
      */
-    public int requiredItemsetLenForSeqProcessing = 2;
+    public int requiredItemsetLenForSeqProcessing = 1;
 
-    enum RunType {SEQ_PURE_JAVA, SEQ_SPARK, PAR_SPARK}
-    public RunType runType;
 }

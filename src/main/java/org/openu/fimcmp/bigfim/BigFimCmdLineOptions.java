@@ -26,6 +26,7 @@ class BigFimCmdLineOptions {
         options.addOption("ipnum", "input-parts-num", true, "Number of partitions to read the input file");
         options.addOption("pi", "persist-input", true, "Whether to persist the input RDD");
         options.addOption("print", "print-fks", true, "Whether to print F1, F2, ...");
+
         options.addOption("sratio", "curr-to-prev-res-ratio-threshold", true,
                 "Threshold to determine sparse datasets for which continue with Apriori");
 
@@ -71,6 +72,7 @@ class BigFimCmdLineOptions {
         algProps.inputNumParts = getIntVal(line, "ipnum", algProps.inputNumParts);
         algProps.isPersistInput = getBooleanVal(line, "pi", algProps.isPersistInput);
         algProps.isPrintFks = getBooleanVal(line, "print", algProps.isPrintFks);
+
         algProps.currToPrevResSignificantIncreaseRatio =
                 getDoubleVal(line, "sratio", "" + algProps.currToPrevResSignificantIncreaseRatio);
 

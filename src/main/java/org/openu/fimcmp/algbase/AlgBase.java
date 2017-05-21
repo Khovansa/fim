@@ -16,9 +16,11 @@ import java.util.List;
  */
 public abstract class AlgBase<P extends CommonAlgProperties> implements Serializable {
     protected final P props;
+    protected final String inputFile;
 
-    public AlgBase(P props) {
+    public AlgBase(P props, String inputFile) {
         this.props = props;
+        this.inputFile = inputFile;
     }
 
     public static JavaSparkContext createSparkContext(boolean useKryo, String sparkMasterUrl, StopWatch sw) {
@@ -28,7 +30,7 @@ public abstract class AlgBase<P extends CommonAlgProperties> implements Serializ
         return sc;
     }
 
-    public JavaRDD<String[]> readInput(JavaSparkContext sc, String inputFile, StopWatch sw) {
+    public JavaRDD<String[]> readInput(JavaSparkContext sc, StopWatch sw) {
         pp(sw, "Start reading " + inputFile);
         JavaRDD<String[]> res = BasicOps.readLinesAsSortedItemsArr(inputFile, props.inputNumParts, sc);
         if (props.isPersistInput) {

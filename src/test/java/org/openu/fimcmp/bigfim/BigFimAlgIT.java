@@ -23,10 +23,11 @@ public class BigFimAlgIT {
         final double minSupp = 0.8;
 //        final String inputFileName = "my.small.txt";
         final String inputFileName = "pumsb.dat";
+        String inputFile = TestDataLocation.fileStr(inputFileName);
         final int prefixLenToStartEclat = 3;
         BigFimAlgProperties props = new BigFimAlgProperties(minSupp, prefixLenToStartEclat);
         props.maxEclatNumParts = 3;
-        BigFimAlg alg = new BigFimAlg(props);
+        BigFimAlg alg = new BigFimAlg(props, inputFile);
 
         StopWatch sw = new StopWatch();
         sw.start();
@@ -39,8 +40,7 @@ public class BigFimAlgIT {
         sw.stop();
         sw.reset();
         sw.start();
-        String inputFile = TestDataLocation.fileStr(inputFileName);
-        JavaRDD<String[]> trs = alg.readInput(sc, inputFile, sw);
+        JavaRDD<String[]> trs = alg.readInput(sc, sw);
 
         BigFimResult res = alg.computeFis(trs, sw);
         res.printCounts(sw);

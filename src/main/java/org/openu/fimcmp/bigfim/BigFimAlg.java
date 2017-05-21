@@ -19,7 +19,6 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties> {
         }
 
         BigFimAlgProperties props = runProps.bigFimAlgProps;
-        BigFimAlg alg = new BigFimAlg(props);
 
         StopWatch sw = new StopWatch();
         sw.start();
@@ -27,17 +26,19 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties> {
         JavaSparkContext sc = createSparkContext(runProps.isUseKrio, runProps.sparkMasterUrl, sw);
 
         String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + runProps.inputFileName;
-        JavaRDD<String[]> trs = alg.readInput(sc, inputFile, sw);
+        BigFimAlg alg = new BigFimAlg(props, inputFile);
+        JavaRDD<String[]> trs = alg.readInput(sc, sw);
 
         BigFimResult res = alg.computeFis(trs, sw);
         res.printCounts(sw);
 
     }
-    public BigFimAlg(BigFimAlgProperties props) {
-        super(props);
+
+    public BigFimAlg(BigFimAlgProperties props, String inputFile) {
+        super(props, inputFile);
     }
 
-    public BigFimResult computeFis(JavaRDD<String[]> trs, StopWatch sw) {
+    BigFimResult computeFis(JavaRDD<String[]> trs, StopWatch sw) {
         BigFimStepExecutor helper = new BigFimStepExecutor(props, computeF1Context(trs, sw));
 
         JavaRDD<int[]> ranks1Rdd = helper.computeRddRanks1(trs);

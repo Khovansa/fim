@@ -6,10 +6,8 @@ import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.algbase.F1Context;
-import org.openu.fimcmp.result.BitsetFiResultHolderFactory;
 import org.openu.fimcmp.result.CountingOnlyFiResultHolderFactory;
 import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.result.FiResultHolderFactory;
@@ -18,7 +16,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Implement the main steps of the FIN+ algorithm.
@@ -26,8 +23,8 @@ import java.util.stream.Collectors;
 public class FinAlg extends AlgBase<FinAlgProperties> {
 
     @SuppressWarnings("WeakerAccess")
-    public FinAlg(FinAlgProperties props) {
-        super(props);
+    public FinAlg(FinAlgProperties props, String inputFile) {
+        super(props, inputFile);
     }
 
     public static Class[] getClassesToRegister() {
@@ -39,7 +36,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
     }
 
     public static void main(String[] args) throws Exception {
-        FinAlgProperties props = new FinAlgProperties(0.7);
+        FinAlgProperties props = new FinAlgProperties(0.9);
         props.inputNumParts = 1;
         props.isPersistInput = true;
         props.requiredItemsetLenForSeqProcessing = 1;
@@ -79,14 +76,14 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
 
     private static FinContext prepare(FinAlgProperties props, String inputFile) throws Exception {
         FinContext res = new FinContext();
-        res.alg = new FinAlg(props);
+        res.alg = new FinAlg(props, inputFile);
 
         res.sw = new StopWatch();
         res.sw.start();
 
         res.sc = createSparkContext(false, "local", res.sw);
 
-        JavaRDD<String[]> trs = res.alg.readInput(res.sc, inputFile, res.sw);
+        JavaRDD<String[]> trs = res.alg.readInput(res.sc, res.sw);
 
         res.f1Context = res.alg.computeF1Context(trs, res.sw);
         res.f1Context.printRankToItem();
