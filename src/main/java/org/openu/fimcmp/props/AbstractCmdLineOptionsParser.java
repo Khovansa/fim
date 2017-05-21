@@ -74,7 +74,8 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
 
         options.addOption("ipnum", "input-parts-num", true, "Number of partitions to read the input file");
         options.addOption("pi", "persist-input", true, "Whether to persist the input RDD");
-        options.addOption("print", "print-fks", true, "Whether to print F1, F2, ...");
+        options.addOption("print", "print-intermediate-res", true,
+                "Whether to print F1, F2, ..., and also some progress info");
 
         return options;
     }
@@ -95,7 +96,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
 
         algProps.inputNumParts = getIntVal(line, "ipnum", algProps.inputNumParts);
         algProps.isPersistInput = getBooleanVal(line, "pi", algProps.isPersistInput);
-        algProps.isPrintFks = getBooleanVal(line, "print", algProps.isPrintFks);
+        algProps.isPrintIntermediateRes = getBooleanVal(line, "print", algProps.isPrintIntermediateRes);
 
         return new CmdLineOptions<>(sparkMasterUrl, isUseKrio, inputFileName, algProps);
     }

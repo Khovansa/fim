@@ -51,6 +51,9 @@ public class FinCmdLineOptionsParser extends AbstractCmdLineOptionsParser<FinAlg
 
         algProps.isCountingOnly = getBooleanVal(line, CNT_ONLY_SHORT_OPT, algProps.isCountingOnly);
         algProps.isPrintAllFis = getBooleanVal(line, PRINT_FIS_SHORT_OPT, algProps.isPrintAllFis);
+        if (algProps.isPrintAllFis && algProps.isCountingOnly) {
+            throw new IllegalArgumentException("Contradicting options: can't print all FIs if we only count them");
+        }
 
         return algProps;
     }

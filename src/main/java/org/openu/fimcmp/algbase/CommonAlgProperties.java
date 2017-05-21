@@ -20,7 +20,7 @@ public class CommonAlgProperties implements Serializable {
 
     public boolean isPersistInput = false;
 
-    public boolean isPrintFks = true;
+    public boolean isPrintIntermediateRes = true;
 
     protected CommonAlgProperties(double minSupp) {
         this.minSupp = minSupp;

@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  */
 public class FinAlg extends AlgBase<FinAlgProperties, Void> {
 
-    //--spark-master-url local --input-file-name pumsb.dat --min-supp 0.8 --input-parts-num 1 --persist-input true --run-type PAR_SPARK --itemset-len-for-seq-processing 1 --cnt-only true
+    //--spark-master-url local --input-file-name pumsb.dat --min-supp 0.8 --input-parts-num 1 --persist-input true --run-type PAR_SPARK --itemset-len-for-seq-processing 1 --cnt-only true --print-intermediate-res true --print-all-fis false
     public static void main(String[] args) throws Exception {
         FinCmdLineOptionsParser cmdLineOptionsParser = new FinCmdLineOptionsParser();
         CmdLineOptions<FinAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(args);
@@ -91,7 +91,9 @@ public class FinAlg extends AlgBase<FinAlgProperties, Void> {
         JavaRDD<String[]> trs = readInput(sc, sw);
 
         res.f1Context = computeF1Context(trs, sw);
-        res.f1Context.printRankToItem();
+        if (props.isPrintIntermediateRes) {
+            res.f1Context.printRankToItem();
+        }
         res.rankTrsRdd = res.f1Context.computeRddRanks1(trs);
 
         res.resultHolderFactory = (props.isCountingOnly) ?
@@ -144,11 +146,11 @@ public class FinAlg extends AlgBase<FinAlgProperties, Void> {
 
         //process each subtree
         for (ProcessedNodeset rootNodeset : rootNodesets) {
-            System.out.println(String.format("Processing subtree of %s", Arrays.toString(rootNodeset.getItemset())));
-            long sizeBefore = resultHolder.size();
+            long sizeBefore = FinAlgHelper.printStartProcessingSubtreeIfNeeded(props.isPrintIntermediateRes, resultHolder, rootNodeset);
+
             rootNodeset.processSubtree(resultHolder, f1Context.minSuppCnt);
-            System.out.println(String.format("Done processing subtree of %s: +%s -> %s",
-                    Arrays.toString(rootNodeset.getItemset()), resultHolder.size() - sizeBefore, resultHolder.size()));
+
+            FinAlgHelper.printEndProcessingSubtreeIfNeeded(props.isPrintIntermediateRes, sizeBefore, resultHolder, rootNodeset);
         }
 
         return resultHolder;

@@ -127,7 +127,7 @@ class BigFimStepExecutor {
 
         AprioriStepRes res = new AprioriStepRes(kp1, fkAsArrays, prevSizeAllRanks, fkSize, cxt);
 
-        res.print(cxt, props.isPrintFks);
+        res.print(cxt, props.isPrintIntermediateRes);
 
         aprioriFis.add(res.getItemsetBitsets(cxt));
         return res;

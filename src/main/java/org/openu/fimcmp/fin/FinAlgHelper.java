@@ -140,16 +140,31 @@ class FinAlgHelper implements Serializable {
         // to the smallest one consisting just of the most frequent item:
         System.out.println(String.format("Starting processing subtrees: %s roots", rootNodesets.size()));
         for (ProcessedNodeset rootNodeset : rootNodesets) {
-            System.out.println(String.format("Processing subtree of %s", Arrays.toString(rootNodeset.getItemset())));
-            long sizeBefore = resultHolder.size();
+            long sizeBefore = printStartProcessingSubtreeIfNeeded(props.isPrintIntermediateRes, resultHolder, rootNodeset);
 
             rootNodeset.processSubtree(resultHolder, minSuppCnt);
 
-            System.out.println(String.format("Done processing subtree of %s: +%s -> %s",
-                    Arrays.toString(rootNodeset.getItemset()), resultHolder.size() - sizeBefore, resultHolder.size()));
+            printEndProcessingSubtreeIfNeeded(props.isPrintIntermediateRes, sizeBefore, resultHolder, rootNodeset);
         }
 
         return resultHolder;
+    }
+
+    static long printStartProcessingSubtreeIfNeeded(
+            boolean isPrintIntermediateRes, FiResultHolder resultHolder, ProcessedNodeset rootNodeset) {
+        if (isPrintIntermediateRes) {
+            System.out.println(String.format("Processing subtree of %s", Arrays.toString(rootNodeset.getItemset())));
+        }
+        return resultHolder.size();
+    }
+
+    static void printEndProcessingSubtreeIfNeeded(
+            boolean isPrintIntermediateRes, long sizeBefore, FiResultHolder resultHolder, ProcessedNodeset rootNodeset) {
+        if (isPrintIntermediateRes) {
+            long currSize = resultHolder.size();
+            System.out.println(String.format("Done processing subtree of %s: +%s -> %s",
+                    Arrays.toString(rootNodeset.getItemset()), currSize - sizeBefore, currSize));
+        }
     }
 
     /**
