@@ -24,6 +24,9 @@ public class FinAlgProperties extends CommonAlgProperties {
      */
     public int requiredItemsetLenForSeqProcessing = 1;
 
+    public boolean isCountingOnly = true;
+    public boolean isPrintAllFis = false;
+
     @Override
     public String toString() {
         return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);

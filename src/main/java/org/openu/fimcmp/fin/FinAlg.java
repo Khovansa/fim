@@ -6,24 +6,26 @@ import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.algbase.F1Context;
 import org.openu.fimcmp.props.CmdLineOptions;
+import org.openu.fimcmp.result.BitsetFiResultHolderFactory;
 import org.openu.fimcmp.result.CountingOnlyFiResultHolderFactory;
 import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.result.FiResultHolderFactory;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Implement the main steps of the FIN+ algorithm.
  */
 public class FinAlg extends AlgBase<FinAlgProperties, Void> {
 
-    //--spark-master-url local --input-file-name pumsb.dat --min-supp 0.8 --input-parts-num 1 --persist-input true --run-type PAR_SPARK --itemset-len-for-seq-processing 1
+    //--spark-master-url local --input-file-name pumsb.dat --min-supp 0.8 --input-parts-num 1 --persist-input true --run-type PAR_SPARK --itemset-len-for-seq-processing 1 --cnt-only true
     public static void main(String[] args) throws Exception {
         FinCmdLineOptionsParser cmdLineOptionsParser = new FinCmdLineOptionsParser();
         CmdLineOptions<FinAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(args);
@@ -92,8 +94,10 @@ public class FinAlg extends AlgBase<FinAlgProperties, Void> {
         res.f1Context.printRankToItem();
         res.rankTrsRdd = res.f1Context.computeRddRanks1(trs);
 
-//        res.resultHolderFactory = new BitsetFiResultHolderFactory(res.f1Context.totalFreqItems, 20_000);
-        res.resultHolderFactory = new CountingOnlyFiResultHolderFactory(res.f1Context.totalFreqItems);
+        res.resultHolderFactory = (props.isCountingOnly) ?
+                new CountingOnlyFiResultHolderFactory(res.f1Context.totalFreqItems) :
+                new BitsetFiResultHolderFactory(res.f1Context.totalFreqItems, 20_000);
+
         return res;
     }
 
@@ -116,7 +120,8 @@ public class FinAlg extends AlgBase<FinAlgProperties, Void> {
         FiResultHolder rootsResultHolder = resultHolderFactory.newResultHolder();
         List<ProcessedNodeset> rootNodesets = FinAlgHelper.createAscFreqSortedRoots(
                 rootsResultHolder, rankTrsRdd, f1Context, requiredItemsetLenForSeqProcessing);
-        Collections.reverse(rootNodesets); //nodes sorted in descending frequency, to start the most frequent ones first
+        //nodes sorted in descending frequency, but from the largest sub-tree
+        // to the smallest one consisting just of the most frequent item:
         JavaRDD<ProcessedNodeset> rootsRdd = sc.parallelize(rootNodesets);
 
         //process each subtree
@@ -149,13 +154,17 @@ public class FinAlg extends AlgBase<FinAlgProperties, Void> {
         return resultHolder;
     }
 
-    private static void outputResults(FiResultHolder resultHolder, @SuppressWarnings("UnusedParameters") F1Context f1Context, StopWatch sw) {
+    private void outputResults(FiResultHolder resultHolder, @SuppressWarnings("UnusedParameters") F1Context f1Context, StopWatch sw) {
         pp(sw, "Total results: " + resultHolder.size());
-//        List<FreqItemset> allFrequentItemsets = resultHolder.getAllFrequentItemsets(f1Context.rankToItem);
-//        allFrequentItemsets = allFrequentItemsets.stream().
-//                sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
-//        allFrequentItemsets.forEach(System.out::println);
-//        pp(sw, "Total results: " + allFrequentItemsets.size());
+        if (!props.isCountingOnly) {
+            List<FreqItemset> allFrequentItemsets = resultHolder.getAllFrequentItemsets(f1Context.rankToItem);
+            if (props.isPrintAllFis) {
+                allFrequentItemsets = allFrequentItemsets.stream().
+                        sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
+                allFrequentItemsets.forEach(System.out::println);
+            }
+            pp(sw, "Total results: " + allFrequentItemsets.size());
+        }
     }
 
     private static class FinContext {
