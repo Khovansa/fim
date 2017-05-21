@@ -2,7 +2,7 @@ package org.openu.fimcmp.cmdline;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
-import org.openu.fimcmp.algbase.CommonAlgProperties;
+import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;

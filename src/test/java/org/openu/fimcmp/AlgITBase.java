@@ -4,7 +4,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
-import org.openu.fimcmp.algbase.BasicOps;
+import org.openu.fimcmp.algs.algbase.BasicOps;
 
 import java.util.ArrayList;
 

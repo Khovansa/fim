@@ -2,14 +2,14 @@ package org.openu.fimcmp;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.openu.fimcmp.algbase.AlgBase;
-import org.openu.fimcmp.algbase.CommonAlgProperties;
-import org.openu.fimcmp.algbase.BasicOps;
-import org.openu.fimcmp.apriori.*;
-import org.openu.fimcmp.bigfim.BigFimAlg;
-import org.openu.fimcmp.bigfim.BigFimAlgProperties;
-import org.openu.fimcmp.eclat.EclatAlg;
-import org.openu.fimcmp.fin.FinAlg;
+import org.openu.fimcmp.algs.algbase.AlgBase;
+import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
+import org.openu.fimcmp.algs.algbase.BasicOps;
+import org.openu.fimcmp.algs.apriori.*;
+import org.openu.fimcmp.algs.bigfim.BigFimAlg;
+import org.openu.fimcmp.algs.bigfim.BigFimAlgProperties;
+import org.openu.fimcmp.algs.eclat.EclatAlg;
+import org.openu.fimcmp.algs.fin.FinAlg;
 import org.openu.fimcmp.result.*;
 import scala.Tuple2;
 

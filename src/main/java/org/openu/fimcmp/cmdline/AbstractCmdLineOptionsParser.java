@@ -1,8 +1,8 @@
 package org.openu.fimcmp.cmdline;
 
 import org.apache.commons.cli.*;
-import org.openu.fimcmp.algbase.AlgBase;
-import org.openu.fimcmp.algbase.CommonAlgProperties;
+import org.openu.fimcmp.algs.algbase.AlgBase;
+import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 
 /**
  * Base class for algorithm-specific cmd-line options parsers.
