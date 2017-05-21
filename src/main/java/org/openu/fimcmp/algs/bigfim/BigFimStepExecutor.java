@@ -3,7 +3,7 @@ package org.openu.fimcmp.algs.bigfim;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.storage.StorageLevel;
-import org.openu.fimcmp.ItemsetAndTidsCollection;
+import org.openu.fimcmp.itemset.ItemsetAndTidsCollection;
 import org.openu.fimcmp.algs.algbase.F1Context;
 import org.openu.fimcmp.algs.apriori.*;
 import org.openu.fimcmp.algs.eclat.EclatAlg;

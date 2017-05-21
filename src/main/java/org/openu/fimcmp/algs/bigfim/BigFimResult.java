@@ -3,8 +3,8 @@ package org.openu.fimcmp.algs.bigfim;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.openu.fimcmp.FreqItemset;
-import org.openu.fimcmp.FreqItemsetAsRanksBs;
+import org.openu.fimcmp.itemset.FreqItemset;
+import org.openu.fimcmp.itemset.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.result.FiResultHolder;
 import scala.Tuple2;
 

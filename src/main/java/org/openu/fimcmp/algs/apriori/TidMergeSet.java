@@ -1,7 +1,7 @@
 package org.openu.fimcmp.algs.apriori;
 
-import org.openu.fimcmp.ItemsetAndTids;
-import org.openu.fimcmp.ItemsetAndTidsCollection;
+import org.openu.fimcmp.itemset.ItemsetAndTids;
+import org.openu.fimcmp.itemset.ItemsetAndTidsCollection;
 import org.openu.fimcmp.util.Assert;
 import org.openu.fimcmp.util.BitArrays;
 import scala.Tuple2;

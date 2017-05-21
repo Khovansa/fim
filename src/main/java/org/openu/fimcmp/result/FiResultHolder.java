@@ -1,6 +1,6 @@
 package org.openu.fimcmp.result;
 
-import org.openu.fimcmp.FreqItemset;
+import org.openu.fimcmp.itemset.FreqItemset;
 
 import java.io.Serializable;
 import java.util.Iterator;

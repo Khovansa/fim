@@ -1,4 +1,4 @@
-package org.openu.fimcmp;
+package org.openu.fimcmp.itemset;
 
 import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.util.Assert;

@@ -1,7 +1,7 @@
 package org.openu.fimcmp.algs.bigfim;
 
 import org.apache.commons.lang3.StringUtils;
-import org.openu.fimcmp.FreqItemset;
+import org.openu.fimcmp.itemset.FreqItemset;
 import org.openu.fimcmp.algs.algbase.F1Context;
 import org.openu.fimcmp.algs.apriori.CurrSizeFiRanks;
 import org.openu.fimcmp.algs.apriori.FiRanksToFromItems;

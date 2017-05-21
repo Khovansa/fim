@@ -1,4 +1,4 @@
-package org.openu.fimcmp;
+package org.openu.fimcmp.itemset;
 
 import org.openu.fimcmp.util.BitArrays;
 import org.openu.fimcmp.util.SubsetsGenerator;

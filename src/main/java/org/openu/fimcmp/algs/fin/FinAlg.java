@@ -6,7 +6,7 @@ import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.openu.fimcmp.FreqItemset;
+import org.openu.fimcmp.itemset.FreqItemset;
 import org.openu.fimcmp.algs.algbase.AlgBase;
 import org.openu.fimcmp.algs.algbase.F1Context;
 import org.openu.fimcmp.cmdline.CmdLineOptions;

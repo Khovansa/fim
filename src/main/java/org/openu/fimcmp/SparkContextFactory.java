@@ -10,6 +10,8 @@ import org.openu.fimcmp.algs.bigfim.BigFimAlg;
 import org.openu.fimcmp.algs.bigfim.BigFimAlgProperties;
 import org.openu.fimcmp.algs.eclat.EclatAlg;
 import org.openu.fimcmp.algs.fin.FinAlg;
+import org.openu.fimcmp.itemset.ItemsetAndTids;
+import org.openu.fimcmp.itemset.ItemsetAndTidsCollection;
 import org.openu.fimcmp.result.*;
 import scala.Tuple2;
 

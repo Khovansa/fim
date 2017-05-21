@@ -1,15 +1,15 @@
 package org.openu.fimcmp.result;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.openu.fimcmp.FreqItemset;
-import org.openu.fimcmp.FreqItemsetAsRanksBs;
+import org.openu.fimcmp.itemset.FreqItemset;
+import org.openu.fimcmp.itemset.FreqItemsetAsRanksBs;
 
 import java.util.*;
 
 /**
  * Holds the frequent itemsets and their support count as a bitset. <br/>
  *
- * @see org.openu.fimcmp.FreqItemsetAsRanksBs
+ * @see FreqItemsetAsRanksBs
  */
 public class BitsetFiResultHolder implements FiResultHolder {
     private final int totalFreqItems;

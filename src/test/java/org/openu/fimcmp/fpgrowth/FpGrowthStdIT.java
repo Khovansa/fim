@@ -5,7 +5,7 @@ import org.apache.spark.mllib.fpm.FPGrowthModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.openu.fimcmp.AlgITBase;
-import org.openu.fimcmp.FreqItemset;
+import org.openu.fimcmp.itemset.FreqItemset;
 
 import java.util.List;
 import java.util.stream.Collectors;

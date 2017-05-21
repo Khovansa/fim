@@ -1,7 +1,7 @@
 package org.openu.fimcmp.result;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.openu.fimcmp.FreqItemset;
+import org.openu.fimcmp.itemset.FreqItemset;
 import org.openu.fimcmp.util.BitArrays;
 import org.openu.fimcmp.util.SubsetsGenerator;
 
