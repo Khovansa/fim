@@ -29,7 +29,7 @@ public abstract class AlgBase<P extends CommonAlgProperties, R> implements Seria
         print(String.format("%-15s %s", tt(sw), msg));
     }
 
-    protected static JavaSparkContext createSparkContext(boolean useKryo, String sparkMasterUrl, StopWatch sw) {
+    public static JavaSparkContext createSparkContext(boolean useKryo, String sparkMasterUrl, StopWatch sw) {
         pp(sw, "Starting the Spark context");
         JavaSparkContext sc = SparkContextFactory.createSparkContext(useKryo, sparkMasterUrl);
         pp(sw, "Completed starting the Spark context");

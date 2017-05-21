@@ -1,6 +1,7 @@
 package org.openu.fimcmp.cmdline;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.lang3.StringUtils;
 import org.openu.fimcmp.algs.algbase.AlgBase;
 import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 
@@ -10,13 +11,15 @@ import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties, A extends AlgBase>
         implements ICmdLineOptionsParser<P, A> {
-    private static final String HELP_OPTION = "help";
+    private static final String HELP_OPT = "help";
+    private static final String MASTER_URL_OPT = "spark-master-url";
+    private static final String USE_KRIO_OPT = "use-krio";
+    private static final String INPUT_FILE_OPT = "input-file-name";
+    private static final String MIN_SUPP_OPT = "min-supp";
+    private static final String INPUT_PARTS_NUM_OPT = "input-parts-num";
+    private static final String PERSIST_INPUT_OPT = "persist-input";
+    private static final String PRINT_PART_OPT = "print-intermediate-res";
 
-    /**
-     * Parses the command-line options.
-     *
-     * @return either the parsed options or null in case of help request
-     */
     @Override
     public CmdLineOptions<P> parseCmdLine(String[] args) throws ParseException {
         Options options = createCommonOptions();
@@ -25,7 +28,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
         CommandLineParser parser = new BasicParser();
         CommandLine line = parser.parse(options, args);
 
-        if (line.hasOption(HELP_OPTION)) {
+        if (line.hasOption(HELP_OPT)) {
             printHelp(options);
             return null;
         }
@@ -42,39 +45,66 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
 
     //Services for sub-classes:
     protected static int getIntVal(CommandLine line, String opt, int defaultVal) {
-        return Integer.parseInt(line.getOptionValue(opt, "" + defaultVal));
+        String val = line.getOptionValue(opt, "" + defaultVal);
+        try {
+            return Integer.parseInt(val);
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException(errMsg(opt, val, "<any integer number>"));
+        }
     }
 
     protected static Integer getOptIntVal(CommandLine line, String opt, Integer defaultVal) {
         if (!line.hasOption(opt)) {
             return defaultVal;
-        } else {
-            return Integer.parseInt(line.getOptionValue(opt, "" + defaultVal));
+        }
+
+        String val = line.getOptionValue(opt, "" + defaultVal);
+        try {
+            return Integer.parseInt(val);
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException(errMsg(opt, val, "<any integer number>"));
         }
     }
 
     protected static double getDoubleVal(CommandLine line, String opt, String defaultVal) {
-        return Double.parseDouble(line.getOptionValue(opt, defaultVal));
+        String val = line.getOptionValue(opt, defaultVal);
+        try {
+            return Double.parseDouble(val);
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException(errMsg(opt, val, "<any floating-point number>"));
+        }
     }
 
     protected static boolean getBooleanVal(CommandLine line, String opt, boolean defaultVal) {
-        return Boolean.parseBoolean(line.getOptionValue(opt, "" + defaultVal));
+        String val = line.getOptionValue(opt, "" + defaultVal);
+        try {
+            return Boolean.parseBoolean(val);
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException(errMsg(opt, val, "false | true"));
+        }
     }
 
+    protected static String errMsg(String opt, String val, String allowedValues) {
+        if (StringUtils.isBlank(val)) {
+            return String.format("Missing mandatory option '--%s', allowed values: %s", opt, allowedValues);
+        } else {
+            return String.format("Bad value of '--%s %s', allowed values: %s", opt, val, allowedValues);
+        }
+    }
 
     private Options createCommonOptions() {
         Options options = new Options();
-        options.addOption("h", "help", false, "Print help and quit");
-        options.addOption("url", "spark-master-url", true, "Spark master URL");
-        options.addOption("krio", "use-krio", false, "Whether to use krio serialization library");
-        options.addOption("input", "input-file-name", true,
+        options.addOption(null, HELP_OPT, false, "Print help and quit");
+        options.addOption(null, MASTER_URL_OPT, true, "Spark master URL");
+        options.addOption(null, USE_KRIO_OPT, false, "Whether to use krio serialization library");
+        options.addOption(null, INPUT_FILE_OPT, true,
                 String.format("Either an absolute path or a path relative to '%s' environment variable", CmdLineOptions.INPUT_PATH_ENV_VAR));
 
-        options.addOption("sup", "min-supp", true, "Min support");
+        options.addOption(null, MIN_SUPP_OPT, true, "Min support");
 
-        options.addOption("ipnum", "input-parts-num", true, "Number of partitions to read the input file");
-        options.addOption("pi", "persist-input", true, "Whether to persist the input RDD");
-        options.addOption("print", "print-intermediate-res", true,
+        options.addOption(null, INPUT_PARTS_NUM_OPT, true, "Number of partitions to read the input file");
+        options.addOption(null, PERSIST_INPUT_OPT, true, "Whether to persist the input RDD");
+        options.addOption(null, PRINT_PART_OPT, true,
                 "Whether to print F1, F2, ..., and also some progress info");
 
         return options;
@@ -86,17 +116,17 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
     }
 
     private CmdLineOptions<P> cmdLineToOptions(CommandLine line) {
-        String sparkMasterUrl = line.getOptionValue("url", "spark://192.168.1.68:7077");
-        boolean isUseKrio = line.hasOption("krio");
-        String inputFileName = line.getOptionValue("input");
+        String sparkMasterUrl = line.getOptionValue(MASTER_URL_OPT, "spark://192.168.1.68:7077");
+        boolean isUseKrio = line.hasOption(USE_KRIO_OPT);
+        String inputFileName = line.getOptionValue(INPUT_FILE_OPT);
 
-        double minSupp = getDoubleVal(line, "sup", "0.9");
+        double minSupp = getDoubleVal(line, MIN_SUPP_OPT, "0.9");
 
         P algProps = createAlgProperties(line, minSupp);
 
-        algProps.inputNumParts = getIntVal(line, "ipnum", algProps.inputNumParts);
-        algProps.isPersistInput = getBooleanVal(line, "pi", algProps.isPersistInput);
-        algProps.isPrintIntermediateRes = getBooleanVal(line, "print", algProps.isPrintIntermediateRes);
+        algProps.inputNumParts = getIntVal(line, INPUT_PARTS_NUM_OPT, algProps.inputNumParts);
+        algProps.isPersistInput = getBooleanVal(line, PERSIST_INPUT_OPT, algProps.isPersistInput);
+        algProps.isPrintIntermediateRes = getBooleanVal(line, PRINT_PART_OPT, algProps.isPrintIntermediateRes);
 
         return new CmdLineOptions<>(sparkMasterUrl, isUseKrio, inputFileName, algProps);
     }

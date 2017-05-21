@@ -82,7 +82,7 @@
                         <manifest>
                             <!--<addClasspath>true</addClasspath>-->
                             <classpathLayoutType>repository</classpathLayoutType>
-                            <mainClass>org.openu.fimcmp.algs.bigfim.BigFimAlg</mainClass>
+                            <mainClass>org.openu.fimcmp.cmdline.CmdLineRunner</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

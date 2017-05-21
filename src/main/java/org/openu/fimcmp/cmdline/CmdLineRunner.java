@@ -1,6 +1,9 @@
 package org.openu.fimcmp.cmdline;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.algs.algbase.AlgBase;
 import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 import org.openu.fimcmp.algs.bigfim.BigFimCmdLineOptionsParser;
@@ -18,10 +21,19 @@ import java.util.TreeMap;
 public class CmdLineRunner {
     private final Map<String, ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase>> algNameToAlgOptionsParser;
 
+    private static Map<String, ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase>> defaultAlgNameToAlgOptionsParser() {
+        Map<String, ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase>> res = new TreeMap<>();
+        res.put("BIG_FIM", new BigFimCmdLineOptionsParser());
+        res.put("FIN", new FinCmdLineOptionsParser());
+        return res;
+    }
+
+
     public static void main(String[] args) throws Exception {
         CmdLineRunner runner = new CmdLineRunner();
         runner.run(args);
     }
+
 
     public CmdLineRunner() {
         this(defaultAlgNameToAlgOptionsParser());
@@ -33,24 +45,27 @@ public class CmdLineRunner {
     }
 
     public void run(String[] args) throws Exception {
-        //TODO
         ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase> cmdLineOptionsParser =
                 findCmdLineOptionsParser(args);
         if (cmdLineOptionsParser == null) {
             return; //--help
         }
 
-        CmdLineOptions<? extends CommonAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(args);
+        String[] algArgs = ArrayUtils.subarray(args, 1, args.length);
+        CmdLineOptions<? extends CommonAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(algArgs);
+        if (runProps == null) {
+            return; //<alg> --help, i.e. help on alg-specific options
+        }
+
+        StopWatch sw = new StopWatch();
+        sw.start();
+        AlgBase.pp(sw, runProps);
+        JavaSparkContext sc = AlgBase.createSparkContext(runProps.isUseKrio, runProps.sparkMasterUrl, sw);
+
         AlgBase alg = cmdLineOptionsParser.createAlg(runProps);
-        alg.run(null, null);
+        alg.run(sc, sw);
     }
 
-    private static Map<String, ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase>> defaultAlgNameToAlgOptionsParser() {
-        Map<String, ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase>> res = new TreeMap<>();
-        res.put("BIG_FIM", new BigFimCmdLineOptionsParser());
-        res.put("FIN", new FinCmdLineOptionsParser());
-        return res;
-    }
 
     private ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase> findCmdLineOptionsParser(String[] args) {
         if (args.length == 0 || "--help".equals(args[0]) || "-h".equals(args[0])) {
