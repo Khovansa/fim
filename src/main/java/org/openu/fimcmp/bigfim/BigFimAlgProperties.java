@@ -17,7 +17,6 @@ public class BigFimAlgProperties extends CommonAlgProperties {
     public final int prefixLenToStartEclat;
 
     //BigFim
-    public boolean isPrintFks = true;
     /**
      * Decides whether the itemset is 'sparse' enough to continue with Apriori despite
      * the {@link #prefixLenToStartEclat} restriction. <br/>
