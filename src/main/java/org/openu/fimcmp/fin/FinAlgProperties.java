@@ -1,10 +1,13 @@
 package org.openu.fimcmp.fin;
 
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 import org.openu.fimcmp.algbase.CommonAlgProperties;
 
 /**
  * Properties for FIN+ algorithm
  */
+@SuppressWarnings("WeakerAccess")
 public class FinAlgProperties extends CommonAlgProperties {
     public FinAlgProperties(double minSupp) {
         super(minSupp);
@@ -21,4 +24,8 @@ public class FinAlgProperties extends CommonAlgProperties {
      */
     public int requiredItemsetLenForSeqProcessing = 1;
 
+    @Override
+    public String toString() {
+        return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);
+    }
 }

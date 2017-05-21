@@ -11,6 +11,8 @@ import org.openu.fimcmp.props.CmdLineOptions;
  */
 public class FinCmdLineOptionsParser extends AbstractCmdLineOptionsParser<FinAlgProperties, FinAlg> {
     private static final String RUN_TYPE_ALLOWED_VALUES = StringUtils.join(FinAlgProperties.RunType.values(), "|");
+    private static final String RUN_TYPE_SHORT_OPT = "rtype";
+    private static final String IS_SEQ_LEN_SHORT_OPT = "islenseq";
 
     @Override
     public FinAlg createAlg(CmdLineOptions<FinAlgProperties> cmdLineOptions) {
@@ -19,9 +21,9 @@ public class FinCmdLineOptionsParser extends AbstractCmdLineOptionsParser<FinAlg
 
     @Override
     protected void addAlgSpecificOptions(Options options) {
-        options.addOption("rtype", "run-type", true, RUN_TYPE_ALLOWED_VALUES);
+        options.addOption(RUN_TYPE_SHORT_OPT, "run-type", true, RUN_TYPE_ALLOWED_VALUES);
 
-        options.addOption("isdlen", "itemset-len-to-process-on-driver", true,
+        options.addOption(IS_SEQ_LEN_SHORT_OPT, "itemset-len-for-seq-processing", true,
                 "The required itemset length of the nodes processed sequentially on the driver machine, e.g. '1' for items");
     }
 
@@ -29,7 +31,7 @@ public class FinCmdLineOptionsParser extends AbstractCmdLineOptionsParser<FinAlg
     protected FinAlgProperties createAlgProperties(CommandLine line, double minSupp) {
         FinAlgProperties algProps = new FinAlgProperties(minSupp);
 
-        String runTypeStr = line.getOptionValue("rtype");
+        String runTypeStr = line.getOptionValue(RUN_TYPE_SHORT_OPT);
         try {
             algProps.runType = FinAlgProperties.RunType.valueOf(runTypeStr);
         } catch (IllegalArgumentException ex) {
@@ -37,7 +39,8 @@ public class FinCmdLineOptionsParser extends AbstractCmdLineOptionsParser<FinAlg
                     String.format("Bad run type '%s', allowed values: %s", runTypeStr, RUN_TYPE_ALLOWED_VALUES));
         }
 
-        algProps.requiredItemsetLenForSeqProcessing = getIntVal(line, "isdlen", algProps.requiredItemsetLenForSeqProcessing);
+        algProps.requiredItemsetLenForSeqProcessing = getIntVal(
+                line, IS_SEQ_LEN_SHORT_OPT, algProps.requiredItemsetLenForSeqProcessing);
 
         return algProps;
     }

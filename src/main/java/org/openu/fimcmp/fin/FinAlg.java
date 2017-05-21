@@ -8,6 +8,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.algbase.F1Context;
+import org.openu.fimcmp.props.CmdLineOptions;
 import org.openu.fimcmp.result.CountingOnlyFiResultHolderFactory;
 import org.openu.fimcmp.result.FiResultHolder;
 import org.openu.fimcmp.result.FiResultHolderFactory;
@@ -22,9 +23,21 @@ import java.util.function.Predicate;
  */
 public class FinAlg extends AlgBase<FinAlgProperties, Void> {
 
-    @SuppressWarnings("WeakerAccess")
-    public FinAlg(FinAlgProperties props, String inputFile) {
-        super(props, inputFile);
+    //--spark-master-url local --input-file-name pumsb.dat --min-supp 0.8 --input-parts-num 1 --persist-input true --run-type PAR_SPARK --itemset-len-for-seq-processing 1
+    public static void main(String[] args) throws Exception {
+        FinCmdLineOptionsParser cmdLineOptionsParser = new FinCmdLineOptionsParser();
+        CmdLineOptions<FinAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(args);
+        if (runProps == null) {
+            return; //help
+        }
+
+        StopWatch sw = new StopWatch();
+        sw.start();
+        pp(sw, runProps);
+        JavaSparkContext sc = createSparkContext(runProps.isUseKrio, runProps.sparkMasterUrl, sw);
+
+        FinAlg alg = cmdLineOptionsParser.createAlg(runProps);
+        alg.run(sc, sw);
     }
 
     public static Class[] getClassesToRegister() {
@@ -35,23 +48,9 @@ public class FinAlg extends AlgBase<FinAlgProperties, Void> {
         };
     }
 
-    public static void main(String[] args) throws Exception {
-        FinAlgProperties props = new FinAlgProperties(0.9);
-        props.inputNumParts = 1;
-        props.isPersistInput = true;
-        props.requiredItemsetLenForSeqProcessing = 1;
-        props.runType = FinAlgProperties.RunType.PAR_SPARK;
-//        props.runType = FinAlgProperties.RunType.SEQ_SPARK;
-
-//        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
-        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "pumsb.dat";
-
-        StopWatch sw = new StopWatch();
-        sw.start();
-        JavaSparkContext sc = createSparkContext(false, "local", sw);
-
-        FinAlg alg = new FinAlg(props, inputFile);
-        alg.run(sc, sw);
+    @SuppressWarnings("WeakerAccess")
+    public FinAlg(FinAlgProperties props, String inputFile) {
+        super(props, inputFile);
     }
 
     @Override
@@ -137,7 +136,6 @@ public class FinAlg extends AlgBase<FinAlgProperties, Void> {
         FiResultHolder resultHolder = resultHolderFactory.newResultHolder();
         List<ProcessedNodeset> rootNodesets = FinAlgHelper.createAscFreqSortedRoots(
                 resultHolder, rankTrsRdd, f1Context, requiredItemsetLenForSeqProcessing);
-//        Collections.reverse(rootNodesets);
 
         //process each subtree
         for (ProcessedNodeset rootNodeset : rootNodesets) {
