@@ -52,7 +52,9 @@ public abstract class AlgBase<P extends CommonAlgProperties, R> implements Seria
 
         List<Tuple2<String, Integer>> sortedF1 = apr.computeF1WithSupport(trs);
         pp(sw, "F1 size = " + sortedF1.size());
-        pp(sw, sortedF1);
+        if (props.isPrintIntermediateRes) {
+            pp(sw, sortedF1);
+        }
 
         return new F1Context(apr, sortedF1, cnts, sw);
     }
