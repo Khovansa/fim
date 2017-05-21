@@ -3,6 +3,7 @@ package org.openu.fimcmp.algs.fin;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 import org.openu.fimcmp.cmdline.AbstractCmdLineOptionsParser;
 import org.openu.fimcmp.cmdline.CmdLineOptions;
 
@@ -17,8 +18,8 @@ public class FinCmdLineOptionsParser extends AbstractCmdLineOptionsParser<FinAlg
     private static final String PRINT_FIS_SHORT_OPT = "printall";
 
     @Override
-    public FinAlg createAlg(CmdLineOptions<FinAlgProperties> cmdLineOptions) {
-        return new FinAlg(cmdLineOptions.algProps, cmdLineOptions.getInputFile());
+    public FinAlg createAlg(CmdLineOptions<? extends CommonAlgProperties> cmdLineOptions) {
+        return new FinAlg((FinAlgProperties)cmdLineOptions.algProps, cmdLineOptions.getInputFile());
     }
 
     @Override

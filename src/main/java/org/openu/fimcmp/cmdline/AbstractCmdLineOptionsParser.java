@@ -8,7 +8,8 @@ import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
  * Base class for algorithm-specific cmd-line options parsers.
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties, A extends AlgBase> {
+public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties, A extends AlgBase>
+        implements ICmdLineOptionsParser<P, A> {
     private static final String HELP_OPTION = "help";
 
     /**
@@ -16,6 +17,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
      *
      * @return either the parsed options or null in case of help request
      */
+    @Override
     public CmdLineOptions<P> parseCmdLine(String[] args) throws ParseException {
         Options options = createCommonOptions();
         addAlgSpecificOptions(options);
@@ -30,8 +32,6 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
 
         return cmdLineToOptions(line);
     }
-
-    public abstract A createAlg(CmdLineOptions<P> cmdLineOptions);
 
 
     //Required from subclasses:

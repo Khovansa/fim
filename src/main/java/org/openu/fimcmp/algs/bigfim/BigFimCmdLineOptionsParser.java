@@ -2,6 +2,7 @@ package org.openu.fimcmp.algs.bigfim;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 import org.openu.fimcmp.cmdline.AbstractCmdLineOptionsParser;
 import org.openu.fimcmp.cmdline.CmdLineOptions;
 
@@ -9,9 +10,10 @@ import org.openu.fimcmp.cmdline.CmdLineOptions;
  * Parse command line options to create BigFim algorithm
  */
 public class BigFimCmdLineOptionsParser extends AbstractCmdLineOptionsParser<BigFimAlgProperties, BigFimAlg> {
+
     @Override
-    public BigFimAlg createAlg(CmdLineOptions<BigFimAlgProperties> cmdLineOptions) {
-        return new BigFimAlg(cmdLineOptions.algProps, cmdLineOptions.getInputFile());
+    public BigFimAlg createAlg(CmdLineOptions<? extends CommonAlgProperties> cmdLineOptions) {
+        return new BigFimAlg((BigFimAlgProperties) cmdLineOptions.algProps, cmdLineOptions.getInputFile());
     }
 
     @Override
