@@ -1,4 +1,4 @@
-package org.openu.fimcmp.props;
+package org.openu.fimcmp.cmdline;
 
 import org.apache.commons.cli.*;
 import org.openu.fimcmp.algbase.AlgBase;

@@ -2,8 +2,8 @@ package org.openu.fimcmp.bigfim;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.openu.fimcmp.props.AbstractCmdLineOptionsParser;
-import org.openu.fimcmp.props.CmdLineOptions;
+import org.openu.fimcmp.cmdline.AbstractCmdLineOptionsParser;
+import org.openu.fimcmp.cmdline.CmdLineOptions;
 
 /**
  * Parse command line options to create BigFim algorithm

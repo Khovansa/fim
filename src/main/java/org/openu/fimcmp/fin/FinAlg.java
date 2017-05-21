@@ -9,7 +9,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.FreqItemset;
 import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.algbase.F1Context;
-import org.openu.fimcmp.props.CmdLineOptions;
+import org.openu.fimcmp.cmdline.CmdLineOptions;
 import org.openu.fimcmp.result.BitsetFiResultHolderFactory;
 import org.openu.fimcmp.result.CountingOnlyFiResultHolderFactory;
 import org.openu.fimcmp.result.FiResultHolder;

@@ -1,4 +1,4 @@
-package org.openu.fimcmp.props;
+package org.openu.fimcmp.cmdline;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;

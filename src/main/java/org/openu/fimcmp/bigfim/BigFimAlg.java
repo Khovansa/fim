@@ -4,7 +4,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.algbase.AlgBase;
-import org.openu.fimcmp.props.CmdLineOptions;
+import org.openu.fimcmp.cmdline.CmdLineOptions;
 import org.openu.fimcmp.result.FiResultHolder;
 import scala.Tuple2;
 

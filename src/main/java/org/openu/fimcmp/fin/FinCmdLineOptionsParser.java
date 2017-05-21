@@ -3,8 +3,8 @@ package org.openu.fimcmp.fin;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
-import org.openu.fimcmp.props.AbstractCmdLineOptionsParser;
-import org.openu.fimcmp.props.CmdLineOptions;
+import org.openu.fimcmp.cmdline.AbstractCmdLineOptionsParser;
+import org.openu.fimcmp.cmdline.CmdLineOptions;
 
 /**
  * Parse command line options to create FIN+ algorithm
