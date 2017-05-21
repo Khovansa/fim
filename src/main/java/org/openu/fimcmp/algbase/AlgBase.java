@@ -16,14 +16,20 @@ import java.util.List;
  */
 public abstract class AlgBase<P extends CommonAlgProperties> implements Serializable {
     protected final P props;
-    protected final String inputFile;
+    private final String inputFile;
 
     public AlgBase(P props, String inputFile) {
         this.props = props;
         this.inputFile = inputFile;
     }
 
-    public static JavaSparkContext createSparkContext(boolean useKryo, String sparkMasterUrl, StopWatch sw) {
+    public abstract void run(JavaSparkContext sc, StopWatch sw) throws Exception;
+
+    public static void pp(StopWatch sw, Object msg) {
+        print(String.format("%-15s %s", tt(sw), msg));
+    }
+
+    protected static JavaSparkContext createSparkContext(boolean useKryo, String sparkMasterUrl, StopWatch sw) {
         pp(sw, "Starting the Spark context");
         JavaSparkContext sc = SparkContextFactory.createSparkContext(useKryo, sparkMasterUrl);
         pp(sw, "Completed starting the Spark context");
@@ -62,10 +68,6 @@ public abstract class AlgBase<P extends CommonAlgProperties> implements Serializ
     }
 
 
-
-    public static void pp(StopWatch sw, Object msg) {
-        print(String.format("%-15s %s", tt(sw), msg));
-    }
 
     private static void print(String msg) {
         System.out.println(msg);

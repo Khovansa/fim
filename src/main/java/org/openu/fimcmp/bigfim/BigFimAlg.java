@@ -38,6 +38,14 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties> {
         super(props, inputFile);
     }
 
+    @Override
+    public void run(JavaSparkContext sc, StopWatch sw) throws Exception {
+        JavaRDD<String[]> trs = readInput(sc, sw);
+
+        BigFimResult res = computeFis(trs, sw);
+        res.printCounts(sw);
+    }
+
     BigFimResult computeFis(JavaRDD<String[]> trs, StopWatch sw) {
         BigFimStepExecutor helper = new BigFimStepExecutor(props, computeF1Context(trs, sw));
 

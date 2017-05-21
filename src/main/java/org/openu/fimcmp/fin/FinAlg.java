@@ -45,47 +45,50 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
 
 //        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "my.small.txt";
         String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + "pumsb.dat";
-        runAlg(props, inputFile);
+
+        StopWatch sw = new StopWatch();
+        sw.start();
+        JavaSparkContext sc = createSparkContext(false, "local", sw);
+
+        FinAlg alg = new FinAlg(props, inputFile);
+        alg.run(sc, sw);
     }
 
-    private static void runAlg(FinAlgProperties props, String inputFile) throws Exception {
-        FinContext ctx = prepare(props, inputFile);
+    @Override
+    public void run(JavaSparkContext sc, StopWatch sw) throws Exception {
+        FinContext ctx = prepareContext(sc, sw);
 
         FiResultHolder resultHolder;
         switch (props.runType) {
             case SEQ_PURE_JAVA:
-                resultHolder = ctx.alg.collectResultsSequentiallyPureJava(
+                resultHolder = collectResultsSequentiallyPureJava(
                         ctx.resultHolderFactory, ctx.rankTrsRdd, ctx.f1Context,
                         props.requiredItemsetLenForSeqProcessing);
                 break;
             case SEQ_SPARK:
-                resultHolder = ctx.alg.collectResultsSequentiallyWithSpark(
+                resultHolder = collectResultsSequentiallyWithSpark(
                         ctx.resultHolderFactory, ctx.rankTrsRdd, ctx.f1Context,
-                        props.requiredItemsetLenForSeqProcessing, ctx.sc);
+                        props.requiredItemsetLenForSeqProcessing, sc);
                 break;
             case PAR_SPARK:
-                resultHolder = ctx.alg.collectResultsInParallel(
-                        ctx.resultHolderFactory, ctx.rankTrsRdd, ctx.f1Context, props);
+                resultHolder = collectResultsInParallel(ctx.resultHolderFactory, ctx.rankTrsRdd, ctx.f1Context, props);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported run type " + props.runType);
         }
 
-        outputResults(resultHolder, ctx.f1Context, ctx.sw);
+        outputResults(resultHolder, ctx.f1Context, sw);
     }
 
-    private static FinContext prepare(FinAlgProperties props, String inputFile) throws Exception {
+    private FinContext prepareContext(JavaSparkContext sc, StopWatch sw) {
         FinContext res = new FinContext();
-        res.alg = new FinAlg(props, inputFile);
+        res.alg = this;
+        res.sw = sw;
+        res.sc = sc;
 
-        res.sw = new StopWatch();
-        res.sw.start();
+        JavaRDD<String[]> trs = readInput(sc, sw);
 
-        res.sc = createSparkContext(false, "local", res.sw);
-
-        JavaRDD<String[]> trs = res.alg.readInput(res.sc, res.sw);
-
-        res.f1Context = res.alg.computeF1Context(trs, res.sw);
+        res.f1Context = computeF1Context(trs, sw);
         res.f1Context.printRankToItem();
         res.rankTrsRdd = res.f1Context.computeRddRanks1(trs);
 
@@ -147,7 +150,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         return resultHolder;
     }
 
-    private static void outputResults(FiResultHolder resultHolder, F1Context f1Context, StopWatch sw) {
+    private static void outputResults(FiResultHolder resultHolder, @SuppressWarnings("UnusedParameters") F1Context f1Context, StopWatch sw) {
         pp(sw, "Total results: " + resultHolder.size());
 //        List<FreqItemset> allFrequentItemsets = resultHolder.getAllFrequentItemsets(f1Context.rankToItem);
 //        allFrequentItemsets = allFrequentItemsets.stream().
