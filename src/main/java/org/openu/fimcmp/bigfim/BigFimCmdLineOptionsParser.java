@@ -11,7 +11,7 @@ import org.openu.fimcmp.props.CmdLineOptions;
 public class BigFimCmdLineOptionsParser extends AbstractCmdLineOptionsParser<BigFimAlgProperties, BigFimAlg> {
     @Override
     public BigFimAlg createAlg(CmdLineOptions<BigFimAlgProperties> cmdLineOptions) {
-        return new BigFimAlg(cmdLineOptions.algProps, cmdLineOptions.inputFileName);
+        return new BigFimAlg(cmdLineOptions.algProps, cmdLineOptions.getInputFile());
     }
 
     @Override

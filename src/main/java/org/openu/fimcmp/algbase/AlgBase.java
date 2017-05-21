@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Useful base class for all other main algorithms.
  */
-public abstract class AlgBase<P extends CommonAlgProperties> implements Serializable {
+public abstract class AlgBase<P extends CommonAlgProperties, R> implements Serializable {
     protected final P props;
     private final String inputFile;
 
@@ -23,7 +23,7 @@ public abstract class AlgBase<P extends CommonAlgProperties> implements Serializ
         this.inputFile = inputFile;
     }
 
-    public abstract void run(JavaSparkContext sc, StopWatch sw) throws Exception;
+    public abstract R run(JavaSparkContext sc, StopWatch sw) throws Exception;
 
     public static void pp(StopWatch sw, Object msg) {
         print(String.format("%-15s %s", tt(sw), msg));

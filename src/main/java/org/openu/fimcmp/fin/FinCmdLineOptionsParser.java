@@ -14,7 +14,7 @@ public class FinCmdLineOptionsParser extends AbstractCmdLineOptionsParser<FinAlg
 
     @Override
     public FinAlg createAlg(CmdLineOptions<FinAlgProperties> cmdLineOptions) {
-        return new FinAlg(cmdLineOptions.algProps, cmdLineOptions.inputFileName);
+        return new FinAlg(cmdLineOptions.algProps, cmdLineOptions.getInputFile());
     }
 
     @Override

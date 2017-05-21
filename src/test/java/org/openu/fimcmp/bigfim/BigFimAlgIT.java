@@ -1,7 +1,6 @@
 package org.openu.fimcmp.bigfim;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.Test;
 import org.openu.fimcmp.SparkContextFactory;
@@ -40,9 +39,7 @@ public class BigFimAlgIT {
         sw.stop();
         sw.reset();
         sw.start();
-        JavaRDD<String[]> trs = alg.readInput(sc, sw);
 
-        BigFimResult res = alg.computeFis(trs, sw);
-        res.printCounts(sw);
+        alg.run(sc, sw);
     }
 }

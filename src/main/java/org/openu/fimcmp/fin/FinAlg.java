@@ -20,7 +20,7 @@ import java.util.function.Predicate;
 /**
  * Implement the main steps of the FIN+ algorithm.
  */
-public class FinAlg extends AlgBase<FinAlgProperties> {
+public class FinAlg extends AlgBase<FinAlgProperties, Void> {
 
     @SuppressWarnings("WeakerAccess")
     public FinAlg(FinAlgProperties props, String inputFile) {
@@ -55,7 +55,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
     }
 
     @Override
-    public void run(JavaSparkContext sc, StopWatch sw) throws Exception {
+    public Void run(JavaSparkContext sc, StopWatch sw) throws Exception {
         FinContext ctx = prepareContext(sc, sw);
 
         FiResultHolder resultHolder;
@@ -78,6 +78,7 @@ public class FinAlg extends AlgBase<FinAlgProperties> {
         }
 
         outputResults(resultHolder, ctx.f1Context, sw);
+        return null;
     }
 
     private FinContext prepareContext(JavaSparkContext sc, StopWatch sw) {

@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.algbase.AlgBase;
+import org.openu.fimcmp.props.CmdLineOptions;
 import org.openu.fimcmp.result.FiResultHolder;
 import scala.Tuple2;
 
@@ -11,27 +12,22 @@ import scala.Tuple2;
 /**
  * The main class that implements the Big FIM algorithm.
  */
-public class BigFimAlg extends AlgBase<BigFimAlgProperties> {
+public class BigFimAlg extends AlgBase<BigFimAlgProperties, BigFimResult> {
+
     public static void main(String[] args) throws Exception {
-        BigFimCmdLineOptions runProps = BigFimCmdLineOptions.parse(args);
+        BigFimCmdLineOptionsParser cmdLineOptionsParser = new BigFimCmdLineOptionsParser();
+        CmdLineOptions<BigFimAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(args);
         if (runProps == null) {
             return; //help
         }
-
-        BigFimAlgProperties props = runProps.bigFimAlgProps;
 
         StopWatch sw = new StopWatch();
         sw.start();
         pp(sw, runProps);
         JavaSparkContext sc = createSparkContext(runProps.isUseKrio, runProps.sparkMasterUrl, sw);
 
-        String inputFile = "C:\\Users\\Alexander\\Desktop\\Data Mining\\DataSets\\" + runProps.inputFileName;
-        BigFimAlg alg = new BigFimAlg(props, inputFile);
-        JavaRDD<String[]> trs = alg.readInput(sc, sw);
-
-        BigFimResult res = alg.computeFis(trs, sw);
-        res.printCounts(sw);
-
+        BigFimAlg alg = cmdLineOptionsParser.createAlg(runProps);
+        alg.run(sc, sw);
     }
 
     public BigFimAlg(BigFimAlgProperties props, String inputFile) {
@@ -39,14 +35,16 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties> {
     }
 
     @Override
-    public void run(JavaSparkContext sc, StopWatch sw) throws Exception {
+    public BigFimResult run(JavaSparkContext sc, StopWatch sw) throws Exception {
         JavaRDD<String[]> trs = readInput(sc, sw);
 
         BigFimResult res = computeFis(trs, sw);
         res.printCounts(sw);
+
+        return res;
     }
 
-    BigFimResult computeFis(JavaRDD<String[]> trs, StopWatch sw) {
+    private BigFimResult computeFis(JavaRDD<String[]> trs, StopWatch sw) {
         BigFimStepExecutor helper = new BigFimStepExecutor(props, computeF1Context(trs, sw));
 
         JavaRDD<int[]> ranks1Rdd = helper.computeRddRanks1(trs);
