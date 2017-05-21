@@ -5,7 +5,7 @@ import org.openu.fimcmp.algbase.AlgBase;
 import org.openu.fimcmp.algbase.CommonAlgProperties;
 
 /**
- *  Base class for algorithm-specific cmd-line options parsers.
+ * Base class for algorithm-specific cmd-line options parsers.
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties, A extends AlgBase> {
@@ -13,6 +13,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
 
     /**
      * Parses the command-line options.
+     *
      * @return either the parsed options or null in case of help request
      */
     public CmdLineOptions<P> parseCmdLine(String[] args) throws ParseException {
@@ -66,7 +67,8 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
         options.addOption("h", "help", false, "Print help and quit");
         options.addOption("url", "spark-master-url", true, "Spark master URL");
         options.addOption("krio", "use-krio", false, "Whether to use krio serialization library");
-        options.addOption("input", "input-file-name", true, "Input file name (not full path)");
+        options.addOption("input", "input-file-name", true,
+                String.format("Either an absolute path or a path relative to '%s' environment variable", CmdLineOptions.INPUT_PATH_ENV_VAR));
 
         options.addOption("sup", "min-supp", true, "Min support");
 
