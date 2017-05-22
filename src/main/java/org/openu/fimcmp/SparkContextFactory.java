@@ -3,16 +3,13 @@ package org.openu.fimcmp;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.algs.algbase.AlgBase;
-import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
-import org.openu.fimcmp.algs.algbase.BasicOps;
-import org.openu.fimcmp.algs.apriori.*;
+import org.openu.fimcmp.algs.apriori.AprioriAlg;
 import org.openu.fimcmp.algs.bigfim.BigFimAlg;
-import org.openu.fimcmp.algs.bigfim.BigFimAlgProperties;
 import org.openu.fimcmp.algs.eclat.EclatAlg;
 import org.openu.fimcmp.algs.fin.FinAlg;
-import org.openu.fimcmp.itemset.ItemsetAndTids;
-import org.openu.fimcmp.itemset.ItemsetAndTidsCollection;
+import org.openu.fimcmp.itemset.*;
 import org.openu.fimcmp.result.*;
+import org.openu.fimcmp.util.*;
 import scala.Tuple2;
 
 import java.util.*;
@@ -39,31 +36,34 @@ public class SparkContextFactory {
             conf.set("spark.kryoserializer.buffer.max", "256m");
 //        conf.set("spark.reducer.maxSizeInFlight", "48m"); //500K worked a bit better
             conf.registerKryoClasses(new Class[]{
+                    FreqItemset.class, ItemsetAndTidsCollection.class, ItemsetAndTids.class, ItemsetAndTids[].class,
+
+                    FiResultHolder.class, BitsetFiResultHolder.class, CountingOnlyFiResultHolder.class,
+                    FiResultHolderFactory.class, BitsetFiResultHolderFactory.class,
+                    CountingOnlyFiResultHolderFactory.class,
+
+                    BitSet.class, IteratorOverArray.class,
+
                     org.apache.spark.mllib.fpm.FPTree.class, org.apache.spark.mllib.fpm.FPTree.Node.class,
                 /*org.apache.spark.mllib.fpm.FPTree.Summary.class, */
                     scala.collection.mutable.ListBuffer.class,
                     org.apache.spark.mllib.fpm.FPGrowth.FreqItemset.class,
                     org.apache.spark.mllib.fpm.FPGrowth.FreqItemset[].class,
-                    Object[].class,
 
-                    BasicOps.class,
-                    HashSet.class, TreeSet.class, HashMap.class, ArrayList.class, LinkedList.class,
+                    Object[].class, boolean[].class,
                     String.class, String[].class, Integer.class, Integer[].class, Integer[][].class, Integer[][][].class,
-                    long[].class, int[].class, int[][].class, int[][][].class, BitSet.class,
-                    Tuple2.class, Tuple2[].class, boolean[].class,
-                    new ArrayList<>().iterator().getClass(), new LinkedList<>().iterator().getClass(),
-                    ItemsetAndTidsCollection.class, ItemsetAndTids.class, ItemsetAndTids[].class,
-
-                    AlgBase.class, CommonAlgProperties.class,
-                    EclatAlg.class,
-                    BigFimAlgProperties.class, BigFimAlg.class,
-
-                    FiResultHolder.class, BitsetFiResultHolder.class, CountingOnlyFiResultHolder.class,
-                    FiResultHolderFactory.class, BitsetFiResultHolderFactory.class,
-                    CountingOnlyFiResultHolderFactory.class,
+                    int[].class, int[][].class, int[][][].class, long[].class,
+                    ArrayList.class, new ArrayList<>().iterator().getClass(),
+                    LinkedList.class, new LinkedList<>().iterator().getClass(),
+                    HashSet.class, TreeSet.class, HashMap.class,
+                    Tuple2.class, Tuple2[].class,
             });
+
+            conf.registerKryoClasses(AlgBase.getClassesToRegister());
             conf.registerKryoClasses(FinAlg.getClassesToRegister());
+            conf.registerKryoClasses(BigFimAlg.getClassesToRegister());
             conf.registerKryoClasses(AprioriAlg.getClassesToRegister());
+            conf.registerKryoClasses(EclatAlg.getClassesToRegister());
         }
 
         conf.set("spark.driver.memory", "1200m");

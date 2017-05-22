@@ -30,6 +30,11 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties, BigFimResult> {
         alg.run(sc, sw);
     }
 
+    public static Class[] getClassesToRegister() {
+        return new Class[] {BigFimAlgProperties.class, BigFimAlg.class};
+    }
+
+    @SuppressWarnings("WeakerAccess")
     public BigFimAlg(BigFimAlgProperties props, String inputFile) {
         super(props, inputFile);
     }

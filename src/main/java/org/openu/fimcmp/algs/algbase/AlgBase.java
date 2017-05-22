@@ -18,6 +18,16 @@ public abstract class AlgBase<P extends CommonAlgProperties, R> implements Seria
     protected final P props;
     private final String inputFile;
 
+    public static Class[] getClassesToRegister() {
+        return new Class[]{
+                AlgBase.class,
+                BasicOps.class,
+                CommonAlgProperties.class,
+                F1Context.class,
+                TrsCount.class
+        };
+    }
+
     public AlgBase(P props, String inputFile) {
         this.props = props;
         this.inputFile = inputFile;

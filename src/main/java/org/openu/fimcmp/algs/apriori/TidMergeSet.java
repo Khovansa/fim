@@ -270,7 +270,7 @@ public class TidMergeSet implements Serializable {
         return res;
     }
 
-    public static long[] newEmptySet(int rank) {
+    static long[] newEmptySet(int rank) {
         long[] res = new long[BITSET_START_IND + 1];
         res[RANK_IND] = rank;
         res[SIZE_IND] = 0;

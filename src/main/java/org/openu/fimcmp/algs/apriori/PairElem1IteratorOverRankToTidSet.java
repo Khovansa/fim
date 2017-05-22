@@ -11,12 +11,12 @@ import java.util.Iterator;
  * Returns tuple (elem1, TidMergeSet). <br/>
  * {@link #remove()} operation is not supported.
  */
-public class PairElem1IteratorOverRankToTidSet implements Iterator<Tuple2<Integer, long[]>> {
+class PairElem1IteratorOverRankToTidSet implements Iterator<Tuple2<Integer, long[]>> {
     private final long[][] rankToTidSet;
     private final PairRanks rankToPair;
     private int currRankK = -1;
 
-    public PairElem1IteratorOverRankToTidSet(long[][] rankToTidSet, PairRanks rankToPair) {
+    PairElem1IteratorOverRankToTidSet(long[][] rankToTidSet, PairRanks rankToPair) {
         this.rankToTidSet = rankToTidSet;
         this.rankToPair = rankToPair;
     }

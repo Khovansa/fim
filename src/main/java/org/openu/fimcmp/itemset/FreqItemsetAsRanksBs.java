@@ -34,10 +34,6 @@ public class FreqItemsetAsRanksBs {
         return result;
     }
 
-    public static long[] toBitSet(ItemsetAndTids iat, int totalFreqItems) {
-        return toBitSet(iat.getSupportCount(), iat.getItemset(), totalFreqItems);
-    }
-
     public static long[] toBitSet(int supportCnt, int[] itemset, int totalFreqItems) {
         long[] res = new long[BitArrays.requiredSize(totalFreqItems, ITEMSET_START_IND)];
         res[0] = supportCnt;

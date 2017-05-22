@@ -22,6 +22,10 @@ import java.util.List;
 public class EclatAlg implements Serializable {
     private final EclatProperties props;
 
+    public static Class[] getClassesToRegister() {
+        return new Class[]{EclatAlg.class, EclatProperties.class};
+    }
+
     public EclatAlg(EclatProperties props) {
         this.props = props;
     }

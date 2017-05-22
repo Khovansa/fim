@@ -38,10 +38,12 @@ public class PairRanks implements Serializable {
         return rankToPair[rank][0];
     }
 
+    @SuppressWarnings("unused")
     int getElem2ByRank(int rank) {
         return rankToPair[rank][1];
     }
 
+    @SuppressWarnings("unused")
     int getRankByPair(int elem1, int elem2) {
         return pairToRank[elem1][elem2];
     }

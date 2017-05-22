@@ -7,6 +7,7 @@ import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 /**
  * Holds all the properties for BigFim algorithm.
  */
+@SuppressWarnings("WeakerAccess")
 public class BigFimAlgProperties extends CommonAlgProperties {
     /**
      * Determines when to stop Apriori an switch to Eclat. <br/>
@@ -27,7 +28,6 @@ public class BigFimAlgProperties extends CommonAlgProperties {
     public boolean isUseDiffSets = true;
     public boolean isSqueezingEnabled = false;
     public boolean isCountingOnly = true;
-    public boolean isStatGatheringEnabled = true;
     public Integer maxEclatNumParts;
 
     public BigFimAlgProperties(double minSupp, int prefixLenToStartEclat) {

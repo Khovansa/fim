@@ -26,10 +26,15 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
 
     public static Class[] getClassesToRegister() {
         return new Class[] {
-                AprioriAlg.class, AprCandidateFisGenerator.class, PairRanks.class,
-                TidsGenHelper.class, CurrSizeFiRanks.class,
-                TidMergeSet.class, FiRanksToFromItems.class, PairElem1IteratorOverRankToTidSet.class,
+                AprCandidateFisGenerator.class,
+                AprioriAlg.class,
+                CurrSizeFiRanks.class,
+                FiRanksToFromItems.class,
                 NextSizeItemsetGenHelper.class,
+                PairElem1IteratorOverRankToTidSet.class,
+                PairRanks.class,
+                TidMergeSet.class,
+                TidsGenHelper.class,
         };
     }
 

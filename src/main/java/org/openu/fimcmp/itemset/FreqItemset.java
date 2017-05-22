@@ -22,10 +22,12 @@ public class FreqItemset {
         return new FreqItemset(itemset, freq);
     }
 
+    @SuppressWarnings("unused")
     public boolean containsItems(String... items) {
         return itemset.containsAll(Arrays.asList(items));
     }
 
+    @SuppressWarnings("unused")
     public int compareForNiceOutput(FreqItemset other) {
         if (freq != other.freq) {
             return Integer.compare(other.freq, freq);
