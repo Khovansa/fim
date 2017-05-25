@@ -58,7 +58,7 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties, BigFimResult> {
         JavaRDD<Tuple2<int[], long[]>> ranks1AndK = null;
         while (currStep != null && helper.isContinueWithApriori()) {
             ranks1AndK = helper.computeCurrSizeRdd(currStep, ranks1AndK, ranks1Rdd, false);
-            currStep = helper.computeFk(ranks1AndK, currStep);
+            currStep = helper.computeFk(ranks1AndK, currStep); //FIs of the next size
         }
 
         JavaRDD<FiResultHolder> optionalEclatFis = null;

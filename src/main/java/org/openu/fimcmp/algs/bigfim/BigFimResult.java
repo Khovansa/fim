@@ -16,6 +16,7 @@ import java.util.Map;
 /**
  * Holds the result of BigFim computation
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class BigFimResult {
     private final Map<String, Integer> itemToRank;
     private final String[] rankToItem;

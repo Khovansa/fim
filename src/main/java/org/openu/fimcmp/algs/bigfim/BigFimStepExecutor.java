@@ -73,12 +73,21 @@ class BigFimStepExecutor {
         return lastRes.size() > 1;
     }
 
+    /**
+     * @return Transactions' RDD, but each transaction is represented as an array of items ranks
+     */
     JavaRDD<int[]> computeRddRanks1(JavaRDD<String[]> trs) {
         JavaRDD<int[]> res = cxt.computeRddRanks1(trs);
         allRanksRdds.add(res);
         return res;
     }
 
+    /**
+     * @return Transactions' RDD; for each transaction we have: <br/><ol>
+     * <li>int[] - transaction's items represented as their F1 ranks</li>
+     * <li>long[] - bitset of frequent k-itemsets contained in this transaction</li>
+     * </ol>
+     */
     JavaRDD<Tuple2<int[], long[]>> computeCurrSizeRdd(
             AprioriStepRes currStep, JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, JavaRDD<int[]> ranks1Rdd,
             boolean isForEclat) {
@@ -133,7 +142,14 @@ class BigFimStepExecutor {
         return res;
     }
 
+    /**
+     *
+     * @param currStep  Apriori results holding F1...Fk
+     * @param ranks1AndK Transactions in the form described in {@link #computeCurrSizeRdd}
+     * @return All FIs per (k-1)-rank
+     */
     JavaRDD<FiResultHolder> computeWithEclat(AprioriStepRes currStep, JavaRDD<Tuple2<int[], long[]>> ranks1AndK) {
+        //Compute list of (itemset, all ots TIds) per (k-1)-rank:
         JavaPairRDD<Integer, ItemsetAndTidsCollection> rKm1ToEclatInput = computeEclatInput(currStep, ranks1AndK);
         cxt.pp("\n\n");
         return computeWithSequentialEclat(rKm1ToEclatInput);
@@ -143,6 +159,10 @@ class BigFimStepExecutor {
         return new BigFimResult(cxt.itemToRank, cxt.rankToItem, aprioriFis, optionalEclatFis);
     }
 
+    /**
+     * Prepare input to the Eclat algorithm. <br/>
+     * The returned 'input' is a map: (k-1)-rank to list of (itemset, its TIDs)
+     */
     private JavaPairRDD<Integer, ItemsetAndTidsCollection> computeEclatInput(
             AprioriStepRes currStep, JavaRDD<Tuple2<int[], long[]>> ranks1AndK) {
         //prepare the input RDD:
@@ -186,6 +206,9 @@ class BigFimStepExecutor {
         }
     }
 
+    /**
+     * Apply the classic sequential Eclat algorithm for each 'ItemsetAndTidsCollection'
+     */
     private JavaRDD<FiResultHolder> computeWithSequentialEclat(
             JavaPairRDD<Integer, ItemsetAndTidsCollection> rKm1ToEclatInput) {
         cxt.pp("Starting Eclat computations");

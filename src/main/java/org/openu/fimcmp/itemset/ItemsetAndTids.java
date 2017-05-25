@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- * Simple structure to hold an itemset as an array frequent items' ranks and the itemset's TIDs as a bit set. <br/>
+ * Simple structure to hold an itemset as an array of frequent items' ranks and the itemset's TIDs as a bit set. <br/>
  */
 public class ItemsetAndTids implements Serializable {
     private static final int TIDS_START_IND = 0;
