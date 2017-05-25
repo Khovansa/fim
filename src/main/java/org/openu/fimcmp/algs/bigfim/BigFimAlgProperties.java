@@ -1,7 +1,5 @@
 package org.openu.fimcmp.algs.bigfim;
 
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
 import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 
 /**
@@ -37,10 +35,5 @@ public class BigFimAlgProperties extends CommonAlgProperties {
     public BigFimAlgProperties(double minSupp, int prefixLenToStartEclat) {
         super(minSupp);
         this.prefixLenToStartEclat = prefixLenToStartEclat;
-    }
-
-    @Override
-    public String toString() {
-        return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 }

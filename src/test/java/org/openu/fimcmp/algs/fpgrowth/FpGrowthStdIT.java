@@ -1,4 +1,4 @@
-package org.openu.fimcmp.fpgrowth;
+package org.openu.fimcmp.algs.fpgrowth;
 
 import org.apache.spark.mllib.fpm.FPGrowth;
 import org.apache.spark.mllib.fpm.FPGrowthModel;

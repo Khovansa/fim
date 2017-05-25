@@ -1,7 +1,5 @@
 package org.openu.fimcmp.algs.fin;
 
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
 import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 
 /**
@@ -26,9 +24,4 @@ public class FinAlgProperties extends CommonAlgProperties {
 
     public boolean isCountingOnly = true;
     public boolean isPrintAllFis = false;
-
-    @Override
-    public String toString() {
-        return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);
-    }
 }

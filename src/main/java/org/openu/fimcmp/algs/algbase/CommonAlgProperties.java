@@ -1,5 +1,8 @@
 package org.openu.fimcmp.algs.algbase;
 
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 import java.io.Serializable;
 
 /**
@@ -24,5 +27,10 @@ public class CommonAlgProperties implements Serializable {
 
     protected CommonAlgProperties(double minSupp) {
         this.minSupp = minSupp;
+    }
+
+    @Override
+    public String toString() {
+        return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 }
