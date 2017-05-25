@@ -17,7 +17,7 @@ public class BasicOps implements Serializable {
     public BasicOps() {
     }
 
-    public JavaRDD<ArrayList<String>> readLinesAsSortedItemsList(String inputFile, int numPart, JavaSparkContext sc) {
+    public static JavaRDD<ArrayList<String>> readLinesAsSortedItemsList(String inputFile, int numPart, JavaSparkContext sc) {
         JavaRDD<String> lines = sc.textFile(inputFile, numPart);
         return linesAsSortedItemsList(lines);
     }
@@ -27,7 +27,7 @@ public class BasicOps implements Serializable {
         return linesAsSortedItemsArr(lines);
     }
 
-    public JavaRDD<ArrayList<String>> linesAsSortedItemsList(JavaRDD<String> lines) {
+    public static JavaRDD<ArrayList<String>> linesAsSortedItemsList(JavaRDD<String> lines) {
         return lines.map(BasicOps::splitLineToSortedList);
     }
 

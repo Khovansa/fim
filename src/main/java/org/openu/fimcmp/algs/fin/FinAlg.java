@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
- * Implement the main steps of the FIN+ algorithm.
+ * The main class that implement the FIN+ algorithm.
  */
 public class FinAlg extends AlgBase<FinAlgProperties, Void> {
 

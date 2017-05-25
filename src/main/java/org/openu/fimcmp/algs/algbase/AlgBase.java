@@ -10,6 +10,7 @@ import org.openu.fimcmp.itemset.FreqItemset;
 import scala.Tuple2;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,6 +52,16 @@ public abstract class AlgBase<P extends CommonAlgProperties, R> implements Seria
     protected JavaRDD<String[]> readInput(JavaSparkContext sc, StopWatch sw) {
         pp(sw, "Start reading " + inputFile);
         JavaRDD<String[]> res = BasicOps.readLinesAsSortedItemsArr(inputFile, props.inputNumParts, sc);
+        if (props.isPersistInput) {
+            res = res.persist(StorageLevel.MEMORY_ONLY_SER());
+        }
+        pp(sw, "Done reading " + inputFile);
+        return res;
+    }
+
+    protected JavaRDD<ArrayList<String>> readInputAsListRdd(JavaSparkContext sc, StopWatch sw) {
+        pp(sw, "Start reading " + inputFile);
+        JavaRDD<ArrayList<String>> res = BasicOps.readLinesAsSortedItemsList(inputFile, props.inputNumParts, sc);
         if (props.isPersistInput) {
             res = res.persist(StorageLevel.MEMORY_ONLY_SER());
         }

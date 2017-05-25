@@ -7,6 +7,7 @@ import org.openu.fimcmp.algs.apriori.AprioriAlg;
 import org.openu.fimcmp.algs.bigfim.BigFimAlg;
 import org.openu.fimcmp.algs.eclat.EclatAlg;
 import org.openu.fimcmp.algs.fin.FinAlg;
+import org.openu.fimcmp.algs.fpgrowth.FpGrowthAlg;
 import org.openu.fimcmp.itemset.*;
 import org.openu.fimcmp.result.*;
 import org.openu.fimcmp.util.*;
@@ -44,12 +45,6 @@ public class SparkContextFactory {
 
                     BitSet.class, IteratorOverArray.class,
 
-                    org.apache.spark.mllib.fpm.FPTree.class, org.apache.spark.mllib.fpm.FPTree.Node.class,
-                /*org.apache.spark.mllib.fpm.FPTree.Summary.class, */
-                    scala.collection.mutable.ListBuffer.class,
-                    org.apache.spark.mllib.fpm.FPGrowth.FreqItemset.class,
-                    org.apache.spark.mllib.fpm.FPGrowth.FreqItemset[].class,
-
                     Object[].class, boolean[].class,
                     String.class, String[].class, Integer.class, Integer[].class, Integer[][].class, Integer[][][].class,
                     int[].class, int[][].class, int[][][].class, long[].class,
@@ -64,6 +59,7 @@ public class SparkContextFactory {
             conf.registerKryoClasses(BigFimAlg.getClassesToRegister());
             conf.registerKryoClasses(AprioriAlg.getClassesToRegister());
             conf.registerKryoClasses(EclatAlg.getClassesToRegister());
+            conf.registerKryoClasses(FpGrowthAlg.getClassesToRegister());
         }
 
         conf.set("spark.driver.memory", "1200m");
