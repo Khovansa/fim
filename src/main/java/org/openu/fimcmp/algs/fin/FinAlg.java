@@ -17,7 +17,6 @@ import org.openu.fimcmp.result.FiResultHolderFactory;
 
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Implement the main steps of the FIN+ algorithm.
@@ -155,14 +154,12 @@ public class FinAlg extends AlgBase<FinAlgProperties, Void> {
         return resultHolder;
     }
 
-    private void outputResults(FiResultHolder resultHolder, @SuppressWarnings("UnusedParameters") F1Context f1Context, StopWatch sw) {
+    private void outputResults(FiResultHolder resultHolder, F1Context f1Context, StopWatch sw) {
         pp(sw, "Total results: " + resultHolder.size());
         if (!props.isCountingOnly) {
             List<FreqItemset> allFrequentItemsets = resultHolder.getAllFrequentItemsets(f1Context.rankToItem);
             if (props.isPrintAllFis) {
-                allFrequentItemsets = allFrequentItemsets.stream().
-                        sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
-                allFrequentItemsets.forEach(System.out::println);
+                allFrequentItemsets = printAllItemsets(allFrequentItemsets);
             }
             pp(sw, "Total results: " + allFrequentItemsets.size());
         }

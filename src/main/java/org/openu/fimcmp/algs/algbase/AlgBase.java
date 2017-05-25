@@ -6,10 +6,12 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
 import org.openu.fimcmp.SparkContextFactory;
 import org.openu.fimcmp.algs.apriori.AprioriAlg;
+import org.openu.fimcmp.itemset.FreqItemset;
 import scala.Tuple2;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Useful base class for all other main algorithms.
@@ -46,7 +48,7 @@ public abstract class AlgBase<P extends CommonAlgProperties, R> implements Seria
         return sc;
     }
 
-    public JavaRDD<String[]> readInput(JavaSparkContext sc, StopWatch sw) {
+    protected JavaRDD<String[]> readInput(JavaSparkContext sc, StopWatch sw) {
         pp(sw, "Start reading " + inputFile);
         JavaRDD<String[]> res = BasicOps.readLinesAsSortedItemsArr(inputFile, props.inputNumParts, sc);
         if (props.isPersistInput) {
@@ -67,6 +69,13 @@ public abstract class AlgBase<P extends CommonAlgProperties, R> implements Seria
         }
 
         return new F1Context(apr, sortedF1, cnts, sw);
+    }
+
+    protected List<FreqItemset> printAllItemsets(List<FreqItemset> allFrequentItemsets) {
+        allFrequentItemsets = allFrequentItemsets.stream().
+                sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
+        allFrequentItemsets.forEach(System.out::println);
+        return allFrequentItemsets;
     }
 
     private TrsCount computeCounts(JavaRDD<String[]> trs, StopWatch sw) {

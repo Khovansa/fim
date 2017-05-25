@@ -11,4 +11,6 @@ public class FpGrowthAlgProperties extends CommonAlgProperties {
     public FpGrowthAlgProperties(double minSupp) {
         super(minSupp);
     }
+
+    public boolean isPrintAllFis = false;
 }
