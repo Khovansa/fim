@@ -63,7 +63,7 @@ class FinAlgHelper implements Serializable {
         int totalFreqItems = f1Context.totalFreqItems;
         FiResultHolder initResultHolder = resultHolderFactory.newResultHolder();
         FiResultHolder subtreeResultHolder = partAndTreeRdd
-                .map(partAndTree -> FinAlgHelper.genAllFisForPartition(
+                .map(partAndTree -> genAllFisForPartition(
                         resultHolderFactory, partAndTree, minSuppCnt, totalFreqItems, props, partitioner))
                 .fold(initResultHolder, FiResultHolder::uniteWith);
 
@@ -115,12 +115,12 @@ class FinAlgHelper implements Serializable {
              we should *only include Nodeset(i1, i) and exclude the rest, i is any item*
          */
         final Integer part = partAndTreeRoot._1;
-        System.out.println("Starting FIs for partition " + part);
+        print("Starting FIs for partition " + part);
         Predicate<Integer> leastFreqItemFilter = (itemRank -> partitioner.getPartition(itemRank) == part);
 
         final PpcTree root = partAndTreeRoot._2;
         FiResultHolder res = genAllFisForPartition(resultHolderFactory, root, leastFreqItemFilter, minSuppCnt, totalFreqItems, props);
-        System.out.println(String.format("Completed FIs for partition %s: %s", part, res.size()));
+        print(String.format("Completed FIs for partition %s: %s", part, res.size()));
         return res;
     }
 
@@ -138,7 +138,7 @@ class FinAlgHelper implements Serializable {
 
         //nodes sorted in descending frequency, but from the largest sub-tree
         // to the smallest one consisting just of the most frequent item:
-        System.out.println(String.format("Starting processing subtrees: %s roots", rootNodesets.size()));
+        print(String.format("Starting processing subtrees: %s roots", rootNodesets.size()));
         for (ProcessedNodeset rootNodeset : rootNodesets) {
             long sizeBefore = printStartProcessingSubtreeIfNeeded(props.isPrintIntermediateRes, resultHolder, rootNodeset);
 
@@ -153,7 +153,7 @@ class FinAlgHelper implements Serializable {
     static long printStartProcessingSubtreeIfNeeded(
             boolean isPrintIntermediateRes, FiResultHolder resultHolder, ProcessedNodeset rootNodeset) {
         if (isPrintIntermediateRes) {
-            System.out.println(String.format("Processing subtree of %s", Arrays.toString(rootNodeset.getItemset())));
+            print(String.format("Processing subtree of %s", Arrays.toString(rootNodeset.getItemset())));
         }
         return resultHolder.size();
     }
@@ -162,7 +162,7 @@ class FinAlgHelper implements Serializable {
             boolean isPrintIntermediateRes, long sizeBefore, FiResultHolder resultHolder, ProcessedNodeset rootNodeset) {
         if (isPrintIntermediateRes) {
             long currSize = resultHolder.size();
-            System.out.println(String.format("Done processing subtree of %s: +%s -> %s",
+            print(String.format("Done processing subtree of %s: +%s -> %s",
                     Arrays.toString(rootNodeset.getItemset()), currSize - sizeBefore, currSize));
         }
     }
@@ -193,5 +193,9 @@ class FinAlgHelper implements Serializable {
             res.addAll(root.processSonsOnly(resultHolder, minSuppCnt));
         }
         return res;
+    }
+
+    private static void print(String msg) {
+        System.out.println(msg);
     }
 }
