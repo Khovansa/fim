@@ -3,7 +3,6 @@ package org.openu.fimcmp.algs.eclat;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.openu.fimcmp.itemset.FreqItemsetAsRanksBs;
 import org.openu.fimcmp.itemset.ItemsetAndTids;
 import org.openu.fimcmp.itemset.ItemsetAndTidsCollection;
 import org.openu.fimcmp.result.BitsetFiResultHolder;
@@ -32,23 +31,17 @@ public class EclatAlg implements Serializable {
 
     public JavaRDD<FiResultHolder> computeFreqItemsetsRdd(
             JavaPairRDD<Integer, ItemsetAndTidsCollection> prefRankAndIsAndTidSetRdd) {
-        return prefRankAndIsAndTidSetRdd.mapValues(this::computeFreqItemsetsSingleDfs)
+        return prefRankAndIsAndTidSetRdd.mapValues(this::computeFreqItemsetsSequentially)
                 .sortByKey()
                 .values();
     }
 
-    /**
-     * Returns a list of {FI frequency as the first element of the array, FI as a bit set of r1s}. <br/>
-     * Use {@link FreqItemsetAsRanksBs#extractItemset(long[])} and {@link FreqItemsetAsRanksBs#extractSupportCnt(long[])}
-     * to properly get the FI and its support from the array. <br/>
-     */
-    @SuppressWarnings("WeakerAccess")
-    public FiResultHolder computeFreqItemsetsSingleDfs(ItemsetAndTidsCollection initFis) {
+    private FiResultHolder computeFreqItemsetsSequentially(ItemsetAndTidsCollection initFis) {
         if (initFis.size() <= 1) {
             return BitsetFiResultHolder.emptyHolder();
         }
 
-        StatPrinter statPrinter = new StatPrinter(true);
+        StatPrinter statPrinter = new StatPrinter(props.isPrintIntermediateRes);
 
         initFis.sortByKm1Item();
         statPrinter.onStart(initFis);

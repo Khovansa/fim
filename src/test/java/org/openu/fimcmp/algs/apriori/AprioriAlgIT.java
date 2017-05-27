@@ -5,6 +5,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openu.fimcmp.*;
 import org.openu.fimcmp.algs.algbase.BasicOps;
@@ -21,6 +22,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Ignore
 public class AprioriAlgIT extends AlgITBase implements Serializable {
     @SuppressWarnings("FieldCanBeLocal")
     private AprioriAlg<String> apr;

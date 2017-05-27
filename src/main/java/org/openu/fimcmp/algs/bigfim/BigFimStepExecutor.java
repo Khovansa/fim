@@ -216,11 +216,12 @@ class BigFimStepExecutor {
         eclatProps.setUseDiffSets(props.isUseDiffSets);
         eclatProps.setSqueezingEnabled(props.isSqueezingEnabled);
         eclatProps.setCountingOnly(props.isCountingOnly);
+        eclatProps.setPrintIntermediateRes(props.isPrintIntermediateRes);
         eclatProps.setRankToItem(cxt.rankToItem);
 
         EclatAlg eclat = new EclatAlg(eclatProps);
         JavaRDD<FiResultHolder> resRdd = eclat.computeFreqItemsetsRdd(rKm1ToEclatInput);
-        cxt.pp("Num parts for Eclat: " + resRdd.getNumPartitions());
+        cxt.pp("Num partitions for Eclat: " + resRdd.getNumPartitions());
 
         return resRdd;
     }

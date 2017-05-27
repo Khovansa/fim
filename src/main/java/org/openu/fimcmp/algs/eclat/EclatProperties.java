@@ -11,6 +11,7 @@ public class EclatProperties implements Serializable {
     boolean isUseDiffSets;
     boolean isSqueezingEnabled;
     boolean isCountingOnly;
+    boolean isPrintIntermediateRes;
     @SuppressWarnings({"FieldCanBeLocal", "unused", "WeakerAccess"})
     String[] rankToItem;
 
@@ -33,5 +34,9 @@ public class EclatProperties implements Serializable {
 
     public void setRankToItem(String[] rankToItem) {
         this.rankToItem = rankToItem;
+    }
+
+    public void setPrintIntermediateRes(boolean printIntermediateRes) {
+        isPrintIntermediateRes = printIntermediateRes;
     }
 }
