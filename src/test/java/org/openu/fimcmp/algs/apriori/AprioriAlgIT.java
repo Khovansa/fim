@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 @Ignore
 public class AprioriAlgIT extends AlgITBase implements Serializable {
     @SuppressWarnings("FieldCanBeLocal")

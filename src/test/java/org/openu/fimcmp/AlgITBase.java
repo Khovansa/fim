@@ -6,49 +6,33 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
 import org.openu.fimcmp.algs.algbase.BasicOps;
 
-import java.util.ArrayList;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Basic class for all integration tests
  */
 @SuppressWarnings("WeakerAccess")
 public class AlgITBase {
+    private static final String TEST_DATA_DIR_SYSTEM_PROP_NAME = "TEST_DATA_DIR";
+
+    protected Path dataDir;
     protected JavaSparkContext sc;
     protected StopWatch sw;
     protected BasicOps basicOps;
 
-    protected static String tt(StopWatch sw) {
-        return "[" + sw.toString() + "] ";
-    }
-
     protected void setUpRun(boolean useKryo) throws Exception {
+        String testDataDirProp = System.getProperty(TEST_DATA_DIR_SYSTEM_PROP_NAME);
+        dataDir = (testDataDirProp != null) ? Paths.get(testDataDirProp) : null;
+
         sc = SparkContextFactory.createSparkContext(useKryo, "local");
         sw = new StopWatch();
         basicOps = new BasicOps();
     }
 
-    protected PrepStepOutputAsList prepareAsList(
-            String inputFileName, double minSupport, boolean isPersist, int numPart) {
-        String inputFile = TestDataLocation.fileStr(inputFileName);
-
-        if (!sw.isStarted()) {
-            sw.start();
-        }
-        JavaRDD<ArrayList<String>> trs = basicOps.readLinesAsSortedItemsList(inputFile, numPart, sc);
-        if (isPersist) {
-            trs = trs.persist(StorageLevel.MEMORY_ONLY_SER());
-        }
-        UsefulCounts cnts = getCounts(trs, minSupport);
-        return new PrepStepOutputAsList(trs, cnts.totalTrs, cnts.minSuppCount, cnts.numParts);
-    }
-
-    protected PrepStepOutputAsArr prepareAsArr(String inputFileName, double minSupport, boolean isPersist) {
-        return prepareAsArr(inputFileName, minSupport, isPersist, 1);
-    }
-
     protected PrepStepOutputAsArr prepareAsArr(
             String inputFileName, double minSupport, boolean isPersist, int numPart) {
-        String inputFile = TestDataLocation.fileStr(inputFileName);
+        String inputFile = fileStr(inputFileName);
 
         sw.start();
         JavaRDD<String[]> trs = BasicOps.readLinesAsSortedItemsArr(inputFile, numPart, sc);
@@ -58,6 +42,19 @@ public class AlgITBase {
         UsefulCounts cnts = getCounts(trs, minSupport);
         return new PrepStepOutputAsArr(trs, cnts.totalTrs, cnts.minSuppCount, cnts.numParts);
     }
+
+    protected void pp(Object msg) {
+        pp(sw, msg);
+    }
+
+    protected static void pp(StopWatch sw, Object msg) {
+        System.out.println(String.format("%-15s %s", tt(sw), msg));
+    }
+
+    protected static String tt(StopWatch sw) {
+        return "[" + sw.toString() + "] ";
+    }
+
 
     private <T> UsefulCounts getCounts(JavaRDD<T> trs, double minSupport) {
         final int numParts = trs.getNumPartitions();
@@ -69,12 +66,27 @@ public class AlgITBase {
         return new UsefulCounts(totalTrs, minSuppCount, numParts);
     }
 
-    protected void pp(Object msg) {
-        pp(sw, msg);
+    private String fileStr(String fileName) {
+        return file(fileName).toString();
     }
 
-    public static void pp(StopWatch sw, Object msg) {
-        System.out.println(String.format("%-15s %s", tt(sw), msg));
+    private Path file(String fileName) {
+        Path res = Paths.get(fileName);
+
+        if (!res.isAbsolute()) {
+            if (dataDir == null) {
+                String msg = String.format("Input file '%s' is relative and no '%s' system property is defined",
+                        fileName, TEST_DATA_DIR_SYSTEM_PROP_NAME);
+                throw new IllegalArgumentException(msg);
+            }
+            res = dataDir.resolve(res);
+        }
+
+        if (!res.toFile().exists()) {
+            throw new IllegalArgumentException(String.format("File '%s' does not exist", res));
+        }
+
+        return res;
     }
 
     private static class UsefulCounts {
@@ -86,16 +98,6 @@ public class AlgITBase {
             this.totalTrs = totalTrs;
             this.minSuppCount = minSuppCount;
             this.numParts = numParts;
-        }
-    }
-
-    protected static class PrepStepOutputAsList extends UsefulCounts {
-        public final JavaRDD<ArrayList<String>> trs;
-
-        public PrepStepOutputAsList(
-                JavaRDD<ArrayList<String>> trs, long totalTrs, long minSuppCount, int numParts) {
-            super(totalTrs, minSuppCount, numParts);
-            this.trs = trs;
         }
     }
 
