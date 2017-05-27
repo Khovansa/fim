@@ -8,6 +8,7 @@ import org.openu.fimcmp.algs.algbase.AlgBase;
 import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 import org.openu.fimcmp.algs.bigfim.BigFimCmdLineOptionsParser;
 import org.openu.fimcmp.algs.fin.FinCmdLineOptionsParser;
+import org.openu.fimcmp.algs.fpgrowth.FpGrowthCmdLineOptionsParser;
 import org.openu.fimcmp.util.Assert;
 
 import java.util.Map;
@@ -25,6 +26,7 @@ public class CmdLineRunner {
         Map<String, ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase>> res = new TreeMap<>();
         res.put("BIG_FIM", new BigFimCmdLineOptionsParser());
         res.put("FIN", new FinCmdLineOptionsParser());
+        res.put("FP_GROWTH", new FpGrowthCmdLineOptionsParser());
         return res;
     }
 

@@ -88,6 +88,7 @@ public class FinAlg extends AlgBase<FinAlgProperties, Void> {
 
         JavaRDD<String[]> trs = readInput(sc, sw);
 
+        pp(sw, "Starting FI computation");
         res.f1Context = computeF1Context(trs, sw);
         if (props.isPrintIntermediateRes) {
             res.f1Context.printRankToItem();

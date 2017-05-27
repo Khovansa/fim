@@ -43,6 +43,7 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties, BigFimResult> {
     public BigFimResult run(JavaSparkContext sc, StopWatch sw) throws Exception {
         JavaRDD<String[]> trs = readInput(sc, sw);
 
+        pp(sw, "Starting FI computation");
         BigFimResult res = computeFis(trs, sw);
         res.printCounts(sw);
 

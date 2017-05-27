@@ -42,6 +42,10 @@ public abstract class AlgBase<P extends CommonAlgProperties, R> implements Seria
         print(String.format("%-15s %s", tt(sw), msg));
     }
 
+    public static void print(Object msg) {
+        System.out.println(msg);
+    }
+
     public static JavaSparkContext createSparkContext(boolean useKryo, String sparkMasterUrl, StopWatch sw) {
         pp(sw, "Starting the Spark context");
         JavaSparkContext sc = SparkContextFactory.createSparkContext(useKryo, sparkMasterUrl);
@@ -63,6 +67,7 @@ public abstract class AlgBase<P extends CommonAlgProperties, R> implements Seria
         pp(sw, "Start reading " + inputFile);
         JavaRDD<ArrayList<String>> res = BasicOps.readLinesAsSortedItemsList(inputFile, props.inputNumParts, sc);
         if (props.isPersistInput) {
+            pp(sw, "Persisting the original input");
             res = res.persist(StorageLevel.MEMORY_ONLY_SER());
         }
         pp(sw, "Done reading " + inputFile);
@@ -85,7 +90,7 @@ public abstract class AlgBase<P extends CommonAlgProperties, R> implements Seria
     protected List<FreqItemset> printAllItemsets(List<FreqItemset> allFrequentItemsets) {
         allFrequentItemsets = allFrequentItemsets.stream().
                 sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
-        allFrequentItemsets.forEach(System.out::println);
+        allFrequentItemsets.forEach(AlgBase::print);
         return allFrequentItemsets;
     }
 
@@ -97,12 +102,6 @@ public abstract class AlgBase<P extends CommonAlgProperties, R> implements Seria
         pp(sw, "Min support: " + minSuppCount);
 
         return new TrsCount(totalTrs, minSuppCount);
-    }
-
-
-
-    private static void print(String msg) {
-        System.out.println(msg);
     }
 
     private static String tt(StopWatch sw) {

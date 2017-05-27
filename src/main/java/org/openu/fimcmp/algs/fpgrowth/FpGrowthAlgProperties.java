@@ -5,12 +5,13 @@ import org.openu.fimcmp.algs.algbase.CommonAlgProperties;
 /**
  * Holds all the properties for FpGrowth algorithm.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"WeakerAccess"})
 public class FpGrowthAlgProperties extends CommonAlgProperties {
 
     public FpGrowthAlgProperties(double minSupp) {
         super(minSupp);
     }
 
+    public boolean isCountingOnly = true;
     public boolean isPrintAllFis = false;
 }
