@@ -20,6 +20,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
     private static final String PERSIST_INPUT_OPT = "persist-input";
     private static final String PRINT_PART_OPT = "print-intermediate-res";
     private static final String PRINT_FIS_OPT = "print-all-fis";
+    private static final String SLEEP_OPT = "sleep-seconds";
 
     @Override
     public CmdLineOptions<P> parseCmdLine(String[] args) throws ParseException {
@@ -115,6 +116,9 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
                 "Whether to only count the FIs instead of actually collecting them");
         options.addOption(null, PRINT_FIS_OPT, true, "Whether to print all found frequent itemsets");
 
+        options.addOption(null, SLEEP_OPT, true,
+                "Number of seconds to sleep after the computation is finished to allow inspection on Spark console");
+
         return options;
     }
 
@@ -146,6 +150,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
             throw new IllegalArgumentException(msg);
         }
 
-        return new CmdLineOptions<>(sparkMasterUrl, isUseKrio, inputFileName, algProps);
+        int sleepSeconds = getIntVal(line, SLEEP_OPT, 0);
+        return new CmdLineOptions<>(sparkMasterUrl, isUseKrio, inputFileName, algProps, sleepSeconds);
     }
 }

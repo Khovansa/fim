@@ -66,6 +66,11 @@ public class CmdLineRunner {
 
         AlgBase alg = cmdLineOptionsParser.createAlg(runProps);
         alg.run(sc, sw);
+
+        if (runProps.sleepSecs > 0) {
+            AlgBase.print(String.format("Computation completed, sleeping for %s seconds as instructed", runProps.sleepSecs));
+            Thread.sleep(1000 * runProps.sleepSecs);
+        }
     }
 
 

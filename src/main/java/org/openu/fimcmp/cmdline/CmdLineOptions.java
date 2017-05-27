@@ -18,13 +18,15 @@ public class CmdLineOptions<P extends CommonAlgProperties> {
     public final boolean isUseKrio;
     private final String inputFile;
     public final P algProps;
+    final int sleepSecs;
 
     @SuppressWarnings("WeakerAccess")
-    public CmdLineOptions(String sparkMasterUrl, boolean isUseKrio, String inputFileName, P algProps) {
+    public CmdLineOptions(String sparkMasterUrl, boolean isUseKrio, String inputFileName, P algProps, int sleepSecs) {
         this.sparkMasterUrl = sparkMasterUrl;
         this.isUseKrio = isUseKrio;
         this.inputFile = findInputFile(inputFileName);
         this.algProps = algProps;
+        this.sleepSecs = sleepSecs;
     }
 
     public String getInputFile() {
