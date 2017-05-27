@@ -246,7 +246,7 @@ public class TidMergeSet implements Serializable {
         tidSet[SIZE_IND] = BitArrays.cardinality(tidSet, BITSET_START_IND);
     }
 
-    static long[] describeAsList(long[] tidSet) {
+    public static long[] describeAsList(long[] tidSet) {
         long[] res = new long[4];
         res[0] = tidSet[RANK_IND];
         if (tidSet.length > 1) {

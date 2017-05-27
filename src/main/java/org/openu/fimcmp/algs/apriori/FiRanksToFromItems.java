@@ -33,7 +33,7 @@ public class FiRanksToFromItems implements Serializable {
         return maxK;
     }
 
-    List<List<String>> toOrigItemsetsForDebug(List<long[]> tidMergeSets, int k, String[] r1ToItem, int maxItemsets) {
+    public List<List<String>> toOrigItemsetsForDebug(List<long[]> tidMergeSets, int k, String[] r1ToItem, int maxItemsets) {
         maxItemsets = Math.min(maxItemsets, tidMergeSets.size());
         List<List<String>> res = new ArrayList<>(maxItemsets+1);
         res.add(Collections.singletonList(String.format("Total=%s", tidMergeSets.size())));
@@ -43,7 +43,7 @@ public class FiRanksToFromItems implements Serializable {
         return res;
     }
 
-    List<String> getOrigItemsetByRank(int rankK, int k, String[] r1ToItem) {
+    public List<String> getOrigItemsetByRank(int rankK, int k, String[] r1ToItem) {
         List<String> res = new ArrayList<>(maxK);
         addToResultOrigItemsetByRank(res, rankK, k, r1ToItem);
         return res;

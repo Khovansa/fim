@@ -1,4 +1,4 @@
-package org.openu.fimcmp.algs.apriori;
+package org.openu.fimcmp.integration;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -7,8 +7,8 @@ import org.apache.spark.storage.StorageLevel;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.openu.fimcmp.*;
 import org.openu.fimcmp.algs.algbase.BasicOps;
+import org.openu.fimcmp.algs.apriori.*;
 import org.openu.fimcmp.algs.eclat.EclatAlg;
 import org.openu.fimcmp.algs.eclat.EclatProperties;
 import org.openu.fimcmp.itemset.FreqItemset;
@@ -45,7 +45,7 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
 
     private void runIt() throws Exception {
         final Integer maxEclatNumParts = 1;
-        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.4, false, 1);
+        final PrepStepOutputAsArr prep = prepareAsArr("pumsb.dat", 0.8, false, 1);
 //        final PrepStepOutputAsArr prep = prepareAsArr("my.small.txt", 0.3, false, 1);
         apr = new AprioriAlg<>(prep.minSuppCount);
 

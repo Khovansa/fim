@@ -1,9 +1,10 @@
-package org.openu.fimcmp;
+package org.openu.fimcmp.integration;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
+import org.openu.fimcmp.SparkContextFactory;
 import org.openu.fimcmp.algs.algbase.BasicOps;
 
 import java.nio.file.Path;

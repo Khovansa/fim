@@ -22,7 +22,7 @@ public class BitsetFiResultHolderTest {
         h1 = h1.uniteWith(h2);
         h1 = h1.uniteWith(h3);
 
-        assertThat(h1.size(), is(3));
+        assertThat(h1.size(), is(3L));
         assertThat(h1.getSupportForTest(new int[]{1, 2}), is(1));
         assertThat(h1.getSupportForTest(new int[]{2, 3}), is(9));
         assertThat(h1.getSupportForTest(new int[]{2, 3, 4}), is(11));
@@ -46,7 +46,7 @@ public class BitsetFiResultHolderTest {
         h1 = h1.uniteWith(h2);
         h1 = h1.uniteWith(h3);
 
-        assertThat(h1.size(), is(2));
+        assertThat(h1.size(), is(2L));
         assertThat(h1.getSupportForTest(new int[]{2, 3}), is(9));
         assertThat(h1.getSupportForTest(new int[]{2, 3, 4}), is(10));
         //make sure the other bitsets have not changed:
