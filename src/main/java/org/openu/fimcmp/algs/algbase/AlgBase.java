@@ -87,7 +87,7 @@ public abstract class AlgBase<P extends CommonAlgProperties, R> implements Seria
         return new F1Context(apr, sortedF1, cnts, sw);
     }
 
-    protected List<FreqItemset> printAllItemsets(List<FreqItemset> allFrequentItemsets) {
+    public static List<FreqItemset> printAllItemsets(List<FreqItemset> allFrequentItemsets) {
         allFrequentItemsets = allFrequentItemsets.stream().
                 sorted(FreqItemset::compareForNiceOutput2).collect(Collectors.toList());
         allFrequentItemsets.forEach(AlgBase::print);

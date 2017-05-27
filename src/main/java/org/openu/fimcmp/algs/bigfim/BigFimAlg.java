@@ -45,7 +45,7 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties, BigFimResult> {
 
         pp(sw, "Starting FI computation");
         BigFimResult res = computeFis(trs, sw);
-        res.printCounts(sw);
+        res.outputResults(props.isCountingOnly, props.isPrintAllFis, sw);
 
         return res;
     }

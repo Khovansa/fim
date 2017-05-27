@@ -13,6 +13,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.openu.fimcmp.algs.algbase.AlgBase.pp;
+import static org.openu.fimcmp.algs.algbase.AlgBase.print;
+
 /**
  * Holds the result of BigFim computation
  */
@@ -32,6 +35,25 @@ public class BigFimResult {
         this.rankToItem = rankToItem;
         this.aprioriFis = aprioriFis;
         this.optionalEclatFis = optionalEclatFis;
+    }
+
+    public void outputResults(boolean isCntOnly, boolean printAllFis, StopWatch sw) {
+        if (isCntOnly) {
+            printCounts(sw);
+        } else {
+            List<FreqItemset> aprioriFis = getAllAprioriFis();
+            List<FreqItemset> eclatFis = getEclatFis(Long.MAX_VALUE, false);
+            final int totalSize = aprioriFis.size() + eclatFis.size();
+            printCounts(sw, aprioriFis.size(), eclatFis.size());
+
+            if (printAllFis) {
+                List<FreqItemset> allFrequentItemsets = new ArrayList<>(totalSize);
+                allFrequentItemsets.addAll(aprioriFis);
+                allFrequentItemsets.addAll(eclatFis);
+                allFrequentItemsets = BigFimAlg.printAllItemsets(allFrequentItemsets);
+                pp(sw, "Total results: " + allFrequentItemsets.size());
+            }
+        }
     }
 
     public long getTotalResultsCount() {
@@ -84,8 +106,7 @@ public class BigFimResult {
     public void printCounts(StopWatch sw) {
         long aprioriCnt = getAprioriResCount();
         long eclatCnt = getEclatResCount();
-        BigFimAlg.pp(sw, String.format(
-                "Total results: %s (Apriori: %s, Eclat: %s)", (aprioriCnt + eclatCnt), aprioriCnt, eclatCnt));
+        printCounts(sw, aprioriCnt, eclatCnt);
     }
 
     public void printFreqItemsets(List<FreqItemset> fis, int maxRes) {
@@ -102,7 +123,8 @@ public class BigFimResult {
         }
     }
 
-    private static void print(String msg) {
-        System.out.println(msg);
+    private static void printCounts(StopWatch sw, long aprioriCnt, long eclatCnt) {
+        pp(sw, String.format(
+                "Total results: %s (Apriori: %s, Eclat: %s)", (aprioriCnt + eclatCnt), aprioriCnt, eclatCnt));
     }
 }
