@@ -14,8 +14,6 @@ public class FinCmdLineOptionsParser extends AbstractCmdLineOptionsParser<FinAlg
     private static final String RUN_TYPE_ALLOWED_VALUES = StringUtils.join(FinAlgProperties.RunType.values(), " | ");
     private static final String RUN_TYPE_OPT = "run-type";
     private static final String ITEMSET_SEQ_LEN_OPT = "itemset-len-for-seq-processing";
-    private static final String CNT_ONLY_OPT = "cnt-only";
-    private static final String PRINT_FIS_OPT = "print-all-fis";
 
     @Override
     public FinAlg createAlg(CmdLineOptions<? extends CommonAlgProperties> cmdLineOptions) {
@@ -28,11 +26,6 @@ public class FinCmdLineOptionsParser extends AbstractCmdLineOptionsParser<FinAlg
 
         options.addOption(null, ITEMSET_SEQ_LEN_OPT, true,
                 "The required itemset length of the nodes processed sequentially on the driver machine, e.g. '1' for items");
-
-        options.addOption(null, CNT_ONLY_OPT, true,
-                "Whether to only count the FIs instead of actually collecting them");
-
-        options.addOption(null, PRINT_FIS_OPT, true, "Whether to print all found frequent itemsets");
     }
 
     @Override
@@ -48,15 +41,6 @@ public class FinCmdLineOptionsParser extends AbstractCmdLineOptionsParser<FinAlg
 
         algProps.requiredItemsetLenForSeqProcessing = getIntVal(
                 line, ITEMSET_SEQ_LEN_OPT, algProps.requiredItemsetLenForSeqProcessing);
-
-        algProps.isCountingOnly = getBooleanVal(line, CNT_ONLY_OPT, algProps.isCountingOnly);
-        algProps.isPrintAllFis = getBooleanVal(line, PRINT_FIS_OPT, algProps.isPrintAllFis);
-        if (algProps.isPrintAllFis && algProps.isCountingOnly) {
-            @SuppressWarnings("ConstantConditions")
-            String msg = String.format("Contradicting options '--%s %s' and '--%s %s'",
-                    CNT_ONLY_OPT, algProps.isCountingOnly, PRINT_FIS_OPT, algProps.isPrintAllFis);
-            throw new IllegalArgumentException(msg);
-        }
 
         return algProps;
     }

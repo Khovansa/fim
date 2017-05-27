@@ -21,7 +21,4 @@ public class FinAlgProperties extends CommonAlgProperties {
      * item + its sons representing frequent pairs.
      */
     public int requiredItemsetLenForSeqProcessing = 1;
-
-    public boolean isCountingOnly = true;
-    public boolean isPrintAllFis = false;
 }

@@ -25,11 +25,6 @@ public class BigFimAlgProperties extends CommonAlgProperties {
     //Eclat
     public boolean isUseDiffSets = true;
     public boolean isSqueezingEnabled = false;
-    /**
-     * Impossible to apply it to the entire algorithm, since Apriori can't proceed with just counting: <br/>
-     * Apriori needs Fk-1 in order to compute Fk
-     */
-    public boolean isCountingOnly = true;
     public Integer maxEclatNumParts;
 
     public BigFimAlgProperties(double minSupp, int prefixLenToStartEclat) {

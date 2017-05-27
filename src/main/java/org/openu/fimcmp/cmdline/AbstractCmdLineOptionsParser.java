@@ -19,6 +19,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
     private static final String INPUT_PARTS_NUM_OPT = "input-parts-num";
     private static final String PERSIST_INPUT_OPT = "persist-input";
     private static final String PRINT_PART_OPT = "print-intermediate-res";
+    private static final String PRINT_FIS_OPT = "print-all-fis";
 
     @Override
     public CmdLineOptions<P> parseCmdLine(String[] args) throws ParseException {
@@ -42,6 +43,9 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
 
     protected abstract P createAlgProperties(CommandLine line, double minSupp);
 
+    protected String getCntOnlyOptionName() {
+        return "cnt-only";
+    }
 
     //Services for sub-classes:
     protected static int getIntVal(CommandLine line, String opt, int defaultVal) {
@@ -104,8 +108,12 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
 
         options.addOption(null, INPUT_PARTS_NUM_OPT, true, "Number of partitions to read the input file");
         options.addOption(null, PERSIST_INPUT_OPT, true, "Whether to persist the input RDD");
+
         options.addOption(null, PRINT_PART_OPT, true,
                 "Whether to print F1, F2, ..., and also some progress info");
+        options.addOption(null, getCntOnlyOptionName(), true,
+                "Whether to only count the FIs instead of actually collecting them");
+        options.addOption(null, PRINT_FIS_OPT, true, "Whether to print all found frequent itemsets");
 
         return options;
     }
@@ -126,7 +134,17 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
 
         algProps.inputNumParts = getIntVal(line, INPUT_PARTS_NUM_OPT, algProps.inputNumParts);
         algProps.isPersistInput = getBooleanVal(line, PERSIST_INPUT_OPT, algProps.isPersistInput);
+
         algProps.isPrintIntermediateRes = getBooleanVal(line, PRINT_PART_OPT, algProps.isPrintIntermediateRes);
+        final String cntOnlyOptionName = getCntOnlyOptionName();
+        algProps.isCountingOnly = getBooleanVal(line, cntOnlyOptionName, algProps.isCountingOnly);
+        algProps.isPrintAllFis = getBooleanVal(line, PRINT_FIS_OPT, algProps.isPrintAllFis);
+        if (algProps.isPrintAllFis && algProps.isCountingOnly) {
+            @SuppressWarnings("ConstantConditions")
+            String msg = String.format("Contradicting options '--%s %s' and '--%s %s'",
+                    cntOnlyOptionName, algProps.isCountingOnly, PRINT_FIS_OPT, algProps.isPrintAllFis);
+            throw new IllegalArgumentException(msg);
+        }
 
         return new CmdLineOptions<>(sparkMasterUrl, isUseKrio, inputFileName, algProps);
     }

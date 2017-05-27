@@ -15,7 +15,6 @@ public class BigFimCmdLineOptionsParser extends AbstractCmdLineOptionsParser<Big
     private static final String CURR_TO_PREV_THR_OPT = "curr-to-prev-res-ratio-threshold";
     private static final String ECLAT_DIFF_SETS_OPT = "eclat-use-diff-sets";
     private static final String ECLAT_SQUEEZE_OPT = "eclat-use-squeezing";
-    private static final String ECLAT_CNT_ONLY_OPT = "eclat-cnt-only";
     private static final String ECLAT_PARTS_NUM_OPT = "eclat-parts-num";
 
     @Override
@@ -32,7 +31,6 @@ public class BigFimCmdLineOptionsParser extends AbstractCmdLineOptionsParser<Big
 
         options.addOption(null, ECLAT_DIFF_SETS_OPT, true, "Eclat: whether to enable the diff-sets");
         options.addOption(null, ECLAT_SQUEEZE_OPT, true, "Eclat: whether to enable the squeezing");
-        options.addOption(null, ECLAT_CNT_ONLY_OPT, true, "Whether to only count the results in Eclat");
         options.addOption(null, ECLAT_PARTS_NUM_OPT, true, "Number of partitions to use for Eclat");
     }
 
@@ -46,9 +44,13 @@ public class BigFimCmdLineOptionsParser extends AbstractCmdLineOptionsParser<Big
 
         algProps.isUseDiffSets = getBooleanVal(line, ECLAT_DIFF_SETS_OPT, algProps.isUseDiffSets);
         algProps.isSqueezingEnabled = getBooleanVal(line, ECLAT_SQUEEZE_OPT, algProps.isSqueezingEnabled);
-        algProps.isCountingOnly = getBooleanVal(line, ECLAT_CNT_ONLY_OPT, algProps.isCountingOnly);
         algProps.maxEclatNumParts = getOptIntVal(line, ECLAT_PARTS_NUM_OPT, algProps.maxEclatNumParts);
 
         return algProps;
+    }
+
+    @Override
+    protected String getCntOnlyOptionName() {
+        return "eclat-cnt-only";
     }
 }

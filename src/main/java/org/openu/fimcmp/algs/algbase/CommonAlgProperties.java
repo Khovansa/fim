@@ -25,6 +25,14 @@ public class CommonAlgProperties implements Serializable {
 
     public boolean isPrintIntermediateRes = true;
 
+    /**
+     * Note: it's impossible to apply it to the entire algorithm if it uses Apriori, as Apriori can't proceed with just counting: <br/>
+     * Apriori needs Fk-1 in order to compute Fk
+     */
+    public boolean isCountingOnly = true;
+
+    public boolean isPrintAllFis = false;
+
     protected CommonAlgProperties(double minSupp) {
         this.minSupp = minSupp;
     }
