@@ -39,6 +39,10 @@ public class CmdLineOptions<P extends CommonAlgProperties> {
     }
 
     private static String findInputFile(String inputFileName) {
+        if (inputFileName.contains("://")) {
+            return inputFileName; //protocols such as s3:// or hdfs:// - no standard checks, relying on Spark to access them
+        }
+
         String inputFile;
         if (Paths.get(inputFileName).isAbsolute()) {
             inputFile = inputFileName;

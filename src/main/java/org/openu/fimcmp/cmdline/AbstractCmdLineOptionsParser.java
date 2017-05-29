@@ -128,7 +128,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
     }
 
     private CmdLineOptions<P> cmdLineToOptions(CommandLine line) {
-        String sparkMasterUrl = line.getOptionValue(MASTER_URL_OPT, "spark://192.168.1.68:7077");
+        String sparkMasterUrl = line.getOptionValue(MASTER_URL_OPT, "");
         boolean isUseKrio = line.hasOption(USE_KRIO_OPT);
         String inputFileName = line.getOptionValue(INPUT_FILE_OPT);
 

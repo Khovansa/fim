@@ -1,5 +1,6 @@
 package org.openu.fimcmp;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.openu.fimcmp.algs.algbase.AlgBase;
@@ -24,7 +25,9 @@ public class SparkContextFactory {
         SparkConf conf = new SparkConf().setAppName("FI Comparison");
 //        conf.setMaster("local");
 //        conf.setMaster("spark://192.168.1.68:7077");
-        conf.setMaster(sparkMasterUrl);
+        if (!StringUtils.isBlank(sparkMasterUrl)) {
+            conf.setMaster(sparkMasterUrl);
+        }
 
         conf.set("spark.rdd.compress", "true");
 
@@ -62,7 +65,7 @@ public class SparkContextFactory {
             conf.registerKryoClasses(FpGrowthAlg.getClassesToRegister());
         }
 
-        conf.set("spark.driver.memory", "1200m");
+//        conf.set("spark.driver.memory", "1200m");
 
         JavaSparkContext sc = new JavaSparkContext(conf);
 
