@@ -1,0 +1,12 @@
+[
+  {
+    "Classification": "spark-defaults",
+    "Properties": {
+      "spark.app.name": "fim-cmp",
+      "spark.driver.cores": 1,
+      "spark.driver.memory": "2G",
+      "spark.executor.cores": 1,
+      "spark.executor.memory": "2G"
+    }
+  }
+]
