@@ -47,14 +47,15 @@ public class CmdLineRunner {
     }
 
     public void run(String[] args) throws Exception {
+        String algName = args[0];
         ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase> cmdLineOptionsParser =
-                findCmdLineOptionsParser(args);
+                findCmdLineOptionsParser(algName, args);
         if (cmdLineOptionsParser == null) {
             return; //--help
         }
 
         String[] algArgs = ArrayUtils.subarray(args, 1, args.length);
-        CmdLineOptions<? extends CommonAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(algArgs);
+        CmdLineOptions<? extends CommonAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(algArgs, algName);
         if (runProps == null) {
             return; //<alg> --help, i.e. help on alg-specific options
         }
@@ -74,8 +75,8 @@ public class CmdLineRunner {
     }
 
 
-    private ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase> findCmdLineOptionsParser(String[] args) {
-        if (args.length == 0 || "--help".equals(args[0]) || "-h".equals(args[0])) {
+    private ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase> findCmdLineOptionsParser(String algName, String[] args) {
+        if (args.length == 0 || "--help".equals(args[0]) || "-h".equals(algName)) {
             String algNameExample = algNameToAlgOptionsParser.keySet().iterator().next();
             print(String.format("" +
                             "Usage: algorithm-name options \n\talgorithm-name = %s\n" +
@@ -84,9 +85,9 @@ public class CmdLineRunner {
             return null;
         }
 
-        ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase> res = algNameToAlgOptionsParser.get(args[0]);
+        ICmdLineOptionsParser<? extends CommonAlgProperties, ? extends AlgBase> res = algNameToAlgOptionsParser.get(algName);
         if (res == null) {
-            String msg = String.format("Unknown algorithm '%s', supported ones are: %s", args[0], getSupportedAlgsAsString());
+            String msg = String.format("Unknown algorithm '%s', supported ones are: %s", algName, getSupportedAlgsAsString());
             throw new IllegalArgumentException(msg);
         }
 

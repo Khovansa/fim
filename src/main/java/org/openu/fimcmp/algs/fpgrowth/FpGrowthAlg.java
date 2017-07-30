@@ -22,7 +22,7 @@ public class FpGrowthAlg extends AlgBase<FpGrowthAlgProperties, FPGrowthModel<St
     //--spark-master-url local --input-file-name pumsb.dat --min-supp 0.8 --input-parts-num 1 --persist-input true --cnt-only true --print-all-fis false
     public static void main(String[] args) throws Exception {
         FpGrowthCmdLineOptionsParser cmdLineOptionsParser = new FpGrowthCmdLineOptionsParser();
-        CmdLineOptions<FpGrowthAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(args);
+        CmdLineOptions<FpGrowthAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(args, args[0]);
 
         if (runProps == null) {
             return; //help

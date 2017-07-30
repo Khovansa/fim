@@ -23,7 +23,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
     private static final String SLEEP_OPT = "sleep-seconds";
 
     @Override
-    public CmdLineOptions<P> parseCmdLine(String[] args) throws ParseException {
+    public CmdLineOptions<P> parseCmdLine(String[] args, String algName) throws ParseException {
         Options options = createCommonOptions();
         addAlgSpecificOptions(options);
 
@@ -31,7 +31,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
         CommandLine line = parser.parse(options, args);
 
         if (line.hasOption(HELP_OPT)) {
-            printHelp(options);
+            printHelp(options, algName);
             return null;
         }
 
@@ -122,9 +122,9 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
         return options;
     }
 
-    private void printHelp(Options options) {
+    private void printHelp(Options options, String algName) {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("ant", options);
+        formatter.printHelp(algName, options);
     }
 
     private CmdLineOptions<P> cmdLineToOptions(CommandLine line) {

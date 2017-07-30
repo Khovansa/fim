@@ -16,7 +16,7 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties, BigFimResult> {
 
     public static void main(String[] args) throws Exception {
         BigFimCmdLineOptionsParser cmdLineOptionsParser = new BigFimCmdLineOptionsParser();
-        CmdLineOptions<BigFimAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(args);
+        CmdLineOptions<BigFimAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(args, args[0]);
         if (runProps == null) {
             return; //help
         }

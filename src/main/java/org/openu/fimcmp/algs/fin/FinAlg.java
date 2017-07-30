@@ -26,7 +26,7 @@ public class FinAlg extends AlgBase<FinAlgProperties, Void> {
     //--spark-master-url local --input-file-name pumsb.dat --min-supp 0.8 --input-parts-num 1 --persist-input true --run-type PAR_SPARK --itemset-len-for-seq-processing 1 --cnt-only true --print-intermediate-res true --print-all-fis false
     public static void main(String[] args) throws Exception {
         FinCmdLineOptionsParser cmdLineOptionsParser = new FinCmdLineOptionsParser();
-        CmdLineOptions<FinAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(args);
+        CmdLineOptions<FinAlgProperties> runProps = cmdLineOptionsParser.parseCmdLine(args, args[0]);
         if (runProps == null) {
             return; //help
         }
