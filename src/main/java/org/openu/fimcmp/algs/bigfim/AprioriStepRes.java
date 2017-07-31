@@ -29,7 +29,7 @@ class AprioriStepRes {
         this.fkAsArrays = fkAsArrays;
         this.prevSizeAllRanks = prevSizeAllRanks;
 
-        this.fk = cxt.apr.fkAsArraysToRankPairs(fkAsArrays);
+        this.fk = cxt.apr.fkAsArraysToFilteredRankPairs(fkAsArrays);
         this.currSizeRanks = CurrSizeFiRanks.construct(this.fk, cxt.totalFreqItems, fkm1Size);
         this.currSizeAllRanks = prevSizeAllRanks.toNextSize(currSizeRanks);
     }

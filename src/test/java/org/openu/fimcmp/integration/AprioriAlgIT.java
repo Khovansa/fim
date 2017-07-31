@@ -70,7 +70,7 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
 
         List<int[]> f2AsArrays = apr.computeF2_Part(filteredTrs, totalFreqItems);
         pp("F2 as arrays size: " + f2AsArrays.size());
-        List<int[]> f2 = apr.fkAsArraysToRankPairs(f2AsArrays);
+        List<int[]> f2 = apr.fkAsArraysToFilteredRankPairs(f2AsArrays);
         pp("F2 size: " + f2.size());
         FiRanksToFromItems fiRanksToFromItemsR1 = new FiRanksToFromItems();
         List<FreqItemset> f2Res =
@@ -88,7 +88,7 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
                 fiRanksToFromItemsR2, totalFreqItems, f2.size());
         List<int[]> f3AsArrays = apr.computeFk_Part(3, ranks1And2, f3GenHelper);
         pp("F3 as arrays size: " + f3AsArrays.size());
-        List<int[]> f3 = apr.fkAsArraysToRankPairs(f3AsArrays);
+        List<int[]> f3 = apr.fkAsArraysToFilteredRankPairs(f3AsArrays);
         pp("F3 size: " + f3.size());
         List<FreqItemset> f3Res = apr.fkAsArraysToResItemsets(f3AsArrays, rankToItem, fiRanksToFromItemsR2);
         f3Res = f3Res.stream().sorted((fi1, fi2) -> Integer.compare(fi2.freq, fi1.freq)).collect(Collectors.toList());
@@ -147,7 +147,7 @@ public class AprioriAlgIT extends AlgITBase implements Serializable {
 //        pp("zzz");
 //        List<int[]> f4AsArrays = apr.computeFk_Part(4, ranks1And3, preprocessedF3);
 //        pp("F4 as arrays size: "+f4AsArrays.size());
-//        List<int[]> f4 = apr.fkAsArraysToRankPairs(f4AsArrays);
+//        List<int[]> f4 = apr.fkAsArraysToFilteredRankPairs(f4AsArrays);
 //        pp("F4 size: "+f4.size());
 //        List<FreqItemset<String>> f4Res =
 //          apr.fkAsArraysToResItemsets(f4AsArrays, itemToRank, new new FiRanksToFromItems(preprocessedF3, preprocessedF2));

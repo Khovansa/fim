@@ -73,6 +73,11 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
                 .map(t -> t._1).collect(Collectors.toList());
     }
 
+    /**
+     * Compute a mapping 2-itemset to count. <br/>
+     * The infrequent 2-itemsets are not yet filtered out. <br/>
+     * See {@link #countArrToCols(int[][], int)} for details on the returned object
+     */
     public List<int[]> computeF2_Part(JavaRDD<int[]> filteredTrs, int totalFreqItems) {
         int[][] candToCount = filteredTrs
                 .mapPartitions(trIt -> candidateFisGenerator.countCands2_Part(trIt, totalFreqItems))
@@ -81,6 +86,11 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return countArrToCols(candToCount, totalFreqItems);
     }
 
+    /**
+     * Compute a mapping k-itemset to count. <br/>
+     * The infrequent k-itemsets are not yet filtered out. <br/>
+     * See {@link #countArrToCols(int[][], int)} for details on the returned object
+     */
     public List<int[]> computeFk_Part(
             int k, JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, NextSizeItemsetGenHelper genHelper) {
 //        rangePartitioner = new RangePartitioner(50, pairRdd)
@@ -92,6 +102,10 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return countArrToCols(candToCount, totalFreqItems);
     }
 
+    /**
+     * @return (k_itemset to count) mapping as a list of 'columns'. <br/>
+     * A 'column' = array whose first element is a frequent item rank, and the rest is a mapping ((k-1)-FI rank to count)
+     */
     private List<int[]> countArrToCols(int[][] candToCount, int totalFreqItems) {
         List<int[]> res = new ArrayList<>(totalFreqItems);
         for (int item = 0; item < totalFreqItems; ++item) {
@@ -106,12 +120,12 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
 
     public JavaRDD<Tuple2<int[], long[]>> toRddOfRanks1And2(
             JavaRDD<int[]> filteredTrs, CurrSizeFiRanks preprocessedF2) {
-        return filteredTrs.map(tr -> candidateFisGenerator.toSortedRanks1And2(tr, preprocessedF2));
+        return filteredTrs.map(tr -> candidateFisGenerator.toSortedRanks1AndBitArrayOfRanks2(tr, preprocessedF2));
     }
 
     public JavaRDD<Tuple2<int[], long[]>> toRddOfRanks1AndK(
             JavaRDD<Tuple2<int[], long[]>> ranks1AndKm1, CurrSizeFiRanks preprocessedFk) {
-        return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndK(row._1, row._2, preprocessedFk));
+        return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndBitArrayOfRanksK(row._1, row._2, preprocessedFk));
     }
 
     public JavaRDD<long[][]> computeCurrRankToTidBitSet_Part(
@@ -213,7 +227,11 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return res;
     }
 
-    public List<int[]> fkAsArraysToRankPairs(List<int[]> cols) {
+    /**
+     * Filter out infrequent candidates and convert 'columns' to triplets (frequent item rank, (k-1)-FI rank, count). <br/>
+     * See {@link AprCandidateFisGenerator#fkColToPairs(int[], long)} for details.
+     */
+    public List<int[]> fkAsArraysToFilteredRankPairs(List<int[]> cols) {
         List<int[]> res = new ArrayList<>(cols.size() * cols.size());
         for (int[] col : cols) {
             res.addAll(candidateFisGenerator.fkColToPairs(col, minSuppCount));

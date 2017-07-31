@@ -12,9 +12,14 @@ import java.util.*;
  */
 class AprCandidateFisGenerator implements Serializable {
 
+    /**
+     * Assumes that each transaction is represented as a sorted frequent item ranks (the more frequent ranks first)
+     *
+     * @return a mapping (frequent item rank, frequent item rank) -> count
+     */
     Iterator<int[][]> countCands2_Part(Iterator<int[]> sortedTrIt, int totalFreqItems) {
         int[][] candToCount = new int[totalFreqItems][totalFreqItems];
-        while(sortedTrIt.hasNext()) {
+        while (sortedTrIt.hasNext()) {
             int[] sortedTr = sortedTrIt.next();
             final int trSize = sortedTr.length;
             if (trSize <= 1) {
@@ -24,7 +29,7 @@ class AprCandidateFisGenerator implements Serializable {
             for (int ii = 0; ii < trSize - 1; ++ii) {
                 int item1 = sortedTr[ii];
                 int[] col = candToCount[item1];
-                for (int jj=ii+1; jj<trSize; ++jj) {
+                for (int jj = ii + 1; jj < trSize; ++jj) {
                     int item2 = sortedTr[jj];
                     ++col[item2];
                 }
@@ -34,6 +39,11 @@ class AprCandidateFisGenerator implements Serializable {
         return Collections.singletonList(candToCount).iterator();
     }
 
+    /**
+     * Assumes that each transaction is represented as a pair (sorted frequent item ranks, bitset of (k-1)-FIs ranks).
+     *
+     * @return a mapping (frequent item rank, (k-1)-FI rank) -> count
+     */
     Iterator<int[][]> countCandsK_Part(
             Iterator<Tuple2<int[], long[]>> f1AndFkm1BitSetIt,
             int km1, NextSizeItemsetGenHelper genHelper) {
@@ -75,10 +85,10 @@ class AprCandidateFisGenerator implements Serializable {
             return arrCopy2D(cnt2);
         }
 
-        for (int ii=0; ii<cnt1.length; ++ii) {
+        for (int ii = 0; ii < cnt1.length; ++ii) {
             int[] col1 = cnt1[ii];
             int[] col2 = cnt2[ii];
-            for (int jj=0; jj<col1.length; ++jj) {
+            for (int jj = 0; jj < col1.length; ++jj) {
                 col1[jj] += col2[jj];
             }
         }
@@ -87,27 +97,35 @@ class AprCandidateFisGenerator implements Serializable {
 
     private int[][] arrCopy2D(int[][] src) {
         int[][] res = new int[src.length][];
-        for (int ii=0; ii<res.length; ++ii) {
+        for (int ii = 0; ii < res.length; ++ii) {
             res[ii] = Arrays.copyOf(src[ii], src[ii].length);
         }
         return res;
     }
 
-    Tuple2<int[], long[]> toSortedRanks1And2(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
-        long[] ranks2 = computeSortedRanks2(sortedTr, f2RanksHelper);
+    /**
+     * @return pair (sorted frequent item ranks, bit array of 2-FI ranks). <br/>
+     * This method is intended to be applied per transaction.
+     */
+    Tuple2<int[], long[]> toSortedRanks1AndBitArrayOfRanks2(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
+        long[] ranks2 = computeBitArrayOfRanks2(sortedTr, f2RanksHelper);
         return new Tuple2<>(sortedTr, ranks2);
     }
 
-    Tuple2<int[], long[]> toSortedRanks1AndK(
+    /**
+     * @return pair (sorted frequent item ranks, bit array of k-FI ranks). <br/>
+     * This method is intended to be applied per transaction.
+     */
+    Tuple2<int[], long[]> toSortedRanks1AndBitArrayOfRanksK(
             int[] sortedTr, long[] sortedRanksKm1, CurrSizeFiRanks fkRanksHelper) {
-        long[] ranksK = computeSortedRanksK(sortedTr, sortedRanksKm1, fkRanksHelper);
+        long[] ranksK = computeBitArrayOfRanksK(sortedTr, sortedRanksKm1, fkRanksHelper);
         return new Tuple2<>(sortedTr, ranksK);
     }
 
     /**
      * Convert the column to pairs and filter out infrequent ones.
-
-     * @param col  col[0]=elem1, the rest is: col[elem2_rank + 1] = count
+     *
+     * @param col col[0]=elem1, the rest is: col[elem2_rank + 1] = count
      */
     List<int[]> fkColToPairs(int[] col, long minSuppCount) {
         if (col.length <= 1) {
@@ -128,7 +146,7 @@ class AprCandidateFisGenerator implements Serializable {
     }
 
 
-    private long[] computeSortedRanks2(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
+    private long[] computeBitArrayOfRanks2(int[] sortedTr, CurrSizeFiRanks f2RanksHelper) {
         final int START_IND = 0;
         long[] resRanks2 = new long[BitArrays.requiredSize(f2RanksHelper.getTotalCurrSizeRanks(), START_IND)];
         final int arrSize = sortedTr.length;
@@ -147,7 +165,7 @@ class AprCandidateFisGenerator implements Serializable {
         return resRanks2;
     }
 
-    private long[] computeSortedRanksK(int[] sortedTr, long[] sortedRanksKm1Bs, CurrSizeFiRanks fkRanksHelper) {
+    private long[] computeBitArrayOfRanksK(int[] sortedTr, long[] sortedRanksKm1Bs, CurrSizeFiRanks fkRanksHelper) {
         final int START_IND = 0;
         long[] resRanksK = new long[BitArrays.requiredSize(fkRanksHelper.getTotalCurrSizeRanks(), START_IND)];
 
@@ -156,7 +174,7 @@ class AprCandidateFisGenerator implements Serializable {
             long[] actRkm1sBs = BitArrays.andReturn(sortedRanksKm1Bs, possibleRkm1sBs, START_IND, sortedRanksKm1Bs.length);
             final int[] actRkm1s = BitArrays.asNumbers(actRkm1sBs, START_IND);
             final int[] rKm1ToRk = fkRanksHelper.getPrevSizeRankToCurrSizeRank(r1);
-            for (int rKm1: actRkm1s) {
+            for (int rKm1 : actRkm1s) {
                 int rankK = rKm1ToRk[rKm1];
                 BitArrays.set(resRanksK, START_IND, rankK);
             }

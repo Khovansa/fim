@@ -128,7 +128,7 @@ class BigFimStepExecutor {
     }
 
     private AprioriStepRes toNextAprioriStep(int kp1, List<int[]> fkAsArrays, int fkSize, FiRanksToFromItems prevSizeAllRanks) {
-        List<int[]> fk = cxt.apr.fkAsArraysToRankPairs(fkAsArrays);
+        List<int[]> fk = cxt.apr.fkAsArraysToFilteredRankPairs(fkAsArrays); //filter our infrequent candidates
         if (fk.isEmpty()) {
             cxt.pp(String.format("F%s is empty => stopping", kp1));
             return null;
