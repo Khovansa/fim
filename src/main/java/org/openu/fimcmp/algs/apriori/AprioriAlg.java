@@ -25,7 +25,7 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
     private final AprCandidateFisGenerator candidateFisGenerator;
 
     public static Class[] getClassesToRegister() {
-        return new Class[] {
+        return new Class[]{
                 AprCandidateFisGenerator.class,
                 AprioriAlg.class,
                 CurrSizeFiRanks.class,
@@ -128,6 +128,15 @@ public class AprioriAlg<T extends Comparable<T>> implements Serializable {
         return ranks1AndKm1.map(row -> candidateFisGenerator.toSortedRanks1AndBitArrayOfRanksK(row._1, row._2, preprocessedFk));
     }
 
+    /**
+     * The core of TID computation
+     *
+     * @param kRanksBsRdd bit set of k-FI ranks per transaction
+     * @return RDD of maps (k-FI rank to bit set of ids of transactions that contain this k-FI). <br/>
+     * The 'map' is represented as long[][]. <br/>
+     * The fact that the returned object is RDD is not really important as the number of objects in this RDD
+     * is expected to be much less than the number of transactions.
+     */
     public JavaRDD<long[][]> computeCurrRankToTidBitSet_Part(
             JavaRDD<long[]> kRanksBsRdd, TidsGenHelper tidsGenHelper) {
         JavaPairRDD<long[], Long> kRanksBsWithTidRdd = kRanksBsRdd.zipWithIndex();

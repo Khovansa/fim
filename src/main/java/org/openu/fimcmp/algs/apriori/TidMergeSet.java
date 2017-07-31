@@ -39,8 +39,12 @@ public class TidMergeSet implements Serializable {
     private static final int BITSET_START_IND = 6;
 
     /**
-     * Return an iterator over a single long[][] array: rankK -> 'tid-set'. <br/>
-     * The 'tid-set' is a bitset of TIDs prefixed with some metadata.
+     * Compute a mapping rankK -> 'tid-set'. <br/>
+     * The 'tid-set' is a bitset of TIDs prefixed with some metadata. <br/>
+     * @param kRanksBsAndTidIt iterator over transactions in this partition. <br/>
+     *                         Each transaction holds a bitset of its k-FI ranks and a transaction ID
+     * @param minAndMaxTids    Min and max TID in this partition
+     * @return iterator over a single long[][] array that holds an entire mapping rankK to 'tid-set' for this partition
      */
     static Iterator<long[][]> processPartition(
             Iterator<Tuple2<long[], Long>> kRanksBsAndTidIt,
@@ -85,6 +89,9 @@ public class TidMergeSet implements Serializable {
         return Collections.singletonList(rankKToTidSet).iterator();
     }
 
+    /**
+     * @return iterator over a single triple (partitionIndex, min-TID in this partition, max-TID in this partition)
+     */
     static Iterator<Tuple3<Integer, Long, Long>> findMinAndMaxTids(
             Integer partitionIndex,
             Iterator<Tuple2<long[], Long>> kRanksBsAndTidIt) {
