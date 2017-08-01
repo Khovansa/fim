@@ -55,8 +55,9 @@ public class TidMergeSet implements Serializable {
         boolean hasElems = false;
 
         final long minTidInPartition = minAndMaxTids._1;
+        final int tidCorrection = getTidCorrection(minTidInPartition);
         final long maxTidInPartition = minAndMaxTids._2;
-        final int totalTidsInThisPartition = 1 + (int)(maxTidInPartition - minTidInPartition);
+        final int totalTidsInThisPartition = 1 + (int)(maxTidInPartition - tidCorrection);
         while(kRanksBsAndTidIt.hasNext()) {
             hasElems = true;
             Tuple2<long[], Long> kRanksBsAndTid = kRanksBsAndTidIt.next();
@@ -67,7 +68,7 @@ public class TidMergeSet implements Serializable {
             int[] kRanksToBeStored = BitArrays.asNumbers(kRanksToBeStoredBs, RANKS_BITSET_START_IND);
 
             //storing a smaller number than TID:
-            final long tidToStore = kRanksBsAndTid._2 - getTidCorrection(minTidInPartition);
+            final long tidToStore = kRanksBsAndTid._2 - tidCorrection;
             for (int rankK : kRanksToBeStored) {
                 long[] tidSet = rankKToTidSet[rankK];
                 if (tidSet != null) {
