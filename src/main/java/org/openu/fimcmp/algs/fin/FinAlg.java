@@ -34,7 +34,7 @@ public class FinAlg extends AlgBase<FinAlgProperties, Void> {
         StopWatch sw = new StopWatch();
         sw.start();
         pp(sw, runProps);
-        JavaSparkContext sc = createSparkContext(runProps.isUseKrio, runProps.sparkMasterUrl, sw);
+        JavaSparkContext sc = createSparkContext(runProps.isUseKryo, runProps.sparkMasterUrl, sw);
 
         FinAlg alg = cmdLineOptionsParser.createAlg(runProps);
         alg.run(sc, sw);

@@ -15,15 +15,15 @@ public class CmdLineOptions<P extends CommonAlgProperties> {
     static final String INPUT_PATH_ENV_VAR = "FIM_CMP_INPUT_PATH";
 
     public final String sparkMasterUrl;
-    public final boolean isUseKrio;
+    public final boolean isUseKryo;
     private final String inputFile;
     public final P algProps;
     final int sleepSecs;
 
     @SuppressWarnings("WeakerAccess")
-    public CmdLineOptions(String sparkMasterUrl, boolean isUseKrio, String inputFileName, P algProps, int sleepSecs) {
+    public CmdLineOptions(String sparkMasterUrl, boolean isUseKryo, String inputFileName, P algProps, int sleepSecs) {
         this.sparkMasterUrl = sparkMasterUrl;
-        this.isUseKrio = isUseKrio;
+        this.isUseKryo = isUseKryo;
         this.inputFile = findInputFile(inputFileName);
         this.algProps = algProps;
         this.sleepSecs = sleepSecs;

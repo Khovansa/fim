@@ -63,7 +63,7 @@ public class CmdLineRunner {
         StopWatch sw = new StopWatch();
         sw.start();
         AlgBase.pp(sw, runProps);
-        JavaSparkContext sc = AlgBase.createSparkContext(runProps.isUseKrio, runProps.sparkMasterUrl, sw);
+        JavaSparkContext sc = AlgBase.createSparkContext(runProps.isUseKryo, runProps.sparkMasterUrl, sw);
 
         AlgBase alg = cmdLineOptionsParser.createAlg(runProps);
         alg.run(sc, sw);

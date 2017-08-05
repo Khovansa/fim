@@ -21,7 +21,7 @@ public class BigFimAlgProperties extends CommonAlgProperties {
      * the {@link #prefixLenToStartEclat} restriction. <br/>
      * The idea is that Apriori is very fast on sparse datasets. <br/>
      */
-    public double currToPrevResSignificantIncreaseRatio = 2.0;
+    public double currToPrevResSignificantIncreaseRatio = 1.1;
     //Eclat
     public boolean isUseDiffSets = true;
     public boolean isSqueezingEnabled = false;

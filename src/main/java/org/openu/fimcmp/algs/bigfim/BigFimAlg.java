@@ -24,7 +24,7 @@ public class BigFimAlg extends AlgBase<BigFimAlgProperties, BigFimResult> {
         StopWatch sw = new StopWatch();
         sw.start();
         pp(sw, runProps);
-        JavaSparkContext sc = createSparkContext(runProps.isUseKrio, runProps.sparkMasterUrl, sw);
+        JavaSparkContext sc = createSparkContext(runProps.isUseKryo, runProps.sparkMasterUrl, sw);
 
         BigFimAlg alg = cmdLineOptionsParser.createAlg(runProps);
         alg.run(sc, sw);

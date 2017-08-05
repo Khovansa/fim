@@ -13,7 +13,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
         implements ICmdLineOptionsParser<P, A> {
     private static final String HELP_OPT = "help";
     private static final String MASTER_URL_OPT = "spark-master-url";
-    private static final String USE_KRIO_OPT = "use-krio";
+    private static final String USE_KRYO_OPT = "use-kryo";
     private static final String INPUT_FILE_OPT = "input-file-name";
     private static final String MIN_SUPP_OPT = "min-supp";
     private static final String INPUT_PARTS_NUM_OPT = "input-parts-num";
@@ -101,7 +101,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
         Options options = new Options();
         options.addOption(null, HELP_OPT, false, "Print help and quit");
         options.addOption(null, MASTER_URL_OPT, true, "Spark master URL");
-        options.addOption(null, USE_KRIO_OPT, false, "Whether to use krio serialization library");
+        options.addOption(null, USE_KRYO_OPT, false, "Whether to use kryo serialization library");
         options.addOption(null, INPUT_FILE_OPT, true,
                 String.format("Either an absolute path or a path relative to '%s' environment variable", CmdLineOptions.INPUT_PATH_ENV_VAR));
 
@@ -129,7 +129,7 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
 
     private CmdLineOptions<P> cmdLineToOptions(CommandLine line) {
         String sparkMasterUrl = line.getOptionValue(MASTER_URL_OPT, "");
-        boolean isUseKrio = line.hasOption(USE_KRIO_OPT);
+        boolean isUseKryo = line.hasOption(USE_KRYO_OPT);
         String inputFileName = line.getOptionValue(INPUT_FILE_OPT);
 
         double minSupp = getDoubleVal(line, MIN_SUPP_OPT, "0.9");
@@ -151,6 +151,6 @@ public abstract class AbstractCmdLineOptionsParser<P extends CommonAlgProperties
         }
 
         int sleepSeconds = getIntVal(line, SLEEP_OPT, 0);
-        return new CmdLineOptions<>(sparkMasterUrl, isUseKrio, inputFileName, algProps, sleepSeconds);
+        return new CmdLineOptions<>(sparkMasterUrl, isUseKryo, inputFileName, algProps, sleepSeconds);
     }
 }
